@@ -15,6 +15,7 @@ The purpose is to create a scalable and efficient server that can handle multipl
 The project encompasses features such as channel creation, private messaging, and handling various IRC commands,
 fostering a comprehensive understanding of networking, system calls, and inter-process communication.
 
+This project is realized as a team effort with [TwindZ](https://github.com/TwindZ) and [Prezcoder](https://github.com/Prezcoder) 
 </div>
 
 <div align="center">
