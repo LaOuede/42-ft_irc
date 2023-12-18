@@ -22,5 +22,3 @@ This project is realized as a team effort with [TwindZ](https://github.com/Twind
 
 Go to [42 Québec](https://42quebec.com/) to discover the course ! 👈
 </div>
-
-Twindz upload test
