@@ -1,0 +1,6 @@
+test d'un server existant
+
+nc irc.freenode.net 6667
+NICK emlamoth 
+USER emlamoth * 0 emlamoth
+
