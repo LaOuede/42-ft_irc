@@ -26,7 +26,7 @@ void Server::start()
 	struct sockaddr_in serverAddress;
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
-	serverAddress.sin_port = 6667;
+	serverAddress.sin_port = htons(6667);
 	
 	int serverSocket;
 	int acceptedSocket;
