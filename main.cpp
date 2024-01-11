@@ -11,15 +11,13 @@ int main(int argc, char **argv) {
 
 	Server server;
 
-//opening of the server
 	try
 	{
 		server.createSocket();
 		server.setSocket();
 		server.bindSocket();
 		server.socketListening();
-		server.acceptConnection();
-		server.serverRoutine();
+		server.newPollRoutine();
 	}
 	catch(const std::exception& e)
 	{

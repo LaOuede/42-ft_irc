@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
-Server::Server() : _reuse(1), _socket_fd(0), _client_fd(0) {
+Server::Server() : _reuse(1), _socket_fd(0), _client_fd(0), _nfds(0) {
 	cout << "Server constructor call" << endl;
 }
 
@@ -36,7 +36,7 @@ void Server::createSocket() {
 
 void Server::setSocket() {
 	if ((setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &this->_reuse, sizeof(this->_reuse)) == -1)
-		/*|| (fcntl(this->_socket_fd, F_SETFL, O_NONBLOCK) == -1)*/)
+		|| (fcntl(this->_socket_fd, F_SETFL, O_NONBLOCK) == -1))
 		setsockoptFailureException();
 	cout << "Server set! socket_fd: " << this->_socket_fd << endl;
 }
@@ -59,7 +59,6 @@ void Server::socketListening() {
 }
 
 void Server::acceptConnection() {
-	cout << "socket_fd "<< this->_socket_fd << endl;
 	this->_client_fd = accept(this->_socket_fd, 0, 0);
 	if (this->_client_fd == -1)
 		acceptFailureException();
@@ -127,3 +126,30 @@ std::exception Server::setsockoptFailureException(){
 	throw std::runtime_error("setsockopt() error");
 }
 
+void Server::newPollRoutine(){
+
+	int status;
+	uint32_t i = 0;
+	while(1){
+		while(i < 10){
+			poll(&_fds[i], _nfds, 100);
+			status = accept(this->_socket_fd, 0, 0);
+			if(status != -1){
+				_fds[_nfds].fd = status;
+				cout << "New connect #" << _fds[_nfds].fd << endl;
+				send(_fds[_nfds].fd, "001 user Welcome !\r\n", 25, 0);
+				_nfds++;
+			}else if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
+				cout << "sent from connection #" << _fds[i].fd << " " << _buf;
+				bzero(_buf, BUFSIZ);
+			}
+			i++;
+		}
+		i = 0;
+		// while(i < 10){
+		// 	cout << _fds[i].fd << endl;
+		// 	i++;
+		// }
+		// i = 0;
+	}
+}
