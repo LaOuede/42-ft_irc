@@ -80,6 +80,9 @@ fclean: clean
 	@echo "\n$W--------- All exec. and archives successfully $Rdeleted ❌$W--------\n"
 	@echo "$W>>>>>>>>>>>>>>>>>>>>> $YCleaning $Wis $Gdone ✅ $W<<<<<<<<<<<<<<<<<<<<<<\n"
 
+wee:
+	docker run -it weechat/weechat
+
 # Display tools available
 help:
 	@echo "$$HELP"
