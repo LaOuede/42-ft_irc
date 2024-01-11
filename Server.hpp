@@ -14,6 +14,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+//poll test
+#include <sys/poll.h>
+#include <vector>
 
 #define PORT 6667
 #define BACKLOG 20
@@ -43,6 +46,8 @@ class Server {
 		void acceptConnection();
 		void serverRoutine();
 
+		void newPollRoutine();
+
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
@@ -65,6 +70,13 @@ class Server {
 		int _bytes_sent;
 		int _port;
 		std::string _password;
+
+		//TODO poll testing
+		struct pollfd _fds[10];
+		nfds_t _nfds;
+
+
+
 };
 
 #endif
