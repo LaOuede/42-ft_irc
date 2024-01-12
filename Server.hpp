@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "CommandHandler.hpp"
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -14,6 +15,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 
 #define PORT 6667
 #define BACKLOG 20
@@ -34,6 +36,7 @@ class Server {
 		// Getters & Setters
 		int &get_client_fd();
 		int &get_socket_fd();
+		string const &get_command_received() const;
 
 		// Methods
 		void createSocket();
@@ -42,6 +45,8 @@ class Server {
 		void socketListening();
 		void acceptConnection();
 		void serverRoutine();
+		void messageHandler();
+		void parseCommand();
 
 		// Exceptions
 		std::exception socketFailureException();
@@ -64,7 +69,9 @@ class Server {
 		int _bytes_read;
 		int _bytes_sent;
 		int _port;
-		std::string _password;
+		string _password;
+		CommandHandler _command_handler;
+		string _command_received;
 };
 
 #endif
