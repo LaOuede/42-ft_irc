@@ -1,4 +1,3 @@
-
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
@@ -10,6 +9,7 @@
 #include <netdb.h>
 #include <stdexcept>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -21,12 +21,14 @@
 
 using std::cout;
 using std::endl;
+using std::string;
 
 
 class Server {
 	public:
 		// Construtors & Destructors
 		Server();
+		Server(string port, string password);
 		~Server();
 
 		// Getters & Setters
