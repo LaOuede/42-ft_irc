@@ -20,7 +20,9 @@
 
 #define PORT 6667
 #define BACKLOG 20
+#define MAXCLIENT 2
 
+#define WELCOME "001 user Welcome !\r\n"
 
 using std::cout;
 using std::endl;
@@ -41,10 +43,10 @@ class Server {
 		void setSocket();
 		void bindSocket();
 		void socketListening();
-		void acceptConnection();
 		void serverRoutine();
-
-		void newPollRoutine();
+		void initPollfd();
+		void acceptConnection();
+		void addNewClient(int status);
 
 		// Exceptions
 		std::exception socketFailureException();
@@ -70,7 +72,7 @@ class Server {
 		std::string _password;
 
 		//TODO poll testing
-		struct pollfd _fds[10];
+		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
 		nfds_t _nfds;
 
 

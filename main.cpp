@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 		server.setSocket();
 		server.bindSocket();
 		server.socketListening();
-		server.newPollRoutine();
+		server.serverRoutine();
 	}
 	catch(const std::exception& e)
 	{

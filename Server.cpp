@@ -58,41 +58,89 @@ void Server::socketListening() {
 	cout << "Listening on port: " << PORT << endl;
 }
 
-void Server::acceptConnection() {
-	this->_client_fd = accept(this->_socket_fd, 0, 0);
-	if (this->_client_fd == -1)
-		acceptFailureException();
-	cout << "New connection accepted on client socket fd: " << this->_client_fd << endl;
-}
-
-void Server::serverRoutine() {
-	
-	this->_bytes_read = 1;
-	while (this->_bytes_read >= 0) {
-		cout << "Reading client socket: "<< this->_client_fd << endl;
-		this->_bytes_read = recv(this->_client_fd, this->_buf, BUFSIZ, 0);
-		if (this->_bytes_read == 0) {
-			cout << "Client socket " << this->_client_fd << ": connection closed" << endl;
-			break;
-		} else if (this->_bytes_read == -1)
-			recvFailureException();
-		else {			
-			char *msg = (char *)"001 moi Welcome!\r\n";
-			int msg_len = strlen(msg);
-			int bytes_sent;
-			this->_buf[this->_bytes_read] = '\0';
-			cout << "Message received from client socket: " << this->_client_fd << this->_buf << endl;
-			bytes_sent = send(this->_client_fd, msg, msg_len, 0);
-			if (bytes_sent == -1)
-				sendFailureException();
-			else if (this->_bytes_sent == msg_len) {
-				cout << "Message sent to client socket " << this->_client_fd << " to confirm reception" << endl;
-			} else {
-				cout << "Message partially sent to client socket " << this->_client_fd << ": " << this->_bytes_sent << endl;
+void Server::serverRoutine(){
+	initPollfd();
+	while(1){
+		if(poll(_fds, _nfds, 100) == 1){
+			for(uint32_t i = 0; i < _nfds; i++){
+				if(i == 0 && _fds[i].revents & POLLIN){
+					acceptConnection();
+				}else if(_fds[i].revents & POLLIN){
+					//need generic receving/parsing function here
+					if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
+						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
+						bzero(_buf, BUFSIZ);
+					}else
+						recvFailureException();
+				}
 			}
 		}
+		// only for visualition of the fd
+		for(int i = 0; i < MAXCLIENT + 1; i++)
+			cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
+		sleep(1);
 	}
 }
+
+void Server::initPollfd(){
+	_fds[0].fd = _socket_fd;
+	_fds[0].events = POLLIN;
+	_nfds++;
+	for(int i = 1; i < MAXCLIENT + 1; i++)
+		_fds[i].fd = -1;
+}
+
+void Server::acceptConnection() {
+	int status = accept(this->_socket_fd, 0, 0);
+	if(status != -1){
+		// besoin d'un recv pour save les info NICK/USER
+		if(_nfds < MAXCLIENT + 1){
+			addNewClient(status);
+		}else{
+			//marche pas full bien
+			send(status, "Server is full comeback later \r\n", 50, 0);
+			close(status);
+		}
+	}else
+		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
+}
+
+void Server::addNewClient(int status){
+	_fds[_nfds].fd = status;
+	_fds[_nfds].events = POLLIN;
+	cout << "New connect #" << _fds[_nfds].fd << endl;
+	send(_fds[_nfds].fd, WELCOME, 25, 0);
+	_nfds++;
+}
+// OLD
+// void Server::serverRoutine() {
+	
+// 	this->_bytes_read = 1;
+// 	while (this->_bytes_read >= 0) {
+// 		cout << "Reading client socket: "<< this->_client_fd << endl;
+// 		this->_bytes_read = recv(this->_client_fd, this->_buf, BUFSIZ, 0);
+// 		if (this->_bytes_read == 0) {
+// 			cout << "Client socket " << this->_client_fd << ": connection closed" << endl;
+// 			break;
+// 		} else if (this->_bytes_read == -1)
+// 			recvFailureException();
+// 		else {			
+// 			char *msg = (char *)"001 moi Welcome!\r\n";
+// 			int msg_len = strlen(msg);
+// 			int bytes_sent;
+// 			this->_buf[this->_bytes_read] = '\0';
+// 			cout << "Message received from client socket: " << this->_client_fd << this->_buf << endl;
+// 			bytes_sent = send(this->_client_fd, msg, msg_len, 0);
+// 			if (bytes_sent == -1)
+// 				sendFailureException();
+// 			else if (this->_bytes_sent == msg_len) {
+// 				cout << "Message sent to client socket " << this->_client_fd << " to confirm reception" << endl;
+// 			} else {
+// 				cout << "Message partially sent to client socket " << this->_client_fd << ": " << this->_bytes_sent << endl;
+// 			}
+// 		}
+// 	}
+// }
 
 
 /* ************************************************************************** */
@@ -124,32 +172,4 @@ std::exception Server::sendFailureException(){
 
 std::exception Server::setsockoptFailureException(){
 	throw std::runtime_error("setsockopt() error");
-}
-
-void Server::newPollRoutine(){
-
-	int status;
-	uint32_t i = 0;
-	while(1){
-		while(i < 10){
-			poll(&_fds[i], _nfds, 100);
-			status = accept(this->_socket_fd, 0, 0);
-			if(status != -1){
-				_fds[_nfds].fd = status;
-				cout << "New connect #" << _fds[_nfds].fd << endl;
-				send(_fds[_nfds].fd, "001 user Welcome !\r\n", 25, 0);
-				_nfds++;
-			}else if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
-				cout << "sent from connection #" << _fds[i].fd << " " << _buf;
-				bzero(_buf, BUFSIZ);
-			}
-			i++;
-		}
-		i = 0;
-		// while(i < 10){
-		// 	cout << _fds[i].fd << endl;
-		// 	i++;
-		// }
-		// i = 0;
-	}
 }
