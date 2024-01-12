@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CommandHandler.hpp"
+#include "CommandHandler.hpp"
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -40,6 +41,7 @@ class Server {
 		// Getters & Setters
 		int &get_client_fd();
 		int &get_socket_fd();
+		string const &get_command_received() const;
 		string const &get_command_received() const;
 
 		// Methods
