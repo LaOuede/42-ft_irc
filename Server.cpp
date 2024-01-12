@@ -28,6 +28,11 @@ int &Server::get_socket_fd() {
 	return this->_socket_fd;
 }
 
+string const &Server::get_command_received() const {
+	return this->_command_received;
+}
+
+
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
@@ -145,6 +150,56 @@ void Server::addNewClient(int status){
 // 		}
 // 	}
 // }
+	this->_bytes_read = 1;
+	while (this->_bytes_read >= 0) {
+		cout << "Reading client socket: "<< this->_client_fd << endl;
+		this->_bytes_read = recv(this->_client_fd, this->_buf, BUFSIZ, 0);
+		if (this->_bytes_read == 0) {
+			cout << "Client socket " << this->_client_fd << ": connection closed" << endl;
+			break;
+		} else if (this->_bytes_read == -1)
+			recvFailureException();
+		else {			
+			messageHandler();
+		}
+	}
+}
+
+void Server::messageHandler() {
+	// récupérer le message du client
+	// split (attention, plusieurs commandes peuvent se suivre séparées par "/r/n")
+	// répondre en fonction de ce qui a été reçu.
+
+	// Récupérer les infos de NICK et USER quand reçu
+	// Renvoyer "001 <user> Welcome"
+
+	string response;
+	this->_buf[this->_bytes_read] = '\0';
+	cout << "Message received from client socket " << this->_client_fd << ": " << this->_buf << endl;
+	parseCommand();
+	response = this->_command_handler.sendResponse( this );
+	if (response.size() > 0) {
+		this->_bytes_sent = send(this->_client_fd, response.c_str(), response.size(), 0);
+	}
+	if (this->_bytes_sent == -1)
+		sendFailureException();
+	else if (this->_bytes_sent == (int)response.size()) {
+		cout << "Message sent to client socket " << this->_client_fd << " to confirm reception" << endl;
+	} else {
+		cout << "Message partially sent to client socket " << this->_client_fd << ": " << this->_bytes_sent << endl;
+	}
+}
+
+void Server::parseCommand() {
+	size_t pos = static_cast<string>(this->_buf).find_first_of(" ");
+	if (pos == string::npos) {
+		this->_command_received = this->_buf;
+		cout << "Command received: " << this->_command_received << endl;
+	} else {
+		this->_command_received = static_cast<string>(this->_buf).substr(0, pos);
+		cout << "Command received: " << this->_command_received << endl;
+	}
+}
 
 
 /* ************************************************************************** */

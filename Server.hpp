@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "CommandHandler.hpp"
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -39,6 +40,7 @@ class Server {
 		// Getters & Setters
 		int &get_client_fd();
 		int &get_socket_fd();
+		string const &get_command_received() const;
 
 		// Methods
 		void createSocket();
@@ -49,6 +51,8 @@ class Server {
 		void initPollfd();
 		void acceptConnection();
 		void addNewClient(int status);
+		void messageHandler();
+		void parseCommand();
 
 		// Exceptions
 		std::exception socketFailureException();
@@ -71,7 +75,9 @@ class Server {
 		int _bytes_read;
 		int _bytes_sent;
 		int _port;
-		std::string _password;
+		string _password;
+		CommandHandler _command_handler;
+		string _command_received;
 
 		//TODO poll testing
 		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
