@@ -4,7 +4,6 @@
 #pragma once
 
 #include "CommandHandler.hpp"
-#include "CommandHandler.hpp"
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -19,6 +18,7 @@
 //poll test
 #include <sys/poll.h>
 #include <vector>
+
 
 #define PORT 6667
 #define BACKLOG 20
@@ -42,7 +42,6 @@ class Server {
 		int &get_client_fd();
 		int &get_socket_fd();
 		string const &get_command_received() const;
-		string const &get_command_received() const;
 
 		// Methods
 		void createSocket();
@@ -53,6 +52,8 @@ class Server {
 		void initPollfd();
 		void acceptConnection();
 		void addNewClient(int status);
+		void messageHandler();
+		void parseCommand();
 		void messageHandler();
 		void parseCommand();
 
