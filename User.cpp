@@ -19,8 +19,8 @@ User::~User() {}
 /* ************************************************************************** */
 string User::executeCommand(Server *server) {
 	(void)server;
-	cout << this->getCommandName() << endl;
-	return ("001 user Welcome from USER\r\n");
+	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	return ("001 user :you're in the shadow\r\n");
 }
 
 

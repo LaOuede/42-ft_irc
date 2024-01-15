@@ -119,7 +119,7 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	// send(_fds[_nfds].fd, WELCOME, 25, 0);
+	//send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
 
@@ -169,16 +169,6 @@ void Server::messageHandler(int i) {
 	}
 }
 
-
-void Server::parseCommand() {
-	size_t pos = this->_command_received.find_first_of(" ");
-	if (pos == string::npos) {
-		cout << "Command received: " << this->_command_received << endl;
-	} else {
-		this->_command_received = this->_command_received.substr(0, pos);
-		cout << "Command received: " << this->_command_received << endl;
-	}
-}
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
