@@ -58,6 +58,7 @@ class Server {
 		void parseCommand();
 
 		int receiver(int i);
+		int builtCommandString();
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();

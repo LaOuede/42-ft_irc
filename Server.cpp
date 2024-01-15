@@ -76,7 +76,7 @@ void Server::serverRoutine(){
 					acceptConnection();
 				}else if(_fds[i].revents & POLLIN){
 					if(receiver(i) != -1){
-						cout << "sent from connection #" << _fds[i].fd << " " << _command_received;
+						cout << "sent from connection #" << _fds[i].fd << ": " << _command_received;
 						// messageHandler(i);
 						_command_received.clear();
 					}else
@@ -122,6 +122,33 @@ void Server::addNewClient(int status){
 	_nfds++;
 }
 
+int Server::receiver(int i)
+{
+	while(1){
+		bzero(_buf, BUFFERSIZE);
+		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1)
+			if(builtCommandString())
+				break;
+			else
+				return -1;
+	}
+	return 0;
+}
+
+int Server::builtCommandString(){
+	size_t pos = 0;
+	// string temp;
+	_command_received.append(_buf, BUFFERSIZE);
+	pos = _command_received.find("\n");
+	if(pos != std::string::npos){
+		// if(pos + 1 != std::string::npos) //TODO trouver un moyen de tester
+		// 	temp = _command_received.substr(pos + 1);
+		_command_received.assign(_command_received.substr(0, pos + 1));
+		return 1;
+	}
+	return 0;
+}
+
 void Server::messageHandler(int i) {
 	string response;
 	this->_buf[this->_bytes_read] = '\0';
@@ -149,7 +176,6 @@ void Server::parseCommand() {
 		cout << "Command received: " << this->_command_received << endl;
 	}
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
@@ -180,29 +206,4 @@ std::exception Server::sendFailureException(){
 
 std::exception Server::setsockoptFailureException(){
 	throw std::runtime_error("setsockopt() error");
-}
-
-int Server::receiver(int i)
-{
-	string temp;
-	size_t pos = 0;
-	while(1){
-		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
-			_command_received.append(_buf, BUFFERSIZE);
-			pos = _command_received.find("\n");
-			if(pos != std::string::npos){
-				// if(pos + 1 != std::string::npos)
-				// 	temp = _command_received.substr(pos + 1);
-				_command_received.assign(_command_received.substr(0, pos + 1));
-				bzero(_buf, BUFFERSIZE);
-				break;
-			}
-		}else
-			return -1;
-		bzero(_buf, BUFFERSIZE);
-		cout << _command_received << endl;
-	}
-	cout << _command_received << endl;
-
-	return 0;
 }
