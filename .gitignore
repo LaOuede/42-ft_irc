@@ -33,4 +33,6 @@
 ircserv
 
 # Vscode configuration
-.vscode
+*/.vscode
+*.json
+
