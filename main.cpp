@@ -19,14 +19,12 @@ int main(int argc, char **argv) {
 
 	Server server(argv[1], argv[2]);
 
-	//opening of the server
 	try
 	{
 		server.createSocket();
 		server.setSocket();
 		server.bindSocket();
 		server.socketListening();
-		server.acceptConnection();
 		server.serverRoutine();
 	}
 	catch(const std::exception& e)
