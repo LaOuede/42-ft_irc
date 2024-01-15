@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -126,8 +127,9 @@ void Server::addNewClient(int status){
 
 void Server::messageHandler(int i) {
 	string response;
-	this->_buf[this->_bytes_read] = '\0';
+
 	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
+	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
@@ -141,6 +143,7 @@ void Server::messageHandler(int i) {
 		cout << "Message partially sent to client socket " << this->_fds[i].fd << ": " << this->_bytes_sent << endl;
 	}
 }
+
 
 void Server::parseCommand() {
 	size_t pos = this->_command_received.find_first_of(" ");

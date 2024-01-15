@@ -11,6 +11,8 @@ using std::cout;
 using std::endl;
 using std::string;
 
+class Server;
+
 class Cap : public ACommand {
 	public:
 		// Construtors & Destructors
@@ -18,7 +20,7 @@ class Cap : public ACommand {
 		virtual ~Cap();
 
 		// Methods
-		string executeCommand();
+		string executeCommand(Server *server);
 
 	private:
 		// Attributes
