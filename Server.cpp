@@ -77,7 +77,7 @@ void Server::serverRoutine(){
 				}else if(_fds[i].revents & POLLIN){
 					if(receiver(i) != -1){
 						cout << "sent from connection #" << _fds[i].fd << ": " << _command_received;
-						// messageHandler(i);
+						messageHandler(i);
 						_command_received.clear();
 					}else
 						recvFailureException();
@@ -126,11 +126,11 @@ int Server::receiver(int i)
 {
 	while(1){
 		bzero(_buf, BUFFERSIZE);
-		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1)
+		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
 			if(builtCommandString())
 				break;
-			else
-				return -1;
+		}else
+			return -1;
 	}
 	return 0;
 }
