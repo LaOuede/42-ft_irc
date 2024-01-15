@@ -52,9 +52,7 @@ class Server {
 		void initPollfd();
 		void acceptConnection();
 		void addNewClient(int status);
-		void messageHandler();
-		void parseCommand();
-		void messageHandler();
+		void messageHandler(int i);
 		void parseCommand();
 
 		// Exceptions
