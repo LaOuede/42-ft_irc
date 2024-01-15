@@ -1,4 +1,5 @@
 #include "CommandHandler.hpp"
+#include "Server.hpp"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -28,12 +29,11 @@ CommandHandler::~CommandHandler() {
 /* Functions                                                                  */
 /* ************************************************************************** */
 string CommandHandler::sendResponse( Server *server) {
-	(void)server;
 	map<string, ACommand *>::iterator it;
 
 	it = this->_command_caller.find( server->get_command_received() ) ;
 	if ( it != this->_command_caller.end() ) {
-		return it->second->executeCommand() ;
+		return it->second->executeCommand(server) ;
 	}
 	return ("Command not found\n");
 }

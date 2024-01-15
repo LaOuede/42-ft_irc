@@ -6,9 +6,12 @@
 # include <iostream>
 # include <string>
 
+
 using std::cout;
 using std::endl;
 using std::string;
+
+class Server;
 
 class ACommand {
 	public:
@@ -20,7 +23,7 @@ class ACommand {
 		string const &getCommandName() const;
 
 		// Methods
-		virtual string executeCommand() = 0;
+		virtual string executeCommand(Server *server) = 0;
 
 		// Exceptions
 

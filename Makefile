@@ -46,7 +46,7 @@ HEADS		=	$(wildcard *.hpp, *.tpp)
 
 OBJS_DIR	=	./obj/
 OBJS_LIST	=	$(patsubst %.cpp, %.o, $(SRCS))
-OBJS4		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
+OBJS		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
 
 #------------------------------------------------------------------------------#
 #                                  RULES                                       #
@@ -71,7 +71,7 @@ $(OBJS_DIR)%.o: %.cpp $(HEADS)
 
 run: re
 	@echo "\n$W---------------------- $GLaunching $W$(NAME) 🚀 $W----------------------\n"
-	./$(NAME) 1 1
+	./$(NAME) 6667 allo
 
 # Remove objects and executables
 clean:

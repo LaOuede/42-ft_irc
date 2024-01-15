@@ -34,7 +34,7 @@ class CommandHandler {
 		// Getters & Setters
 
 		// Methods
-		string sendResponse( Server *server);
+		string sendResponse(Server *server);
 
 		// Exceptions
 
@@ -43,7 +43,5 @@ class CommandHandler {
 		map<string, ACommand *> _command_caller;
 
 };
-
-#include "Server.hpp"
 
 #endif
