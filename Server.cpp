@@ -75,12 +75,10 @@ void Server::serverRoutine(){
 				if(i == 0 && _fds[i].revents & POLLIN){
 					acceptConnection();
 				}else if(_fds[i].revents & POLLIN){
-					//need generic receving/parsing function here
-				if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
-						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
-						this->_command_received = this->_buf;
-						messageHandler(i);
-						bzero(_buf, BUFSIZ);
+					if(receiver(i) != -1){
+						cout << "sent from connection #" << _fds[i].fd << " " << _command_received;
+						// messageHandler(i);
+						_command_received.clear();
 					}else
 						recvFailureException();
 				}
@@ -120,7 +118,7 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	send(_fds[_nfds].fd, WELCOME, 25, 0);
+	// send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
 
@@ -182,4 +180,29 @@ std::exception Server::sendFailureException(){
 
 std::exception Server::setsockoptFailureException(){
 	throw std::runtime_error("setsockopt() error");
+}
+
+int Server::receiver(int i)
+{
+	string temp;
+	size_t pos = 0;
+	while(1){
+		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
+			_command_received.append(_buf, BUFFERSIZE);
+			pos = _command_received.find("\n");
+			if(pos != std::string::npos){
+				// if(pos + 1 != std::string::npos)
+				// 	temp = _command_received.substr(pos + 1);
+				_command_received.assign(_command_received.substr(0, pos + 1));
+				bzero(_buf, BUFFERSIZE);
+				break;
+			}
+		}else
+			return -1;
+		bzero(_buf, BUFFERSIZE);
+		cout << _command_received << endl;
+	}
+	cout << _command_received << endl;
+
+	return 0;
 }

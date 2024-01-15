@@ -23,6 +23,8 @@
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 2
+#define BUFFERSIZE 5
+
 
 #define WELCOME "001 user Welcome !\r\n"
 
@@ -55,6 +57,7 @@ class Server {
 		void messageHandler(int i);
 		void parseCommand();
 
+		int receiver(int i);
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
@@ -72,20 +75,15 @@ class Server {
 		struct sockaddr_in _sa;
 		struct sockadr_storage *_client_addr;
 		socklen_t _addr_size;
-		char _buf[BUFSIZ];
+		char _buf[BUFFERSIZE];
 		int _bytes_read;
 		int _bytes_sent;
 		int _port;
 		string _password;
 		CommandHandler _command_handler;
 		string _command_received;
-
-		//TODO poll testing
 		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
 		nfds_t _nfds;
-
-
-
 };
 
 #endif
