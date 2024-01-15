@@ -6,7 +6,7 @@
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_fd(0) {
+	_reuse(1), _socket_fd(0), _client_fd(0), _nfds(0) {
 	_port = atoi(port.c_str());
 	_password = password;
 	cout << "Server constructor call" << endl;
@@ -27,6 +27,11 @@ int &Server::get_client_fd() {
 int &Server::get_socket_fd() {
 	return this->_socket_fd;
 }
+
+string const &Server::get_command_received() const {
+	return this->_command_received;
+}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */
@@ -71,8 +76,10 @@ void Server::serverRoutine(){
 					acceptConnection();
 				}else if(_fds[i].revents & POLLIN){
 					//need generic receving/parsing function here
-					if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
+				if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
 						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
+						this->_command_received = this->_buf;
+						messageHandler(i);
 						bzero(_buf, BUFSIZ);
 					}else
 						recvFailureException();
@@ -80,9 +87,9 @@ void Server::serverRoutine(){
 			}
 		}
 		// only for visualition of the fd
-		for(int i = 0; i < MAXCLIENT + 1; i++)
+/* 		for(int i = 0; i < MAXCLIENT + 1; i++)
 			cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
-		sleep(1);
+		sleep(1); */
 	}
 }
 
@@ -116,35 +123,34 @@ void Server::addNewClient(int status){
 	send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
-// OLD
-// void Server::serverRoutine() {
-	
-// 	this->_bytes_read = 1;
-// 	while (this->_bytes_read >= 0) {
-// 		cout << "Reading client socket: "<< this->_client_fd << endl;
-// 		this->_bytes_read = recv(this->_client_fd, this->_buf, BUFSIZ, 0);
-// 		if (this->_bytes_read == 0) {
-// 			cout << "Client socket " << this->_client_fd << ": connection closed" << endl;
-// 			break;
-// 		} else if (this->_bytes_read == -1)
-// 			recvFailureException();
-// 		else {			
-// 			char *msg = (char *)"001 moi Welcome!\r\n";
-// 			int msg_len = strlen(msg);
-// 			int bytes_sent;
-// 			this->_buf[this->_bytes_read] = '\0';
-// 			cout << "Message received from client socket: " << this->_client_fd << this->_buf << endl;
-// 			bytes_sent = send(this->_client_fd, msg, msg_len, 0);
-// 			if (bytes_sent == -1)
-// 				sendFailureException();
-// 			else if (this->_bytes_sent == msg_len) {
-// 				cout << "Message sent to client socket " << this->_client_fd << " to confirm reception" << endl;
-// 			} else {
-// 				cout << "Message partially sent to client socket " << this->_client_fd << ": " << this->_bytes_sent << endl;
-// 			}
-// 		}
-// 	}
-// }
+
+void Server::messageHandler(int i) {
+	string response;
+	this->_buf[this->_bytes_read] = '\0';
+	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
+	parseCommand();
+	response = this->_command_handler.sendResponse( this );
+	if (response.size() > 0) {
+		this->_bytes_sent = send(this->_fds[i].fd, response.c_str(), response.size(), 0);
+	}
+	if (this->_bytes_sent == -1)
+		sendFailureException();
+	else if (this->_bytes_sent == (int)response.size()) {
+		cout << "Message sent to client socket " << this->_fds[i].fd << " to confirm reception" << endl;
+	} else {
+		cout << "Message partially sent to client socket " << this->_fds[i].fd << ": " << this->_bytes_sent << endl;
+	}
+}
+
+void Server::parseCommand() {
+	size_t pos = this->_command_received.find_first_of(" ");
+	if (pos == string::npos) {
+		cout << "Command received: " << this->_command_received << endl;
+	} else {
+		this->_command_received = this->_command_received.substr(0, pos);
+		cout << "Command received: " << this->_command_received << endl;
+	}
+}
 
 
 /* ************************************************************************** */
