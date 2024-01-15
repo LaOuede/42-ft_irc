@@ -46,7 +46,7 @@ HEADS		=	$(wildcard *.hpp, *.tpp)
 
 OBJS_DIR	=	./obj/
 OBJS_LIST	=	$(patsubst %.cpp, %.o, $(SRCS))
-OBJS4		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
+OBJS		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
 
 #------------------------------------------------------------------------------#
 #                                  RULES                                       #
@@ -68,10 +68,6 @@ $(NAME) : $(OBJS)
 # Create all files .o (object) from files .cpp (source code)
 $(OBJS_DIR)%.o: %.cpp $(HEADS)
 	@$(CC) $(CFLAGS) -c $< -o $@
-
-run: re
-	@echo "\n$W---------------------- $GLaunching $W$(NAME) 🚀 $W----------------------\n"
-	./$(NAME) 1 1
 
 # Remove objects and executables
 clean:

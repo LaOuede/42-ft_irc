@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -77,7 +78,7 @@ void Server::serverRoutine(){
 				}else if(_fds[i].revents & POLLIN){
 					//need generic receving/parsing function here
 				if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
-						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
+						//cout << "sent from connection #" << _fds[i].fd << " " << _buf;
 						this->_command_received = this->_buf;
 						messageHandler(i);
 						bzero(_buf, BUFSIZ);
@@ -120,15 +121,15 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	send(_fds[_nfds].fd, WELCOME, 25, 0);
+	//send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
 
 void Server::messageHandler(int i) {
 	string response;
-	this->_buf[this->_bytes_read] = '\0';
-	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
-	parseCommand();
+
+	cout << "\nMessage received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
+	this->_command_handler.commandTokenizer( this );
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
 		this->_bytes_sent = send(this->_fds[i].fd, response.c_str(), response.size(), 0);
@@ -139,16 +140,6 @@ void Server::messageHandler(int i) {
 		cout << "Message sent to client socket " << this->_fds[i].fd << " to confirm reception" << endl;
 	} else {
 		cout << "Message partially sent to client socket " << this->_fds[i].fd << ": " << this->_bytes_sent << endl;
-	}
-}
-
-void Server::parseCommand() {
-	size_t pos = this->_command_received.find_first_of(" ");
-	if (pos == string::npos) {
-		cout << "Command received: " << this->_command_received << endl;
-	} else {
-		this->_command_received = this->_command_received.substr(0, pos);
-		cout << "Command received: " << this->_command_received << endl;
 	}
 }
 
