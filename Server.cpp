@@ -33,6 +33,18 @@ string const &Server::get_command_received() const {
 	return this->_command_received;
 }
 
+map <int, clientInfo> &Server::get_userDB() {
+	return this->_userDB;
+}
+
+map <int, clientInfo> Server::set_userDB(map <int, clientInfo> userDB) {
+	this->_userDB = userDB;
+	return this->_userDB;
+}
+
+nfds_t &Server::get_nfds() {
+	return this->_nfds;
+}
 
 /* ************************************************************************** */
 /* Functions                                                                  */
@@ -119,7 +131,7 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	//send(_fds[_nfds].fd, WELCOME, 25, 0);
+	// send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
 
