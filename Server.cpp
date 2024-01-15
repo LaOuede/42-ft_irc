@@ -1,10 +1,14 @@
-	
-	#include "Server.hpp"
+#include "Server.hpp"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
-Server::Server() : _reuse(1), _socket_fd(0), _client_fd(0) {
+Server::Server() {}
+
+Server::Server(string port, string password) :
+	_reuse(1), _socket_fd(0), _client_fd(0) {
+	_port = atoi(port.c_str());
+	_password = password;
 	cout << "Server constructor call" << endl;
 }
 
@@ -45,17 +49,17 @@ void Server::bindSocket() {
 	memset(&this->_sa, 0, sizeof this->_sa);
 	this->_sa.sin_family = AF_INET;
 	this->_sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	this->_sa.sin_port = htons(PORT);
+	this->_sa.sin_port = htons(this->_port);
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
-	cout << "Bound socket to localhost port: " << PORT << endl;
+	cout << "Bound socket to localhost port: " << this->_port << endl;
 }
 
 void Server::socketListening() {
 	if (listen(this->_socket_fd, BACKLOG) != 0) {
 		listenFailureException();
 	}
-	cout << "Listening on port: " << PORT << endl;
+	cout << "Listening on port: " << this->_port << endl;
 }
 
 void Server::acceptConnection() {
@@ -126,4 +130,3 @@ std::exception Server::sendFailureException(){
 std::exception Server::setsockoptFailureException(){
 	throw std::runtime_error("setsockopt() error");
 }
-

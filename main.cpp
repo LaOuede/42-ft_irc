@@ -1,5 +1,7 @@
-
 #include "Server.hpp"
+
+bool parsingPort(string port);
+bool parsingPassword(string password);
 
 int main(int argc, char **argv) {
 	(void)argv;
@@ -7,11 +9,17 @@ int main(int argc, char **argv) {
 		cout << "Usage: ./ircserver <port> <password>" << endl;
 		return 1;
 	}
+
+	if (!parsingPort(argv[1]) || !parsingPassword(argv[2])) {
+		cout << "Error: Invalid arguments." << endl;
+		return 1;
+	}
+
 	cout << "---------- I'M THE SERVER ----------" << endl;
 
-	Server server;
+	Server server(argv[1], argv[2]);
 
-//opening of the server
+	//opening of the server
 	try
 	{
 		server.createSocket();
@@ -26,6 +34,7 @@ int main(int argc, char **argv) {
 		std::cerr << e.what() << endl;
 	}
 
+	//closing of the server
 	cout << "Closing client socket..." << endl;
 	close(server.get_client_fd());
 	cout << "Closing server socket..." << endl;
