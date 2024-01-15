@@ -17,7 +17,8 @@ User::~User() {}
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-string User::executeCommand() {
+string User::executeCommand(Server *server) {
+	(void)server;
 	cout << this->getCommandName() << endl;
 	return ("001 user Welcome from USER\r\n");
 }
