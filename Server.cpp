@@ -75,12 +75,10 @@ void Server::serverRoutine(){
 				if(i == 0 && _fds[i].revents & POLLIN){
 					acceptConnection();
 				}else if(_fds[i].revents & POLLIN){
-					//need generic receving/parsing function here
-				if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
-						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
-						this->_command_received = this->_buf;
+					if(receiver(i) != -1){
+						cout << "sent from connection #" << _fds[i].fd << ": " << _command_received;
 						messageHandler(i);
-						bzero(_buf, BUFSIZ);
+						_command_received.clear();
 					}else
 						recvFailureException();
 				}
@@ -120,13 +118,40 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	send(_fds[_nfds].fd, WELCOME, 25, 0);
+	// send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
+}
+
+int Server::receiver(int i)
+{
+	while(1){
+		bzero(_buf, BUFFERSIZE);
+		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
+			if(builtCommandString())
+				break;
+		}else
+			return -1;
+	}
+	return 0;
+}
+
+int Server::builtCommandString(){
+	size_t pos = 0;
+	// string temp;
+	_command_received.append(_buf, BUFFERSIZE);
+	pos = _command_received.find("\n");
+	if(pos != std::string::npos){
+		// if(pos + 1 != std::string::npos) //TODO trouver un moyen de tester
+		// 	temp = _command_received.substr(pos + 1);
+		_command_received.assign(_command_received.substr(0, pos + 1));
+		return 1;
+	}
+	return 0;
 }
 
 void Server::messageHandler(int i) {
 	string response;
-	this->_buf[this->_bytes_read] = '\0';
+
 	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
@@ -151,7 +176,6 @@ void Server::parseCommand() {
 		cout << "Command received: " << this->_command_received << endl;
 	}
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
