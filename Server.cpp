@@ -151,7 +151,7 @@ int Server::builtCommandString(){
 
 void Server::messageHandler(int i) {
 	string response;
-	this->_buf[this->_bytes_read] = '\0';
+
 	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
