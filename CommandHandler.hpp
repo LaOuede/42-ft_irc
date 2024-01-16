@@ -14,7 +14,6 @@
 #include "ACommand.hpp"
 #include "Cap.hpp"
 #include "Nick.hpp"
-#include "Ping.hpp"
 #include "User.hpp"
 
 using std::cout;
