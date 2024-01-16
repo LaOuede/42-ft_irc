@@ -191,9 +191,8 @@ int Server::builtCommandString(){
 
 void Server::messageHandler() {
 	string response;
-
-	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
-	this->_command_handler.commandTokenizer( this );
+	this->_buf[this->_bytes_read] = '\0';
+	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
 	parseCommand();
 	response = this->_command_handler.sendResponse(this);
 	if (response.size() > 0) {
