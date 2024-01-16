@@ -58,7 +58,7 @@ class Server {
 		void parseCommand();
 
 		int receiver(int i);
-		int builtCommandString();
+		int builtCommandString(char *buffer);
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
@@ -82,6 +82,7 @@ class Server {
 		int _port;
 		string _password;
 		CommandHandler _command_handler;
+		string _buff;
 		string _command_received;
 		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
 		nfds_t _nfds;
