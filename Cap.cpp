@@ -12,7 +12,8 @@ Cap::~Cap() {}
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-string Cap::executeCommand() {
-	cout << this->getCommandName() << endl;
-	return ("001 user Welcome from CAP\r\n");
+string Cap::executeCommand(Server *server) {
+	(void)server;
+	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	return ("001 user Welcome!\r\n");
 }

@@ -1,6 +1,4 @@
 #include "CommandHandler.hpp"
-#include "Server.hpp"
-#include "Server.hpp"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -67,7 +65,7 @@ string CommandHandler::sendResponse(Server *server) {
 		}
 	}
 	this->_command_tokens.clear();
-	return ("421 PRIVMSG :Command not found\n");
+	return ("421 PRIVMSG :421 PRIVMSG :Command not found\n");
 }
 
 
