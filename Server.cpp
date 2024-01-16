@@ -148,26 +148,54 @@ void Server::addNewClient(int status){
 
 int Server::receiver(int i)
 {
+	size_t pos = 0;
+	int bytes = 0;
+	char buffer[BUFFERSIZE];
+
 	while(1){
-		bzero(_buf, BUFFERSIZE);
-		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
-			if(builtCommandString())
+		bzero(buffer, BUFFERSIZE);
+		bytes = recv(_fds[i].fd, buffer, BUFFERSIZE, 0);
+		// cout << "bytes " << bytes << endl;
+		if(bytes != -1){
+			_buff.append(buffer, BUFFERSIZE);
+			// (void) buffer;
+			// char test[] = "allo\nbonjour\n";
+			pos = _buff.find("\n");
+			if(pos != std::string::npos){
+				_command_received.assign(_buff.substr(0, pos + 1));
+				if(_buff.size() != _command_received.size())
+					_buff.assign(_buff.substr(pos + 1));
+				else{
+					cout << "clear" << endl;
+					_buff.clear();
+				}
+				cout << "_command_received " << _command_received << endl;
+				cout << "buff "<< _buff << endl;
 				break;
+			}
 		}else
 			return -1;
 	}
 	return 0;
 }
 
-int Server::builtCommandString(){
+int Server::builtCommandString(char *buffer){
 	size_t pos = 0;
-	// string temp;
-	_command_received.append(_buf, BUFFERSIZE);
-	pos = _command_received.find("\n");
+	// (void) buffer;
+	// char test[] = "allo\nbonjour\n";
+	_buff.append(buffer, BUFFERSIZE);
+	pos = _buff.find("\n");
 	if(pos != std::string::npos){
-		// if(pos + 1 != std::string::npos) //TODO trouver un moyen de tester
-		// 	temp = _command_received.substr(pos + 1);
-		_command_received.assign(_command_received.substr(0, pos + 1));
+		_command_received.assign(_buff.substr(0, pos + 1));
+		if(_buff.size() != _command_received.size())
+			_buff.assign(_buff.substr(pos + 1));
+		else{
+			cout << "clear" << endl;
+			_buff.clear();
+		}
+		
+		cout << "_command_received " << _command_received << endl;
+		cout << "buff "<< _buff << endl;
 		return 1;
 	}
 	return 0;
