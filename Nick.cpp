@@ -17,10 +17,10 @@ Nick::~Nick() {}
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-string Nick::executeCommand(Server *server) {
+string Nick::executeCommand(Server *serverServer *server) {
 	(void)server;
-	cout << this->getCommandName() << endl;
-	return ("001 user Welcome from NICK\r\n");
+	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	return (":user!d@localhost NICK LaOuede\r\n");
 }
 
 

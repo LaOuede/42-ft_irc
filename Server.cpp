@@ -78,7 +78,7 @@ void Server::serverRoutine(){
 				}else if(_fds[i].revents & POLLIN){
 					//need generic receving/parsing function here
 				if(recv(_fds[i].fd, this->_buf, BUFSIZ, 0) != -1){
-						cout << "sent from connection #" << _fds[i].fd << " " << _buf;
+						//cout << "sent from connection #" << _fds[i].fd << " " << _buf;
 						this->_command_received = this->_buf;
 						messageHandler(i);
 						bzero(_buf, BUFSIZ);
@@ -121,7 +121,7 @@ void Server::addNewClient(int status){
 	_fds[_nfds].fd = status;
 	_fds[_nfds].events = POLLIN;
 	cout << "New connect #" << _fds[_nfds].fd << endl;
-	send(_fds[_nfds].fd, WELCOME, 25, 0);
+	//send(_fds[_nfds].fd, WELCOME, 25, 0);
 	_nfds++;
 }
 
@@ -143,7 +143,6 @@ void Server::messageHandler(int i) {
 		cout << "Message partially sent to client socket " << this->_fds[i].fd << ": " << this->_bytes_sent << endl;
 	}
 }
-
 
 void Server::parseCommand() {
 	size_t pos = this->_command_received.find_first_of(" ");

@@ -14,16 +14,14 @@
 #include "ACommand.hpp"
 #include "Cap.hpp"
 #include "Nick.hpp"
+#include "Ping.hpp"
 #include "User.hpp"
-
-#define CAP "CAP"
-#define NICK "NICK"
-#define USER "USER"
 
 using std::cout;
 using std::endl;
 using std::istringstream;
 using std::map;
+using std::pair;
 using std::string;
 using std::list;
 
@@ -38,6 +36,7 @@ class CommandHandler {
 		// Getters & Setters
 
 		// Methods
+		void initializeCommandCaller();
 		void commandTokenizer(Server *server);
 		string sendResponse(Server *server);
 
