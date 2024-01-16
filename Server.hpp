@@ -12,11 +12,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-//poll test
-#include <sys/poll.h>
 #include <vector>
 
 
@@ -32,6 +31,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
+class CommandHandler;
 
 class Server {
 	public:
@@ -86,5 +86,7 @@ class Server {
 		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
 		nfds_t _nfds;
 };
+
+#include "CommandHandler.hpp"
 
 #endif

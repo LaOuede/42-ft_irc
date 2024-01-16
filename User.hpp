@@ -11,6 +11,8 @@ using std::cout;
 using std::endl;
 using std::string;
 
+class Server;
+
 class User : public ACommand {
 	public:
 		// Construtors & Destructors
@@ -18,7 +20,7 @@ class User : public ACommand {
 		virtual ~User();
 
 		// Methods
-		string executeCommand();
+		string executeCommand(Server *server);
 
 	private:
 		// Attributes
