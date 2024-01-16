@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <map>
+#include <cctype>
 //poll test
 #include <sys/poll.h>
 #include <vector>
@@ -55,7 +56,7 @@ class Server {
 		string const &get_command_received() const;
 		map <int, clientInfo> &get_userDB();
 		map <int, clientInfo> set_userDB(map <int, clientInfo> userDB);
-		nfds_t &get_nfds();
+		uint32_t &get_client_index();
 
 		// Methods
 		void createSocket();
@@ -66,7 +67,7 @@ class Server {
 		void initPollfd();
 		void acceptConnection();
 		void addNewClient(int status);
-		void messageHandler(int i);
+		void messageHandler();
 		void parseCommand();
 
 		// Exceptions
@@ -83,6 +84,7 @@ class Server {
 		int 					_reuse;
 		int 					_socket_fd;
 		int 					_client_fd;
+		uint32_t 				_client_index;
 		struct sockaddr_in 		_sa;
 		struct sockadr_storage 	*_client_addr;
 		socklen_t 				_addr_size;

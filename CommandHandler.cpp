@@ -28,7 +28,7 @@ CommandHandler::~CommandHandler() {
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-string CommandHandler::sendResponse( Server *server) {
+string CommandHandler::sendResponse(Server *server) {
 	map<string, ACommand *>::iterator it;
 
 	it = this->_command_caller.find( server->get_command_received() ) ;
