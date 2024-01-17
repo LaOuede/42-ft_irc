@@ -23,7 +23,6 @@
 #include <sys/poll.h>
 #include <vector>
 
-
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 10
@@ -40,6 +39,7 @@ using std::map;
 struct	clientInfo {
 	string	_nickname;
 	string	_username;
+	string	_realname;
 };
 
 class CommandHandler;

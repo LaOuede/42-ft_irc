@@ -89,6 +89,11 @@ void Server::socketListening() {
 		listenFailureException();
 	}
 	cout << "Listening on port: " << this->_port << endl;
+	cout << endl;
+	cout << endl;
+	cout << "To connect to the server, use the following commands:" << endl;
+	cout << "/server add IRCserv host.docker.internal/6667 -notls" << endl;
+	cout << "/connect IRCserv" << endl;
 }
 
 void Server::serverRoutine(){

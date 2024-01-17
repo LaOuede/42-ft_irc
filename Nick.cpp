@@ -3,9 +3,9 @@
 #include "CommandHandler.hpp"
 
 //NICKNAME
-// #define ERR_NONICKNAMEGIVEN(hostname) ":" + hostname + " 431 nonick :No nickname given\r\n"
-#define ERR_ERRONEUSNICKNAME(hostname) ":" + hostname + " 432 * :Erroneus nickname\r\n"
-#define ERR_NICKNAMEINUSE(hostname) ":" + hostname + " 433 * :Nickname is already in use\r\n"
+#define ERR_NONICKNAMEGIVEN "431 nonick :No nickname given\r\n"
+#define ERR_ERRONEUSNICKNAME(nickname) "432 '" + nickname + "' :Erroneus nickname\r\n"
+#define ERR_NICKNAMEINUSE(nickname) " 433 '" + nickname + "' :Nickname is already in use\r\n"
 #define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
 
 
@@ -36,10 +36,12 @@ string Nick::executeCommand(Server *server) {
 	string &username = server->get_userDB()[server->get_client_index()]._username;
 	string &current_nickname = server->get_userDB()[server->get_client_index()]._nickname;
 
+	if (nickname_token.empty())
+		return (ERR_NONICKNAMEGIVEN);
 	if (!isNickValid(nickname_token))
-		return (ERR_ERRONEUSNICKNAME(hostname));
+		return (ERR_ERRONEUSNICKNAME(nickname_token));
 	if (isNickInUse(nickname_token, server)) {
-		return (ERR_NICKNAMEINUSE(hostname));
+		return (ERR_NICKNAMEINUSE(nickname_token));
 	}
 	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
 		current_nickname = nickname_token;
