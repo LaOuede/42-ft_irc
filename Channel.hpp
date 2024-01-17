@@ -23,9 +23,11 @@ class Channel {
 		~Channel();
 
 		// Getters & Setters
+		string const &getChannelName() const;
+		int const &getUsersNb() const;
+		int const &getOperatorsNb() const;
 
 		// Methods
-		string channelCreation( Server *server);
 
 		// Exceptions
 
@@ -33,9 +35,9 @@ class Channel {
 		// Attributes
 		int					_nb_users;
 		int					_nb_operators;
+		string				_channel_name;
 		map<int, string>	_users_list;
 		map<int, string>	_operators_list;
-
 };
 
 #include "Server.hpp"
