@@ -98,8 +98,8 @@ void Server::serverRoutine(){
 			for(this->_client_index = 0; this->_client_index < this->_nfds; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
-				}else if(_fds[i].revents & POLLIN){
-					receiver(i);
+				}else if(_fds[this->_client_index].revents & POLLIN){
+					receiver();
 				}
 			}
 		}
@@ -140,16 +140,16 @@ void Server::addNewClient(int status){
 	_nfds++;
 }
 
-void Server::receiver(int i){
-	getBuffer(i);
-	processRequests(i);
+void Server::receiver(){
+	getBuffer();
+	processRequests();
 }
 
-void Server::getBuffer(int i){
+void Server::getBuffer(){
 	int bytes = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
-		bytes = recv(_fds[i].fd, _buf, BUFFERSIZE, 0);
+		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
 		if(bytes != -1)
 			_buffer.append(_buf, BUFFERSIZE);
 		else
@@ -157,11 +157,11 @@ void Server::getBuffer(int i){
 	}
 }
 
-void Server::processRequests(int i){
+void Server::processRequests(){
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	while(_buffer.empty() == false){
 		splitBuffer();
-		messageHandler(i);
+		messageHandler();
 		_command_received.clear();
 	}
 }
@@ -191,19 +191,19 @@ void Server::trimBuffer(size_t pos){
 void Server::messageHandler() {
 	string response;
 
-	cout << "Message received from client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->get_client_index()].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->get_client_index()].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
 }
 
@@ -216,7 +216,6 @@ void Server::parseCommand() {
 		cout << "Command received: " << this->_command_received << endl;
 	}
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */

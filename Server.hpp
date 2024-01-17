@@ -74,12 +74,13 @@ class Server {
 		void messageHandler();
 		void parseCommand();
 
-		void receiver(int i);
-		void getBuffer(int i);
-		void processRequests(int i);
+		void receiver();
+		void getBuffer();
+		void processRequests();
 		void splitBuffer();
 		void buildCommandReceived(size_t pos);
 		void trimBuffer(size_t pos);
+		
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
@@ -104,13 +105,11 @@ class Server {
 		int 					_port;
 		string 					_password;
 		CommandHandler 			_command_handler;
-		string _buff;
+		string _buffer;
 		string 					_command_received;
 		string					_hostname;
 
 		map<int, clientInfo> 	_userDB;
-
-		//TODO poll testing
 		struct pollfd 			_fds[MAXCLIENT + 1]; // +1 for the socket_fd
 		nfds_t 					_nfds;
 
