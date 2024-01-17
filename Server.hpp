@@ -25,14 +25,10 @@
 #include <sys/poll.h>
 #include <vector>
 
-
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 2
 #define BUFFERSIZE 5
-
-
-#define WELCOME "001 user Welcome !\r\n"
 
 using std::cout;
 using std::endl;
@@ -42,6 +38,7 @@ using std::map;
 struct	clientInfo {
 	string	_nickname;
 	string	_username;
+	string	_realname;
 };
 
 class CommandHandler;

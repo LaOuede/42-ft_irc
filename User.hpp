@@ -21,6 +21,12 @@ class User : public ACommand {
 
 		// Methods
 		string executeCommand(Server *server);
+		bool isUserInUse(string username, Server *server);
+		bool isValidChar(string username);
+		bool usernameTooLong(string username);
+		string parseUsername(string username, Server *server);
+		string defaultUser(string &username, string &realname);
+		string timestamp();
 
 	private:
 		// Attributes
