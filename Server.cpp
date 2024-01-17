@@ -101,7 +101,6 @@ void Server::serverRoutine(){
 				}else if(_fds[this->_client_index].revents & POLLIN){
 					receiver();
 				}
-				cout << "1" << endl;
 			}
 		}
 		// only for visualition of the fd
@@ -165,7 +164,7 @@ int Server::getBuffer(){
 }
 
 int Server::closeConnection(){
-	cout << "closing connection" << endl;
+	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
 	_fds[_client_index].fd = -1;
 	_nfds--;
