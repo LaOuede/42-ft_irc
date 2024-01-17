@@ -99,12 +99,7 @@ void Server::serverRoutine(){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
 				}else if(_fds[this->_client_index].revents & POLLIN){
-					if(receiver(this->_client_index) != -1){
-						cout << "sent from connection #" << _fds[this->_client_index].fd << ": " << _command_received;
-						messageHandler();
-						_command_received.clear();
-					}else
-						recvFailureException();
+					receiver();
 				}
 			}
 		}
@@ -139,56 +134,76 @@ void Server::acceptConnection() {
 }
 
 void Server::addNewClient(int status){
-	this->_fds[_nfds].fd = status;
-	this->_fds[_nfds].events = POLLIN;
-	cout << "New connect #" << this->_fds[this->_nfds].fd << endl;
-	// send(_fds[_nfds].fd, WELCOME, 25, 0);
-	this->_nfds++;
+	_fds[_nfds].fd = status;
+	_fds[_nfds].events = POLLIN;
+	cout << "New connect #" << _fds[_nfds].fd << endl;
+	_nfds++;
 }
 
-int Server::receiver(int i)
-{
+void Server::receiver(){
+	getBuffer();
+	processRequests();
+}
+
+void Server::getBuffer(){
+	int bytes = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
-		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
-			if(builtCommandString())
-				break;
-		}else
-			return -1;
+		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
+		if(bytes != -1)
+			_buffer.append(_buf, BUFFERSIZE);
+		else
+			break;
 	}
-	return 0;
 }
 
-int Server::builtCommandString(){
-	size_t pos = 0;
-	// string temp;
-	_command_received.append(_buf, BUFFERSIZE);
-	pos = _command_received.find("\n");
-	if(pos != std::string::npos){
-		// if(pos + 1 != std::string::npos) //TODO trouver un moyen de tester
-		// 	temp = _command_received.substr(pos + 1);
-		_command_received.assign(_command_received.substr(0, pos + 1));
-		return 1;
+void Server::processRequests(){
+	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
+	while(_buffer.empty() == false){
+		splitBuffer();
+		messageHandler();
+		_command_received.clear();
 	}
-	return 0;
+}
+
+void Server::splitBuffer(){
+	size_t pos = 0;
+	pos = _buffer.find("\n");
+	buildCommandReceived(pos);
+	trimBuffer(pos);
+}
+
+void Server::buildCommandReceived(size_t pos){
+	
+	if(pos != std::string::npos)
+		_command_received.assign(_buffer.substr(0, pos));
+	if(_command_received.find("\r") != string::npos)
+		_command_received.pop_back();
+}
+
+void Server::trimBuffer(size_t pos){
+	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
+		_buffer.assign(_buffer.substr(pos + 1));
+	else
+		_buffer.clear();
 }
 
 void Server::messageHandler() {
 	string response;
 
-	cout << "Message received from client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->get_client_index()].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->get_client_index()].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
 }
 
@@ -201,7 +216,6 @@ void Server::parseCommand() {
 		cout << "Command received: " << this->_command_received << endl;
 	}
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
