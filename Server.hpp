@@ -75,8 +75,8 @@ class Server {
 		void messageHandler();
 		void parseCommand();
 
-		int receiver(int i);
-		int builtCommandString(char *buffer);
+		void receiver(int i);
+		void buildCommandReceived();
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
