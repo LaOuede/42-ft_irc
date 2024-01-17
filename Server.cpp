@@ -7,7 +7,7 @@
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_fd(0), _nfds(0) {
+	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0) {
 	_port = atoi(port.c_str());
 	_password = password;
 	cout << "Server constructor call" << endl;
@@ -33,6 +33,26 @@ string const &Server::get_command_received() const {
 	return this->_command_received;
 }
 
+map <int, clientInfo> &Server::get_userDB() {
+	return this->_userDB;
+}
+
+map <int, clientInfo> Server::set_userDB(map <int, clientInfo> userDB) {
+	this->_userDB = userDB;
+	return this->_userDB;
+}
+
+uint32_t &Server::get_client_index() {
+	return this->_client_index;
+}
+
+CommandHandler &Server::get_command_handler() {
+	return this->_command_handler;
+}
+
+string &Server::get_hostname() {
+	return this->_hostname;
+}
 
 /* ************************************************************************** */
 /* Functions                                                                  */
@@ -59,6 +79,9 @@ void Server::bindSocket() {
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
 	cout << "Bound socket to localhost port: " << this->_port << endl;
+	char hostname[1024];
+	gethostname(hostname, 1024);
+	_hostname = static_cast<string>(hostname);
 }
 
 void Server::socketListening() {
@@ -71,14 +94,14 @@ void Server::socketListening() {
 void Server::serverRoutine(){
 	initPollfd();
 	while(1){
-		if(poll(_fds, _nfds, 100) == 1){
-			for(uint32_t i = 0; i < _nfds; i++){
-				if(i == 0 && _fds[i].revents & POLLIN){
+		if(poll(this->_fds, this->_nfds, 100) == 1){
+			for(this->_client_index = 0; this->_client_index < this->_nfds; this->_client_index++){
+				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
-				}else if(_fds[i].revents & POLLIN){
-					if(receiver(i) != -1){
-						cout << "sent from connection #" << _fds[i].fd << ": " << _command_received;
-						messageHandler(i);
+				}else if(_fds[this->_client_index].revents & POLLIN){
+					if(receiver(this->_client_index) != -1){
+						cout << "sent from connection #" << _fds[this->_client_index].fd << ": " << _command_received;
+						messageHandler();
 						_command_received.clear();
 					}else
 						recvFailureException();
@@ -93,18 +116,18 @@ void Server::serverRoutine(){
 }
 
 void Server::initPollfd(){
-	_fds[0].fd = _socket_fd;
-	_fds[0].events = POLLIN;
-	_nfds++;
+	this->_fds[0].fd = this->_socket_fd;
+	this->_fds[0].events = POLLIN;
+	this->_nfds++;
 	for(int i = 1; i < MAXCLIENT + 1; i++)
-		_fds[i].fd = -1;
+		this->_fds[i].fd = -1;
 }
 
 void Server::acceptConnection() {
 	int status = accept(this->_socket_fd, 0, 0);
 	if(status != -1){
 		// besoin d'un recv pour save les info NICK/USER
-		if(_nfds < MAXCLIENT + 1){
+		if(this->_nfds < MAXCLIENT + 1){
 			addNewClient(status);
 		}else{
 			//marche pas full bien
@@ -116,11 +139,11 @@ void Server::acceptConnection() {
 }
 
 void Server::addNewClient(int status){
-	_fds[_nfds].fd = status;
-	_fds[_nfds].events = POLLIN;
-	cout << "New connect #" << _fds[_nfds].fd << endl;
-	//send(_fds[_nfds].fd, WELCOME, 25, 0);
-	_nfds++;
+	this->_fds[_nfds].fd = status;
+	this->_fds[_nfds].events = POLLIN;
+	cout << "New connect #" << this->_fds[this->_nfds].fd << endl;
+	// send(_fds[_nfds].fd, WELCOME, 25, 0);
+	this->_nfds++;
 }
 
 int Server::receiver(int i)
@@ -150,22 +173,32 @@ int Server::builtCommandString(){
 	return 0;
 }
 
-void Server::messageHandler(int i) {
+void Server::messageHandler() {
 	string response;
 
-	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[i].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(this->_fds[this->get_client_index()].fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[i].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << this->_fds[this->get_client_index()].fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[i].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_bytes_sent << endl;
+	}
+}
+
+void Server::parseCommand() {
+	size_t pos = this->_command_received.find_first_of(" ");
+	if (pos == string::npos) {
+		cout << "Command received: " << this->_command_received << endl;
+	} else {
+		this->_command_received = this->_command_received.substr(0, pos);
+		cout << "Command received: " << this->_command_received << endl;
 	}
 }
 

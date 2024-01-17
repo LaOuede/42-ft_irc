@@ -1,8 +1,11 @@
+
+
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
 #pragma once
 
+#include "ACommand.hpp"
 #include "CommandHandler.hpp"
 #include <exception>
 #include <fcntl.h>
@@ -16,6 +19,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <map>
+#include <cctype>
+//poll test
+#include <sys/poll.h>
 #include <vector>
 
 
@@ -30,6 +37,12 @@
 using std::cout;
 using std::endl;
 using std::string;
+using std::map;
+
+struct	clientInfo {
+	string	_nickname;
+	string	_username;
+};
 
 class CommandHandler;
 
@@ -44,6 +57,11 @@ class Server {
 		int &get_client_fd();
 		int &get_socket_fd();
 		string const &get_command_received() const;
+		map <int, clientInfo> &get_userDB();
+		map <int, clientInfo> set_userDB(map <int, clientInfo> userDB);
+		uint32_t &get_client_index();
+		CommandHandler &get_command_handler();
+		string &get_hostname();
 
 		// Methods
 		void createSocket();
@@ -54,7 +72,7 @@ class Server {
 		void initPollfd();
 		void acceptConnection();
 		void addNewClient(int status);
-		void messageHandler(int i);
+		void messageHandler();
 		void parseCommand();
 
 		int receiver(int i);
@@ -70,21 +88,29 @@ class Server {
 
 	private:
 		// Attributes
-		int _reuse;
-		int _socket_fd;
-		int _client_fd;
-		struct sockaddr_in _sa;
-		struct sockadr_storage *_client_addr;
-		socklen_t _addr_size;
-		char _buf[BUFFERSIZE];
-		int _bytes_read;
-		int _bytes_sent;
-		int _port;
-		string _password;
-		CommandHandler _command_handler;
-		string _command_received;
-		struct pollfd _fds[MAXCLIENT + 1]; // +1 for the socket_fd
-		nfds_t _nfds;
+		int 					_reuse;
+		int 					_socket_fd;
+		int 					_client_fd;
+		uint32_t 				_client_index;
+		struct sockaddr_in 		_sa;
+		struct sockadr_storage 	*_client_addr;
+		socklen_t 				_addr_size;
+		char 					_buf[BUFFERSIZE];
+		int 					_bytes_read;
+		int 					_bytes_sent;
+		int 					_port;
+		string 					_password;
+		CommandHandler 			_command_handler;
+		string 					_command_received;
+		string					_hostname;
+
+		map<int, clientInfo> 	_userDB;
+
+		//TODO poll testing
+		struct pollfd 			_fds[MAXCLIENT + 1]; // +1 for the socket_fd
+		nfds_t 					_nfds;
+
+
 };
 
 #include "CommandHandler.hpp"

@@ -6,6 +6,7 @@
 # include <iostream>
 # include <string>
 
+
 using std::cout;
 using std::endl;
 using std::string;
@@ -22,7 +23,7 @@ class ACommand {
 		string const &getCommandName() const;
 
 		// Methods
-		virtual string executeCommand(Server *Server) = 0;
+		virtual string executeCommand(Server *server) = 0;
 
 		// Exceptions
 
