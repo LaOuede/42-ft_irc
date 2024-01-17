@@ -13,6 +13,7 @@
 
 #include "ACommand.hpp"
 #include "Cap.hpp"
+#include "Join.hpp"
 #include "Nick.hpp"
 #include "User.hpp"
 #include "Ping.hpp"
