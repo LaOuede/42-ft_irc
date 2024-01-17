@@ -126,16 +126,18 @@ int Server::receiver(int i)
 {
 	size_t pos = 0;
 	int bytes = 0;
+	(void) i;
 	char buffer[BUFFERSIZE];
+	// char test[] = "allo\nbonjour\n";
 
 	while(1){
+		if(!_buff.empty()){}
 		bzero(buffer, BUFFERSIZE);
 		bytes = recv(_fds[i].fd, buffer, BUFFERSIZE, 0);
 		// cout << "bytes " << bytes << endl;
 		if(bytes != -1){
 			_buff.append(buffer, BUFFERSIZE);
-			// (void) buffer;
-			// char test[] = "allo\nbonjour\n";
+		}else{
 			pos = _buff.find("\n");
 			if(pos != std::string::npos){
 				_command_received.assign(_buff.substr(0, pos + 1));
@@ -149,8 +151,7 @@ int Server::receiver(int i)
 				cout << "buff "<< _buff << endl;
 				break;
 			}
-		}else
-			return -1;
+		}
 	}
 	return 0;
 }
