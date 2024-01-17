@@ -75,12 +75,20 @@ void Server::serverRoutine(){
 				if(i == 0 && _fds[i].revents & POLLIN){
 					acceptConnection();
 				}else if(_fds[i].revents & POLLIN){
-					if(receiver(i) != -1){
+						// if(_buffer.empty() == true)
+					receiver(i);
+					_buffer.assign("NICK\r\nNICK\r\n");
+					while(_buffer.empty() == false){
+						buildCommandReceived();
 						cout << "sent from connection #" << _fds[i].fd << ": " << _command_received;
 						messageHandler(i);
 						_command_received.clear();
-					}else
-						recvFailureException();
+						cout << "2" << endl;
+						sleep(1);
+					}
+					_command_received.clear();
+					cout << "1" << endl;
+					sleep(1);
 				}
 			}
 		}
@@ -122,60 +130,38 @@ void Server::addNewClient(int status){
 	_nfds++;
 }
 
-int Server::receiver(int i)
+void Server::receiver(int i)
 {
-	size_t pos = 0;
 	int bytes = 0;
-	(void) i;
-	char buffer[BUFFERSIZE];
 	// char test[] = "allo\nbonjour\n";
 
 	while(1){
-		if(!_buff.empty()){}
-		bzero(buffer, BUFFERSIZE);
-		bytes = recv(_fds[i].fd, buffer, BUFFERSIZE, 0);
-		// cout << "bytes " << bytes << endl;
-		if(bytes != -1){
-			_buff.append(buffer, BUFFERSIZE);
-		}else{
-			pos = _buff.find("\n");
-			if(pos != std::string::npos){
-				_command_received.assign(_buff.substr(0, pos + 1));
-				if(_buff.size() != _command_received.size())
-					_buff.assign(_buff.substr(pos + 1));
-				else{
-					cout << "clear" << endl;
-					_buff.clear();
-				}
-				cout << "_command_received " << _command_received << endl;
-				cout << "buff "<< _buff << endl;
-				break;
-			}
-		}
+		bzero(_buf, BUFFERSIZE);
+		bytes = recv(_fds[i].fd, _buf, BUFFERSIZE, 0);
+		cout << "bytes " << bytes << endl;
+		if(bytes != -1)
+			_buffer.append(_buf, BUFFERSIZE);
+		else
+			break;
+		sleep(1);
 	}
-	return 0;
 }
 
-int Server::builtCommandString(char *buffer){
+void Server::buildCommandReceived(){
 	size_t pos = 0;
-	// (void) buffer;
-	// char test[] = "allo\nbonjour\n";
-	_buff.append(buffer, BUFFERSIZE);
-	pos = _buff.find("\n");
-	if(pos != std::string::npos){
-		_command_received.assign(_buff.substr(0, pos + 1));
-		if(_buff.size() != _command_received.size())
-			_buff.assign(_buff.substr(pos + 1));
-		else{
-			cout << "clear" << endl;
-			_buff.clear();
-		}
-		
-		cout << "_command_received " << _command_received << endl;
-		cout << "buff "<< _buff << endl;
-		return 1;
+	pos = _buffer.find("\n");
+	if(pos != std::string::npos)
+		_command_received.assign(_buffer.substr(0, pos));
+	if(_command_received.find("\r") != string::npos)
+		_command_received.pop_back();
+	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
+		_buffer.assign(_buffer.substr(pos + 1));
+	else{
+		cout << "clear" << endl;
+		_buffer.clear();
 	}
-	return 0;
+	cout << "_command_received " << _command_received << endl;
+	cout << "buff "<< _buffer << endl;
 }
 
 void Server::messageHandler(int i) {
