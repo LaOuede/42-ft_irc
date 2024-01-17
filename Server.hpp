@@ -28,9 +28,8 @@
 
 #define PORT 6667
 #define BACKLOG 20
-#define MAXCLIENT 2
-#define BUFFERSIZE 5
-
+#define MAXCLIENT 10
+#define BUFFERSIZE 512
 
 #define WELCOME "001 user Welcome !\r\n"
 
@@ -76,7 +75,11 @@ class Server {
 		void parseCommand();
 
 		void receiver(int i);
-		void buildCommandReceived();
+		void getBuffer(int i);
+		void processRequests(int i);
+		void splitBuffer();
+		void buildCommandReceived(size_t pos);
+		void trimBuffer(size_t pos);
 		// Exceptions
 		std::exception socketFailureException();
 		std::exception bindFailureException();
