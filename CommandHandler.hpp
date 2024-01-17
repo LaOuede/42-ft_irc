@@ -33,6 +33,7 @@ class CommandHandler {
 		~CommandHandler();
 
 		// Getters & Setters
+		list<string> &get_command_tokens();
 
 		// Methods
 		void initializeCommandCaller();

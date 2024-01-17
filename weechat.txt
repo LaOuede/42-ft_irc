@@ -1,0 +1,1 @@
+/server add test host.docker.internal/6667 -notls

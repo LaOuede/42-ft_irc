@@ -22,6 +22,9 @@ CommandHandler::~CommandHandler() {
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
 
+list<string> &CommandHandler::get_command_tokens() {
+	return this->_command_tokens;
+}
 
 
 /* ************************************************************************** */
@@ -66,7 +69,7 @@ string CommandHandler::sendResponse(Server *server) {
 		}
 	}
 	this->_command_tokens.clear();
-	return ("421 PRIVMSG :421 PRIVMSG :Command not found\n");
+	return ("421 PRIVMSG :Command not found\n");
 }
 
 

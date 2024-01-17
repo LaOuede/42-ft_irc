@@ -1,16 +1,18 @@
 #include "Nick.hpp"
 #include "Server.hpp"
+#include "CommandHandler.hpp"
 
 //NICKNAME
-#define ERR_NONICKNAMEGIVEN "431 :No nickname given\r\n"
-#define ERR_ERRONEUSNICKNAME(arg) "432 " + arg + " :Erroneus nickname\r\n"
-#define ERR_NICKNAMEINUSE(arg) "433 " + arg + " :Nickname is already in use\r\n"
-#define NEWNICK(arg) "Requesting the new nick \"" + arg + "\"\r\n"
-#define CHANGINGNICK(oldarg, newarg) oldarg + " changed is nickname to " + newarg + "\r\n"
+// #define ERR_NONICKNAMEGIVEN(hostname) ":" + hostname + " 431 nonick :No nickname given\r\n"
+#define ERR_ERRONEUSNICKNAME(hostname) ":" + hostname + " 432 * :Erroneus nickname\r\n"
+#define ERR_NICKNAMEINUSE(hostname) ":" + hostname + " 433 * :Nickname is already in use\r\n"
+#define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
+
 Nick::Nick() : ACommand("NICK") {}
 
 Nick::~Nick() {}
@@ -27,29 +29,25 @@ string Nick::getCommandArgs() {
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
+
 string Nick::executeCommand(Server *server) {
-	cout << this->getCommandName() << endl;
+	string &nickname_token = *server->get_command_handler().get_command_tokens().begin();
+	string &hostname = server->get_hostname();
+	string &username = server->get_userDB()[server->get_client_index()]._username;
+	string &current_nickname = server->get_userDB()[server->get_client_index()]._nickname;
 
-
-	// regarder s'il y a plus d'une commande
-	
-	if (this->getCommandArgs().empty())
-		return (ERR_NONICKNAMEGIVEN);
-	if (!isNickValid(this->getCommandArgs()))
-		return (ERR_ERRONEUSNICKNAME(this->getCommandArgs()));
-	if (!isNickInUse(this->getCommandArgs(), server) && !server->get_userDB()[server->get_client_index()]._username.empty()) {
-		return (ERR_NICKNAMEINUSE(this->getCommandArgs()));
+	if (!isNickValid(nickname_token))
+		return (ERR_ERRONEUSNICKNAME(hostname));
+	if (isNickInUse(nickname_token, server)) {
+		return (ERR_NICKNAMEINUSE(hostname));
 	}
-	else if (!isNickInUse(this->getCommandArgs(), server) && (server->get_userDB()[server->get_client_index()]._username.empty())) {
-		server->get_userDB()[server->get_client_index()]._nickname = this->getCommandArgs();
-		return (NEWNICK(this->getCommandArgs()));
+	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
+		current_nickname = nickname_token;
+		return ("\r\n");
 	}
-	else if (isNickInUse(this->getCommandArgs(), server) && !server->get_userDB()[server->get_client_index()]._username.empty()) {
-		string old_nickname = server->get_userDB()[server->get_client_index()]._nickname;
-		server->get_userDB()[server->get_client_index()]._nickname = this->getCommandArgs();
-		return (CHANGINGNICK(old_nickname, this->getCommandArgs())); //revoir le message
-	}
-	return ("001 user Welcome from CAP\r\n"); // pas bon
+	string old_nickname = current_nickname;
+	current_nickname = nickname_token;
+	return (CHANGINGNICK(old_nickname, username, hostname, nickname_token));
 }
 
 bool Nick::isNickInUse(string nickname, Server *server) {

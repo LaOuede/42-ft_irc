@@ -60,6 +60,8 @@ class Server {
 		map <int, clientInfo> &get_userDB();
 		map <int, clientInfo> set_userDB(map <int, clientInfo> userDB);
 		uint32_t &get_client_index();
+		CommandHandler &get_command_handler();
+		string &get_hostname();
 
 		// Methods
 		void createSocket();
@@ -100,6 +102,7 @@ class Server {
 		string 					_password;
 		CommandHandler 			_command_handler;
 		string 					_command_received;
+		string					_hostname;
 
 		map<int, clientInfo> 	_userDB;
 

@@ -46,6 +46,14 @@ uint32_t &Server::get_client_index() {
 	return this->_client_index;
 }
 
+CommandHandler &Server::get_command_handler() {
+	return this->_command_handler;
+}
+
+string &Server::get_hostname() {
+	return this->_hostname;
+}
+
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
@@ -71,6 +79,9 @@ void Server::bindSocket() {
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
 	cout << "Bound socket to localhost port: " << this->_port << endl;
+	char hostname[1024];
+	gethostname(hostname, 1024);
+	_hostname = static_cast<string>(hostname);
 }
 
 void Server::socketListening() {
@@ -162,48 +173,22 @@ int Server::builtCommandString(){
 	return 0;
 }
 
-int Server::receiver(int i)
-{
-	while(1){
-		bzero(_buf, BUFFERSIZE);
-		if(recv(_fds[i].fd, this->_buf, BUFFERSIZE, 0) != -1){
-			if(builtCommandString())
-				break;
-		}else
-			return -1;
-	}
-	return 0;
-}
-
-int Server::builtCommandString(){
-	size_t pos = 0;
-	// string temp;
-	_command_received.append(_buf, BUFFERSIZE);
-	pos = _command_received.find("\n");
-	if(pos != std::string::npos){
-		// if(pos + 1 != std::string::npos) //TODO trouver un moyen de tester
-		// 	temp = _command_received.substr(pos + 1);
-		_command_received.assign(_command_received.substr(0, pos + 1));
-		return 1;
-	}
-	return 0;
-}
-
 void Server::messageHandler() {
 	string response;
-	this->_buf[this->_bytes_read] = '\0';
-	cout << "Message received from client socket " << this->_fds[i].fd << ": " << this->_command_received << endl;
+
+	cout << "Message received from client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_command_received << endl;
+	this->_command_handler.commandTokenizer( this );
 	parseCommand();
-	response = this->_command_handler.sendResponse(this);
+	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(this->_fds[this->get_client_index()].fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << this->_fds[this->get_client_index()].fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_bytes_sent << endl;
 	}
 }
 
