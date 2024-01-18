@@ -45,6 +45,7 @@ string Join::executeCommand(Server *server) {
 	createChannelsMap();
 	// 3. Process connections
 	processChannelsConnections(server);
+	// 4. Clean Up
 	cleanup();
 	return ("");
 }
@@ -172,9 +173,11 @@ string Join::parseChannelNameAndKey(string name, string key) {
 	return "";
 }
 
+// 4. CLEAN UP
 void Join::cleanup() {
 	this->_channels_names.clear();
 	this->_channels_keys.clear();
+	this->_channels_map.clear();
 }
 
 
