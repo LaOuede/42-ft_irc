@@ -1,9 +1,19 @@
 #include "Server.hpp"
+#include <csignal>
+
+bool g_running = true;
 
 bool parsingPort(string port);
 bool parsingPassword(string password);
 
+static void stop(int sigHandler){
+	(void)sigHandler;
+	g_running = false;
+}
+
 int main(int argc, char **argv) {
+	signal(SIGINT, stop);
+	signal(SIGQUIT, SIG_IGN);
 	(void)argv;
 	if (argc != 3) {
 		cout << "Usage: ./ircserver <port> <password>" << endl;
@@ -31,11 +41,6 @@ int main(int argc, char **argv) {
 	{
 		std::cerr << e.what() << endl;
 	}
-
-	//closing of the server
-	cout << "Closing client socket..." << endl;
-	close(server.getClientFd());
-	cout << "Closing server socket..." << endl;
-	close(server.getSocketFd());
+	cout << endl << "Closing Server ..." << endl;
 	return 0;
 }

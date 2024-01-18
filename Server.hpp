@@ -21,6 +21,8 @@
 #include <cctype>
 #include <sys/poll.h>
 #include <vector>
+#include <csignal>
+
 
 #define PORT 6667
 #define BACKLOG 20
@@ -64,19 +66,21 @@ class Server {
 		void					bindSocket();
 		void					socketListening();
 		void					serverRoutine();
+		void					signalHandler(int sig);
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
+		void 					receiver();
+		int						getBuffer();
+		int						closeConnection();
+		void 					processRequests();
+		void 					splitBuffer();
+		void 					buildCommandReceived(size_t pos);
+		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					closeFds();
 
-		void receiver();
-		int getBuffer();
-		int closeConnection();
-		void processRequests();
-		void splitBuffer();
-		void buildCommandReceived(size_t pos);
-		void trimBuffer(size_t pos);
 		
 		// Exceptions
 		std::exception			socketFailureException();
@@ -109,8 +113,7 @@ class Server {
 		map<int, clientInfo> 	_userDB;
 		struct pollfd 			_fds[MAXFDS];
 		nfds_t 					_nfds;
-
-
+		bool					_running;
 };
 
 #include "CommandHandler.hpp"
