@@ -7,11 +7,6 @@
 #define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
 
 /* ************************************************************************** */
-/* Defines                                                                    */
-/* ************************************************************************** */
-#define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
-
-/* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
 CommandHandler::CommandHandler() {
@@ -58,16 +53,12 @@ void CommandHandler::commandTokenizer(Server *server) {
 
 	// DEBUG PRINT LIST
 	cout << "--- Elements in list: ---" << endl;
-	cout << "--- Elements in list: ---" << endl;
 	list<string>::const_iterator it;
-	int index = -1;
 	int index = -1;
 	it = this->_command_tokens.begin();
 	for (; it != this->_command_tokens.end(); ++it) {
 		std::cout << "index " << ++index << " :" << *it << std::endl;
-		std::cout << "index " << ++index << " :" << *it << std::endl;
 	}
-	cout << "\n" << endl;
 	cout << "\n" << endl;
 }
 
@@ -75,7 +66,6 @@ string CommandHandler::sendResponse(Server *server) {
 	map<string, ACommand *>::iterator it;
 	string response;
 	string command = this->_command_tokens.front();
-
 	string &hostname = server->getHostname();
 	string &nickname = server->getUserDB()[server->getClientIndex()]._nickname;
 
