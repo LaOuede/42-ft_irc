@@ -21,9 +21,6 @@ class Nick : public ACommand {
 		Nick();
 		virtual ~Nick();
 
-		// Getters & Setters
-		string getCommandArgs();
-
 		// Methods
 		string executeCommand(Server *server);
 		bool isNickInUse(string nickname, Server *server);
@@ -31,9 +28,6 @@ class Nick : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
-		string _command_args;
-		string _nickname;
 
 };
 

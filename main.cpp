@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
 
 	//closing of the server
 	cout << "Closing client socket..." << endl;
-	close(server.get_client_fd());
+	close(server.getClientFd());
 	cout << "Closing server socket..." << endl;
-	close(server.get_socket_fd());
+	close(server.getSocketFd());
 	return 0;
 }

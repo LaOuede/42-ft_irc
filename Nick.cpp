@@ -2,12 +2,13 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
-//NICKNAME
-// #define ERR_NONICKNAMEGIVEN(hostname) ":" + hostname + " 431 nonick :No nickname given\r\n"
-#define ERR_ERRONEUSNICKNAME(hostname) ":" + hostname + " 432 * :Erroneus nickname\r\n"
-#define ERR_NICKNAMEINUSE(hostname) ":" + hostname + " 433 * :Nickname is already in use\r\n"
+/* ************************************************************************** */
+/* Defines                                                                    */
+/* ************************************************************************** */
+#define ERR_NONICKNAMEGIVEN "431 nonick :No nickname given\r\n"
+#define ERR_ERRONEUSNICKNAME(nickname) "432 '" + nickname + "' :Erroneus nickname\r\n"
+#define ERR_NICKNAMEINUSE(nickname) " 433 '" + nickname + "' :Nickname is already in use\r\n"
 #define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
-
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -17,29 +18,23 @@ Nick::Nick() : ACommand("NICK") {}
 
 Nick::~Nick() {}
 
-
-/* ************************************************************************** */
-/* Getters & Setters                                                          */
-/* ************************************************************************** */
-
-string Nick::getCommandArgs() {
-	return this->_command_args;
-}
-
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
 
 string Nick::executeCommand(Server *server) {
-	string &nickname_token = *server->get_command_handler().get_command_tokens().begin();
-	string &hostname = server->get_hostname();
-	string &username = server->get_userDB()[server->get_client_index()]._username;
-	string &current_nickname = server->get_userDB()[server->get_client_index()]._nickname;
+	int		&fd = server->getFds()[server->getClientIndex()].fd;
+	string	&nickname_token = *server->getCommandHandler().getCommandTokens().begin();
+	string	&hostname = server->getHostname();
+	string	&username = server->getUserDB()[fd]._username;
+	string	&current_nickname = server->getUserDB()[fd]._nickname;
 
+	if (nickname_token.empty())
+		return (ERR_NONICKNAMEGIVEN);
 	if (!isNickValid(nickname_token))
-		return (ERR_ERRONEUSNICKNAME(hostname));
+		return (ERR_ERRONEUSNICKNAME(nickname_token));
 	if (isNickInUse(nickname_token, server)) {
-		return (ERR_NICKNAMEINUSE(hostname));
+		return (ERR_NICKNAMEINUSE(nickname_token));
 	}
 	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
 		current_nickname = nickname_token;
@@ -51,7 +46,7 @@ string Nick::executeCommand(Server *server) {
 }
 
 bool Nick::isNickInUse(string nickname, Server *server) {
-	for (map<int, clientInfo>::const_iterator it = server->get_userDB().begin(); it != server->get_userDB().end(); it++)
+	for (map<int, clientInfo>::const_iterator it = server->getUserDB().begin(); it != server->getUserDB().end(); it++)
 		if (it->second._nickname == nickname)
 			return true;
 	return false;
@@ -66,7 +61,3 @@ bool Nick::isNickValid(string nickname) {
 	}
 	return true;
 }
-
-/* ************************************************************************** */
-/* Exceptions                                                                 */
-/* ************************************************************************** */

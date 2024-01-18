@@ -19,18 +19,14 @@
 #include <unistd.h>
 #include <map>
 #include <cctype>
-//poll test
 #include <sys/poll.h>
 #include <vector>
-
 
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 10
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
-
-#define WELCOME "001 user Welcome !\r\n"
 
 using std::cout;
 using std::endl;
@@ -40,6 +36,7 @@ using std::map;
 struct	clientInfo {
 	string	_nickname;
 	string	_username;
+	string	_realname;
 };
 
 class CommandHandler;
@@ -52,26 +49,26 @@ class Server {
 		~Server();
 
 		// Getters & Setters
-		int &get_client_fd();
-		int &get_socket_fd();
-		string const &get_command_received() const;
-		map <int, clientInfo> &get_userDB();
-		map <int, clientInfo> set_userDB(map <int, clientInfo> userDB);
-		uint32_t &get_client_index();
-		CommandHandler &get_command_handler();
-		string &get_hostname();
+		int						&getClientFd();
+		int						&getSocketFd();
+		string const 			&getCommandReceived() const;
+		map <int, clientInfo>	&getUserDB();
+		uint32_t				&getClientIndex();
+		CommandHandler			&getCommandHandler();
+		string					&getHostname();
+		struct pollfd			*getFds();
 
 		// Methods
-		void createSocket();
-		void setSocket();
-		void bindSocket();
-		void socketListening();
-		void serverRoutine();
-		void initPollfd();
-		void acceptConnection();
-		void addNewClient(int status);
-		void messageHandler();
-		void parseCommand();
+		void					createSocket();
+		void					setSocket();
+		void					bindSocket();
+		void					socketListening();
+		void					serverRoutine();
+		void					initPollfd();
+		void					acceptConnection();
+		void					addNewClient(int status);
+		void					messageHandler();
+		void					parseCommand();
 
 		void receiver();
 		int getBuffer();
@@ -82,13 +79,13 @@ class Server {
 		void trimBuffer(size_t pos);
 		
 		// Exceptions
-		std::exception socketFailureException();
-		std::exception bindFailureException();
-		std::exception listenFailureException();
-		std::exception acceptFailureException();
-		std::exception recvFailureException();
-		std::exception sendFailureException();
-		std::exception setsockoptFailureException();
+		std::exception			socketFailureException();
+		std::exception			bindFailureException();
+		std::exception			listenFailureException();
+		std::exception			acceptFailureException();
+		std::exception			recvFailureException();
+		std::exception			sendFailureException();
+		std::exception			setsockoptFailureException();
 
 	private:
 		// Attributes
