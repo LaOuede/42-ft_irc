@@ -212,7 +212,6 @@ void Server::messageHandler() {
 
 	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
-	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
 		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
@@ -226,6 +225,8 @@ void Server::messageHandler() {
 	}
 }
 
+
+// DEGUG - Print command name
 void Server::parseCommand() {
 	size_t pos = this->_command_received.find_first_of(" ");
 	if (pos == string::npos) {

@@ -53,7 +53,8 @@ bool Nick::isNickInUse(string nickname, Server *server) {
 }
 
 bool Nick::isNickValid(string nickname) {
-	string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\_{|}-";
+	string characters = CHARACTERS_ALLOWED;
+	
 
 	if (nickname.empty() || nickname.length() > 9
 		|| nickname.find_first_not_of(characters) != string::npos || isdigit(nickname[0])) {

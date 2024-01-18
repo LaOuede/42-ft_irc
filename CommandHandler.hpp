@@ -13,9 +13,10 @@
 
 #include "ACommand.hpp"
 #include "Cap.hpp"
+#include "Join.hpp"
 #include "Nick.hpp"
-#include "User.hpp"
 #include "Ping.hpp"
+#include "User.hpp"
 
 using std::cout;
 using std::endl;
@@ -24,6 +25,8 @@ using std::map;
 using std::pair;
 using std::string;
 using std::list;
+
+#define CHARACTERS_ALLOWED "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\_{|}-"
 
 class Server;
 
