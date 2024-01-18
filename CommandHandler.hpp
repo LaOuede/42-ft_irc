@@ -33,12 +33,12 @@ class CommandHandler {
 		~CommandHandler();
 
 		// Getters & Setters
-		list<string> &get_command_tokens();
+		list<string>	&getCommandTokens();
 
 		// Methods
-		void initializeCommandCaller();
-		void commandTokenizer(Server *server);
-		string sendResponse(Server *server);
+		void			initializeCommandCaller();
+		void			commandTokenizer(Server *server);
+		string			sendResponse(Server *server);
 
 		// Exceptions
 

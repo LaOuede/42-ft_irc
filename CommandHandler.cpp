@@ -22,7 +22,7 @@ CommandHandler::~CommandHandler() {
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
 
-list<string> &CommandHandler::get_command_tokens() {
+list<string> &CommandHandler::getCommandTokens() {
 	return this->_command_tokens;
 }
 
@@ -38,7 +38,7 @@ void CommandHandler::initializeCommandCaller() {
 
 void CommandHandler::commandTokenizer(Server *server) {
 	string token;
-	istringstream iss(server->get_command_received());
+	istringstream iss(server->getCommandReceived());
 
 	while (iss >> token) {
 		this->_command_tokens.push_back(token);

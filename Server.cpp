@@ -21,37 +21,36 @@ Server::~Server() {
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
-int &Server::get_client_fd() {
+int &Server::getClientFd() {
 	return this->_client_fd;
 }
 
-int &Server::get_socket_fd() {
+int &Server::getSocketFd() {
 	return this->_socket_fd;
 }
 
-string const &Server::get_command_received() const {
+string const &Server::getCommandReceived() const {
 	return this->_command_received;
 }
 
-map <int, clientInfo> &Server::get_userDB() {
+map <int, clientInfo> &Server::getUserDB() {
 	return this->_userDB;
 }
 
-map <int, clientInfo> Server::set_userDB(map <int, clientInfo> userDB) {
-	this->_userDB = userDB;
-	return this->_userDB;
-}
-
-uint32_t &Server::get_client_index() {
+uint32_t &Server::getClientIndex() {
 	return this->_client_index;
 }
 
-CommandHandler &Server::get_command_handler() {
+CommandHandler &Server::getCommandHandler() {
 	return this->_command_handler;
 }
 
-string &Server::get_hostname() {
+string &Server::getHostname() {
 	return this->_hostname;
+}
+
+struct pollfd *Server::getFds() {
+	return this->_fds;
 }
 
 /* ************************************************************************** */
