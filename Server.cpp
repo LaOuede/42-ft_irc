@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
+
 extern bool g_running;
 
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
@@ -234,7 +236,23 @@ void Server::messageHandler() {
 	} else {
 		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
-	//verification flag welcome si pas welcome et que nick user pass son ok welcome true
+	welcomeMessage();
+}
+
+void Server::welcomeMessage() {
+	string &hostname = this->_hostname;
+	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
+	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
+	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
+	//manque le mot de passe
+
+	if (username != "" && nickname != "" && welcomed == false) {
+		welcomed = true;
+		string response = WELCOME(hostname, nickname, username);
+		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		if (this->_bytes_sent == -1)
+			sendFailureException();
+	}
 }
 
 // DEGUG - Print command name

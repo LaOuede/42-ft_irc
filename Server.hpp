@@ -40,6 +40,7 @@ struct	clientInfo {
 	string	_nickname;
 	string	_username;
 	string	_realname;
+	bool	_welcomed;
 	int		_nb_channel;
 };
 
@@ -83,6 +84,7 @@ class Server {
 		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
 		void					sendToClient(string *response);

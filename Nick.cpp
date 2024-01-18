@@ -5,6 +5,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
+#define NICKNAMESET(nickname) "400 :Nickname set to: '" + nickname + "'\r\n"
 #define ERR_NONICKNAMEGIVEN "431 nonick :No nickname given\r\n"
 #define ERR_ERRONEUSNICKNAME(nickname) "432 '" + nickname + "' :Erroneus nickname\r\n"
 #define ERR_NICKNAMEINUSE(nickname) " 433 '" + nickname + "' :Nickname is already in use\r\n"
@@ -38,7 +39,7 @@ string Nick::executeCommand(Server *server) {
 	}
 	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
 		current_nickname = nickname_token;
-		return ("\r\n");
+		return (NICKNAMESET(nickname_token));
 	}
 	string old_nickname = current_nickname;
 	current_nickname = nickname_token;
