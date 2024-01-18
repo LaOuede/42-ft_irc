@@ -225,6 +225,8 @@ void Server::messageHandler() {
 	}
 }
 
+
+// DEGUG - Print command name
 void Server::parseCommand() {
 	size_t pos = this->_command_received.find_first_of(" ");
 	if (pos == string::npos) {

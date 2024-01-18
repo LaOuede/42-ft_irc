@@ -75,11 +75,9 @@ string CommandHandler::sendResponse(Server *server) {
 	map<string, ACommand *>::iterator it;
 	string response;
 	string command = this->_command_tokens.front();
-	string &hostname = server->get_hostname();
-	string &nickname = server->get_userDB()[server->get_client_index()]._nickname;
-	string command = this->_command_tokens.front();
-	string &hostname = server->get_hostname();
-	string &nickname = server->get_userDB()[server->get_client_index()]._nickname;
+
+	string &hostname = server->getHostname();
+	string &nickname = server->getUserDB()[server->getClientIndex()]._nickname;
 
 	it = this->_command_caller.find(this->_command_tokens.front());
 	for (; it != this->_command_caller.end(); ++it) {
@@ -91,7 +89,6 @@ string CommandHandler::sendResponse(Server *server) {
 		}
 	}
 	this->_command_tokens.clear();
-	return ERR_UNKNOWNCOMMAND;
 	return ERR_UNKNOWNCOMMAND;
 }
 

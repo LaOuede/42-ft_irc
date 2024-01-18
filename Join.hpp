@@ -30,8 +30,8 @@ class Join : public ACommand {
 		void splitParameters(string to_split, list<string> &to_fill);
 		string parseAttributes(const list<string> &command);
 		void createChannelsMap();
-		string processChannelsConnections();
-		string parseChannelName(string name);
+		string processChannelsConnections(Server *Server);
+		string parseChannelNameAndKey(string name, string key);
 		void cleanup();
 
 	private:

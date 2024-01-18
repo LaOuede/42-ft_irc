@@ -93,7 +93,7 @@ string User::parsingUsername(string username, Server *server) {
 }
 
 bool User::isValidChar(string username) {
-	string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\_{|}-";
+	string characters = CHARACTERS_ALLOWED;
 
 	if (username.find_first_not_of(characters) != string::npos)
 			return false;

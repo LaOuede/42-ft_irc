@@ -26,6 +26,8 @@ using std::pair;
 using std::string;
 using std::list;
 
+#define CHARACTERS_ALLOWED "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789[]\\_{|}-"
+
 class Server;
 
 class CommandHandler {
