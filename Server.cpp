@@ -208,26 +208,28 @@ void Server::trimBuffer(size_t pos){
 
 void Server::messageHandler() {
 	string response;
+	int &fd = this->_fds[this->_client_index].fd;
 
-	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << fd << ": " << this->_bytes_sent << endl;
 	}
 	welcomeMessage();
 }
 
 void Server::welcomeMessage() {
 	string &hostname = this->_hostname;
+	int &fd = this->_fds[this->_client_index].fd;
 	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
 	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
 	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
@@ -236,7 +238,7 @@ void Server::welcomeMessage() {
 	if (username != "" && nickname != "" && welcomed == false) {
 		welcomed = true;
 		string response = WELCOME(hostname, nickname, username);
-		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
 		if (this->_bytes_sent == -1)
 			sendFailureException();
 	}
