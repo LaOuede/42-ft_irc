@@ -24,7 +24,7 @@
 
 #define PORT 6667
 #define BACKLOG 20
-#define MAXCLIENT 10
+#define MAXCLIENT 2
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
 

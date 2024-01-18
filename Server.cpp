@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+#define ERR_SERVERFULL "400 :No empty server slot\r\n"
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -124,23 +126,22 @@ void Server::initPollfd(){
 void Server::acceptConnection() {
 	int status = accept(this->_socket_fd, 0, 0);
 	if(status != -1){
-		// besoin d'un recv pour save les info NICK/USER
 		addNewClient(status);
 	}else
 		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
 }
 
 void Server::addNewClient(int status){
-	for(uint32_t i = 0; i <= _nfds; i++){
+	for(uint32_t i = 0; i < MAXFDS; i++){
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
-			_nfds++;
 			return;
 		}
 	}
-	//besoin d'un send pour pas de place au server pour un nouveau client
+	send(status, ERR_SERVERFULL, strlen(ERR_SERVERFULL), 0);
+	close(status);
 }
 
 void Server::receiver(){
@@ -166,13 +167,10 @@ int Server::getBuffer(){
 int Server::closeConnection(){
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
+	if(_userDB.find(_fds[_client_index].fd) != _userDB.end())
+		_userDB.erase(_userDB.find(_fds[_client_index].fd));
 	_fds[_client_index].fd = -1;
-	// if(_userDB.find(_fds[_client_index].fd) != _userDB.end()) //TODO utiliser avec frank merge
-	// 	_userDB.erase(_userDB.find(_fds[_client_index].fd));
-	if(_userDB.find(_client_index) != _userDB.end()) //TODO delete apres merge frank
-		_userDB.erase(_client_index);
 	return -1;
-	//TODO verifier les structure client savoir quoi detruire a la deconnection
 }
 
 void Server::processRequests(){
@@ -223,6 +221,7 @@ void Server::messageHandler() {
 	} else {
 		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
+	//verification flag welcome si pas welcome et que nick user pass son ok welcome true
 }
 
 
