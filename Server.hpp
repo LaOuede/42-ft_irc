@@ -70,13 +70,13 @@ class Server {
 		void					messageHandler();
 		void					parseCommand();
 
-		void receiver();
-		int getBuffer();
-		int closeConnection();
-		void processRequests();
-		void splitBuffer();
-		void buildCommandReceived(size_t pos);
-		void trimBuffer(size_t pos);
+		void					receiver();
+		int						getBuffer();
+		int						closeConnection();
+		void					processRequests();
+		void					splitBuffer();
+		void					buildCommandReceived(size_t pos);
+		void					trimBuffer(size_t pos);
 		
 		// Exceptions
 		std::exception			socketFailureException();
