@@ -22,7 +22,6 @@ Server::~Server() {
 	closeFds();
 }
 
-
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
@@ -227,7 +226,6 @@ void Server::messageHandler() {
 	}
 	//verification flag welcome si pas welcome et que nick user pass son ok welcome true
 }
-
 
 // DEGUG - Print command name
 void Server::parseCommand() {

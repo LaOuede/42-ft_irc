@@ -23,10 +23,9 @@
 #include <vector>
 #include <csignal>
 
-
 #define PORT 6667
 #define BACKLOG 20
-#define MAXCLIENT 2
+#define MAXCLIENT 10
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
 
@@ -82,7 +81,6 @@ class Server {
 		void					sendToClient(string *response);
 		void					closeFds();
 
-		
 		// Exceptions
 		std::exception			socketFailureException();
 		std::exception			bindFailureException();
@@ -113,8 +111,6 @@ class Server {
 		map<int, clientInfo>	_userDB;
 		struct pollfd			_fds[MAXFDS];
 		nfds_t					_nfds;
-
-
 };
 
 #include "CommandHandler.hpp"
