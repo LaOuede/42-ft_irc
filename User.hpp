@@ -33,8 +33,6 @@ class User : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
-
 };
 
 #endif

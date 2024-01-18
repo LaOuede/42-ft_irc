@@ -2,7 +2,9 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
-//USER
+/* ************************************************************************** */
+/* Defines                                                                    */
+/* ************************************************************************** */
 #define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
 #define ERR_ALREADYREGISTRED "462 PRIVMSG :You may not reregister\r\n"
 #define ERR_NOUSERNAME "400 :No username given\r\n"
@@ -12,7 +14,6 @@
 #define ERR_WRONGCHAR42 "400 :Supposed to be * after the 0\r\n"
 #define ERR_WRONGCHAR3 "400 :Supposed to be : at the beginning of the realname\r\n"
 #define ERR_USERTOOLONG "400 :Username too long\r\n"
-
 #define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
 
 /* ************************************************************************** */
@@ -22,18 +23,9 @@ User::User() : ACommand("USER") {}
 
 User::~User() {}
 
-
-/* ************************************************************************** */
-/* Getters & Setters                                                          */
-/* ************************************************************************** */
-
-
-
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-
-
 string User::executeCommand(Server *server) {
 	list<string>::iterator it = server->getCommandHandler().getCommandTokens().begin();
 	string	&username_token = *it;
@@ -86,7 +78,7 @@ string User::defaultUser(string &username, string &realname){
 
 string User::parsingUsername(string username, Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
-	
+
 	if (!isValidChar(username)) {
 		return (ERR_WRONGCHAR);
 	}
@@ -153,6 +145,3 @@ string User::timestamp() {
 	string str(buffer);
 	return str;
 }
-/* ************************************************************************** */
-/* Exceptions                                                                 */
-/* ************************************************************************** */
