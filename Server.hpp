@@ -77,6 +77,7 @@ class Server {
 		void splitBuffer();
 		void buildCommandReceived(size_t pos);
 		void trimBuffer(size_t pos);
+		void sendToClient(string *response);
 		
 		// Exceptions
 		std::exception			socketFailureException();

@@ -18,3 +18,7 @@ bool parsingPassword(string password) {
 	}
 	return true;
 }
+
+void Server::sendToClient(string *response) {
+	send(this->_fds[this->_client_index].fd, response->c_str(), response->size(), 0);
+}

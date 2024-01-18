@@ -5,12 +5,16 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
+#define ERR_CHANNELNAMETOOLONG(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters)\r\n"
 #define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
-#define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
-#define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYCHANNELS "400 JOIN :Trying to connect to too many channels at the same time\r\n"
-
+#define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
+#define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
+#define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_WRONGCHARCHANNELNAME(name) "400 :Wrong characters used in name '" + name + "'\r\n"
+#define ERR_WRONGCHARCHANNELKEY(key) "400 :Wrong characters used in key '" + key + "'\r\n"
+#define RPL_JOINCHANNEL(user, name) ":" + user + " JOIN " + name + "\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -40,15 +44,15 @@ string Join::executeCommand(Server *server) {
 	// 2. Get a map from the request in order to process
 	createChannelsMap();
 	// 3. Process connections
-	processChannelsConnections();
+	processChannelsConnections(server);
 	cleanup();
-	return (":user!d@localhost JOIN general\r\n");
+	return ("");
 }
 
 
 //1. COMMAND PARSING
 string Join::parseCommand(Server *server) {
-	list<string> command = server->get_command_handler().get_command_tokens();
+	list<string> command = server->getCommandHandler().getCommandTokens();
 	
 	this->_error_msg = parseParameters(command);
 	if (!this->_error_msg.empty()) {
@@ -135,33 +139,44 @@ void Join::createChannelsMap() {
 }
 
 //3. PROCESS CONNECTIONS
-string Join::processChannelsConnections() {
+string Join::processChannelsConnections(Server *server) {
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	string &user = server->getUserDB()[fd]._nickname;
+	string joined_msg;
 	map<string, string>::const_iterator it;
 
 	it = this->_channels_map.begin();
 	for (; it != this->_channels_map.end(); ++it) {
-		this->_error_msg = parseChannelName(it->first);
+		this->_error_msg = "";
+		parseChannelNameAndKey(it->first, it->second);
+		if (!this->_error_msg.empty()) {
+			server->sendToClient(&this->_error_msg);
+			continue;
+		}
+		joined_msg = RPL_JOINCHANNEL(user, it->first);
+		server->sendToClient(&joined_msg);
 	}
 	return "";
 }
 
-string Join::parseChannelName(string name) {
-	if (name[0] != '#') {
-		return ERR_UNKNOWNERROR(name);
+string Join::parseChannelNameAndKey(string name, string key) {
+	if (name[0] != '#' && name[0] != '&' ) {
+		this->_error_msg = ERR_UNKNOWNERROR(name);
+	} else if (name.size() > 10) {
+		this->_error_msg = ERR_CHANNELNAMETOOLONG(name);
+	} else if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
+		this->_error_msg = ERR_WRONGCHARCHANNELNAME(name);
+	} else if (key.size() > 10) {
+		this->_error_msg = ERR_CHANNELKEYTOOLONG(key);
 	}
 	return "";
 }
-
 
 void Join::cleanup() {
 	this->_channels_names.clear();
 	this->_channels_keys.clear();
 }
 
-
-/* 	if (token[0] != '#') {
-		return ERR_UNKNOWNERROR(token);
-	} */
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
