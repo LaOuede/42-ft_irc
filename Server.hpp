@@ -19,7 +19,6 @@
 #include <unistd.h>
 #include <map>
 #include <cctype>
-//poll test
 #include <sys/poll.h>
 #include <vector>
 
