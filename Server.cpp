@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -166,13 +168,10 @@ int Server::getBuffer(){
 int Server::closeConnection(){
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
+	if(_userDB.find(_fds[_client_index].fd) != _userDB.end())
+		_userDB.erase(_userDB.find(_fds[_client_index].fd));
 	_fds[_client_index].fd = -1;
-	// if(_userDB.find(_fds[_client_index].fd) != _userDB.end()) //TODO utiliser avec frank merge
-	// 	_userDB.erase(_userDB.find(_fds[_client_index].fd));
-	if(_userDB.find(_client_index) != _userDB.end()) //TODO delete apres merge frank
-		_userDB.erase(_client_index);
 	return -1;
-	//TODO verifier les structure client savoir quoi detruire a la deconnection
 }
 
 void Server::processRequests(){
@@ -223,6 +222,23 @@ void Server::messageHandler() {
 		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
 	} else {
 		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
+	}
+	welcomeMessage();
+}
+
+void Server::welcomeMessage() {
+	string &hostname = this->_hostname;
+	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
+	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
+	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
+	//manque le mot de passe
+
+	if (username != "" && nickname != "" && welcomed == false) {
+		welcomed = true;
+		string response = WELCOME(hostname, nickname, username);
+		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		if (this->_bytes_sent == -1)
+			sendFailureException();
 	}
 }
 

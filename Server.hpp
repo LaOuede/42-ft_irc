@@ -37,6 +37,7 @@ struct	clientInfo {
 	string	_nickname;
 	string	_username;
 	string	_realname;
+	bool	_welcomed;
 };
 
 class CommandHandler;
@@ -69,6 +70,7 @@ class Server {
 		void					addNewClient(int status);
 		void					messageHandler();
 		void					parseCommand();
+		void					welcomeMessage();
 
 		void					receiver();
 		int						getBuffer();
