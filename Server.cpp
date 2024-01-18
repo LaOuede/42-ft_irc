@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+extern bool g_running;
+
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
 
 /* ************************************************************************** */
@@ -9,7 +11,7 @@
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0) {
+	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0), _running(1) {
 	_port = atoi(port.c_str());
 	_password = password;
 	cout << "Server constructor call" << endl;
@@ -17,6 +19,7 @@ Server::Server(string port, string password) :
 
 Server::~Server() {
 	cout << "Server destructor call" << endl;
+	closeFds();
 }
 
 
@@ -99,7 +102,7 @@ void Server::socketListening() {
 
 void Server::serverRoutine(){
 	initPollfd();
-	while(1){
+	while(g_running){
 		if(poll(this->_fds, MAXFDS, 100) == 1){
 			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
@@ -108,6 +111,7 @@ void Server::serverRoutine(){
 					receiver();
 			}
 		}
+
 		// only for visualition of the fd
 		// for(int i = 0; i < MAXFDS; i++)
 		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
@@ -115,7 +119,7 @@ void Server::serverRoutine(){
 	}
 }
 
-void Server::initPollfd(){
+void Server::initPollfd() {
 	this->_fds[0].fd = this->_socket_fd;
 	this->_fds[0].events = POLLIN;
 	this->_nfds++;
@@ -131,7 +135,7 @@ void Server::acceptConnection() {
 		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
 }
 
-void Server::addNewClient(int status){
+void Server::addNewClient(int status) {
 	for(uint32_t i = 0; i < MAXFDS; i++){
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
@@ -144,13 +148,13 @@ void Server::addNewClient(int status){
 	close(status);
 }
 
-void Server::receiver(){
+void Server::receiver() {
 	if(getBuffer() == -1)
 		return;
 	processRequests();
 }
 
-int Server::getBuffer(){
+int Server::getBuffer() {
 	int bytes = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
@@ -164,7 +168,7 @@ int Server::getBuffer(){
 	}
 }
 
-int Server::closeConnection(){
+int Server::closeConnection() {
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
 	if(_userDB.find(_fds[_client_index].fd) != _userDB.end())
@@ -173,7 +177,7 @@ int Server::closeConnection(){
 	return -1;
 }
 
-void Server::processRequests(){
+void Server::processRequests() {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	if(_buf[0] != 0)
 		return;
@@ -184,21 +188,21 @@ void Server::processRequests(){
 	}
 }
 
-void Server::splitBuffer(){
+void Server::splitBuffer() {
 	size_t pos = 0;
 	pos = _buffer.find("\n");
 	buildCommandReceived(pos);
 	trimBuffer(pos);
 }
 
-void Server::buildCommandReceived(size_t pos){
+void Server::buildCommandReceived(size_t pos) {
 	if(pos != std::string::npos)
 		_command_received.assign(_buffer.substr(0, pos));
 	if(_command_received.find("\r") != string::npos)
 		_command_received.pop_back();
 }
 
-void Server::trimBuffer(size_t pos){
+void Server::trimBuffer(size_t pos) {
 	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
 		_buffer.assign(_buffer.substr(pos + 1));
 	else
@@ -236,33 +240,39 @@ void Server::parseCommand() {
 	}
 }
 
+void	Server::closeFds() {
+	for(int i = 0; i < MAXFDS; i++)
+		if(_fds[i].fd != -1)
+			close(_fds[i].fd);
+}
+
 /* ************************************************************************** */
 /* Exceptions                                                                 */
 /* ************************************************************************** */
-std::exception Server::socketFailureException(){
+std::exception Server::socketFailureException() {
 	throw std::runtime_error("socket() error");
 }
 
-std::exception Server::bindFailureException(){
+std::exception Server::bindFailureException() {
 	throw std::runtime_error("bind() error");
 }
 
-std::exception Server::listenFailureException(){
+std::exception Server::listenFailureException() {
 	throw std::runtime_error("listen() error");
 }
 
-std::exception Server::acceptFailureException(){
+std::exception Server::acceptFailureException() {
 	throw std::runtime_error("accept() error");
 }
 
-std::exception Server::recvFailureException(){
+std::exception Server::recvFailureException() {
 	throw std::runtime_error("recv() error");
 }
 
-std::exception Server::sendFailureException(){
+std::exception Server::sendFailureException() {
 	throw std::runtime_error("send() error");
 }
 
-std::exception Server::setsockoptFailureException(){
+std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
 }

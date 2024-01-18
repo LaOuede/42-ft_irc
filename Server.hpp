@@ -21,6 +21,8 @@
 #include <cctype>
 #include <sys/poll.h>
 #include <vector>
+#include <csignal>
+
 
 #define PORT 6667
 #define BACKLOG 20
@@ -64,20 +66,21 @@ class Server {
 		void					bindSocket();
 		void					socketListening();
 		void					serverRoutine();
+		void					signalHandler(int sig);
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
+		void 					receiver();
+		int						getBuffer();
+		int						closeConnection();
+		void 					processRequests();
+		void 					splitBuffer();
+		void 					buildCommandReceived(size_t pos);
+		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					closeFds();
 
-		void receiver();
-		int getBuffer();
-		int closeConnection();
-		void processRequests();
-		void splitBuffer();
-		void buildCommandReceived(size_t pos);
-		void trimBuffer(size_t pos);
-		void sendToClient(string *response);
 		
 		// Exceptions
 		std::exception			socketFailureException();
