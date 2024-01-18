@@ -28,8 +28,6 @@
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
 
-#define WELCOME "001 user Welcome !\r\n"
-
 using std::cout;
 using std::endl;
 using std::string;
