@@ -79,6 +79,7 @@ class Server {
 		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					sendToClient(string *response);
 		void					closeFds();
 
 		

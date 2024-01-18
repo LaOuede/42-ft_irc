@@ -11,7 +11,7 @@ extern bool g_running;
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0), _running(1) {
+	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0) {
 	_port = atoi(port.c_str());
 	_password = password;
 	cout << "Server constructor call" << endl;

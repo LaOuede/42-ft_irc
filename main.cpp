@@ -5,16 +5,12 @@ bool g_running = true;
 
 bool parsingPort(string port);
 bool parsingPassword(string password);
-
-static void stop(int sigHandler){
-	(void)sigHandler;
-	g_running = false;
-}
+void shutdown(int sig);
 
 int main(int argc, char **argv) {
-	signal(SIGINT, stop);
+	signal(SIGINT, shutdown);
 	signal(SIGQUIT, SIG_IGN);
-	(void)argv;
+	
 	if (argc != 3) {
 		cout << "Usage: ./ircserver <port> <password>" << endl;
 		return 1;
