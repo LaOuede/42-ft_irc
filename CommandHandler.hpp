@@ -15,6 +15,7 @@
 #include "Cap.hpp"
 #include "Nick.hpp"
 #include "User.hpp"
+#include "Ping.hpp"
 
 using std::cout;
 using std::endl;

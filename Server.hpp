@@ -102,13 +102,12 @@ class Server {
 		int 					_port;
 		string 					_password;
 		CommandHandler 			_command_handler;
-		string _buffer;
-		string 					_command_received;
+		string					_buffer;
+		string					_command_received;
 		string					_hostname;
-
-		map<int, clientInfo> 	_userDB;
-		struct pollfd 			_fds[MAXFDS];
-		nfds_t 					_nfds;
+		map<int, clientInfo>	_userDB;
+		struct pollfd			_fds[MAXFDS];
+		nfds_t					_nfds;
 
 
 };
