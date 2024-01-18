@@ -98,9 +98,8 @@ void Server::serverRoutine(){
 			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
-				}else if(_fds[this->_client_index].revents & POLLIN){
+				}else if(_fds[this->_client_index].revents & POLLIN)
 					receiver();
-				}
 			}
 		}
 		// only for visualition of the fd
@@ -151,23 +150,23 @@ int Server::getBuffer(){
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-
-		if(bytes != -1 && _buf[0] != 0)
+		if(bytes > 0)
 			_buffer.append(_buf, BUFFERSIZE);
 		else if(bytes == 0)
 			return closeConnection();
 		else
-			break;
-		sleep(2);
+			return 0;
 	}
-	return 0;
 }
 
 int Server::closeConnection(){
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
 	_fds[_client_index].fd = -1;
-	_nfds--;
+	// if(_userDB.find(_fds[_client_index].fd) != _userDB.end()) //TODO utiliser avec frank merge
+	// 	_userDB.erase(_userDB.find(_fds[_client_index].fd));
+	if(_userDB.find(_client_index) != _userDB.end()) //TODO delete apres merge frank
+		_userDB.erase(_client_index);
 	return -1;
 	//TODO verifier les structure client savoir quoi detruire a la deconnection
 }
@@ -180,7 +179,6 @@ void Server::processRequests(){
 		splitBuffer();
 		messageHandler();
 		_command_received.clear();
-		cout << "2" << endl;
 	}
 }
 
