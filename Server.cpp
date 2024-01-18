@@ -94,19 +94,18 @@ void Server::socketListening() {
 void Server::serverRoutine(){
 	initPollfd();
 	while(1){
-		if(poll(this->_fds, this->_nfds, 100) == 1){
-			for(this->_client_index = 0; this->_client_index < this->_nfds; this->_client_index++){
+		if(poll(this->_fds, MAXFDS, 100) == 1){
+			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
-				}else if(_fds[this->_client_index].revents & POLLIN){
+				}else if(_fds[this->_client_index].revents & POLLIN)
 					receiver();
-				}
 			}
 		}
 		// only for visualition of the fd
-/* 		for(int i = 0; i < MAXCLIENT + 1; i++)
-			cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
-		sleep(1); */
+		// for(int i = 0; i < MAXFDS; i++)
+		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
+		// sleep(1);
 	}
 }
 
@@ -114,7 +113,7 @@ void Server::initPollfd(){
 	this->_fds[0].fd = this->_socket_fd;
 	this->_fds[0].events = POLLIN;
 	this->_nfds++;
-	for(int i = 1; i < MAXCLIENT + 1; i++)
+	for(int i = 1; i < MAXFDS; i++)
 		this->_fds[i].fd = -1;
 }
 
@@ -122,43 +121,60 @@ void Server::acceptConnection() {
 	int status = accept(this->_socket_fd, 0, 0);
 	if(status != -1){
 		// besoin d'un recv pour save les info NICK/USER
-		if(this->_nfds < MAXCLIENT + 1){
-			addNewClient(status);
-		}else{
-			//marche pas full bien
-			send(status, "Server is full comeback later \r\n", 50, 0);
-			close(status);
-		}
+		addNewClient(status);
 	}else
 		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
 }
 
 void Server::addNewClient(int status){
-	_fds[_nfds].fd = status;
-	_fds[_nfds].events = POLLIN;
-	cout << "New connect #" << _fds[_nfds].fd << endl;
-	_nfds++;
+	for(uint32_t i = 0; i <= _nfds; i++){
+		if(_fds[i].fd == -1){
+			_fds[i].fd = status;
+			_fds[i].events = POLLIN;
+			cout << "New connect #" << _fds[i].fd << endl;
+			_nfds++;
+			return;
+		}
+	}
+	//besoin d'un send pour pas de place au server pour un nouveau client
 }
 
 void Server::receiver(){
-	getBuffer();
+	if(getBuffer() == -1)
+		return;
 	processRequests();
 }
 
-void Server::getBuffer(){
+int Server::getBuffer(){
 	int bytes = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-		if(bytes != -1)
+		if(bytes > 0)
 			_buffer.append(_buf, BUFFERSIZE);
+		else if(bytes == 0)
+			return closeConnection();
 		else
-			break;
+			return 0;
 	}
+}
+
+int Server::closeConnection(){
+	cout << "Closing connection #" << _fds[_client_index].fd << endl;
+	close(_fds[_client_index].fd);
+	_fds[_client_index].fd = -1;
+	// if(_userDB.find(_fds[_client_index].fd) != _userDB.end()) //TODO utiliser avec frank merge
+	// 	_userDB.erase(_userDB.find(_fds[_client_index].fd));
+	if(_userDB.find(_client_index) != _userDB.end()) //TODO delete apres merge frank
+		_userDB.erase(_client_index);
+	return -1;
+	//TODO verifier les structure client savoir quoi detruire a la deconnection
 }
 
 void Server::processRequests(){
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
+	if(_buf[0] != 0)
+		return;
 	while(_buffer.empty() == false){
 		splitBuffer();
 		messageHandler();
@@ -174,7 +190,6 @@ void Server::splitBuffer(){
 }
 
 void Server::buildCommandReceived(size_t pos){
-	
 	if(pos != std::string::npos)
 		_command_received.assign(_buffer.substr(0, pos));
 	if(_command_received.find("\r") != string::npos)

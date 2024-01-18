@@ -1,5 +1,3 @@
-
-
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
@@ -29,6 +27,7 @@
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 10
+#define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
 
 #define WELCOME "001 user Welcome !\r\n"
@@ -75,7 +74,8 @@ class Server {
 		void parseCommand();
 
 		void receiver();
-		void getBuffer();
+		int getBuffer();
+		int closeConnection();
 		void processRequests();
 		void splitBuffer();
 		void buildCommandReceived(size_t pos);
@@ -110,7 +110,7 @@ class Server {
 		string					_hostname;
 
 		map<int, clientInfo> 	_userDB;
-		struct pollfd 			_fds[MAXCLIENT + 1]; // +1 for the socket_fd
+		struct pollfd 			_fds[MAXFDS];
 		nfds_t 					_nfds;
 
 
@@ -119,3 +119,4 @@ class Server {
 #include "CommandHandler.hpp"
 
 #endif
+
