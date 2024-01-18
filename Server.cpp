@@ -21,37 +21,36 @@ Server::~Server() {
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
-int &Server::get_client_fd() {
+int &Server::getClientFd() {
 	return this->_client_fd;
 }
 
-int &Server::get_socket_fd() {
+int &Server::getSocketFd() {
 	return this->_socket_fd;
 }
 
-string const &Server::get_command_received() const {
+string const &Server::getCommandReceived() const {
 	return this->_command_received;
 }
 
-map <int, clientInfo> &Server::get_userDB() {
+map <int, clientInfo> &Server::getUserDB() {
 	return this->_userDB;
 }
 
-map <int, clientInfo> Server::set_userDB(map <int, clientInfo> userDB) {
-	this->_userDB = userDB;
-	return this->_userDB;
-}
-
-uint32_t &Server::get_client_index() {
+uint32_t &Server::getClientIndex() {
 	return this->_client_index;
 }
 
-CommandHandler &Server::get_command_handler() {
+CommandHandler &Server::getCommandHandler() {
 	return this->_command_handler;
 }
 
-string &Server::get_hostname() {
+string &Server::getHostname() {
 	return this->_hostname;
+}
+
+struct pollfd *Server::getFds() {
+	return this->_fds;
 }
 
 /* ************************************************************************** */
@@ -181,19 +180,19 @@ int Server::builtCommandString(){
 void Server::messageHandler() {
 	string response;
 
-	cout << "Message received from client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	parseCommand();
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->get_client_index()].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->get_client_index()].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->get_client_index()].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
 }
 

@@ -31,10 +31,11 @@ string Nick::getCommandArgs() {
 /* ************************************************************************** */
 
 string Nick::executeCommand(Server *server) {
-	string &nickname_token = *server->get_command_handler().get_command_tokens().begin();
-	string &hostname = server->get_hostname();
-	string &username = server->get_userDB()[server->get_client_index()]._username;
-	string &current_nickname = server->get_userDB()[server->get_client_index()]._nickname;
+	int		&fd = server->getFds()[server->getClientIndex()].fd;
+	string	&nickname_token = *server->getCommandHandler().getCommandTokens().begin();
+	string	&hostname = server->getHostname();
+	string	&username = server->getUserDB()[fd]._username;
+	string	&current_nickname = server->getUserDB()[fd]._nickname;
 
 	if (nickname_token.empty())
 		return (ERR_NONICKNAMEGIVEN);
@@ -53,7 +54,7 @@ string Nick::executeCommand(Server *server) {
 }
 
 bool Nick::isNickInUse(string nickname, Server *server) {
-	for (map<int, clientInfo>::const_iterator it = server->get_userDB().begin(); it != server->get_userDB().end(); it++)
+	for (map<int, clientInfo>::const_iterator it = server->getUserDB().begin(); it != server->getUserDB().end(); it++)
 		if (it->second._nickname == nickname)
 			return true;
 	return false;
