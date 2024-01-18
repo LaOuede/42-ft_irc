@@ -2,12 +2,13 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
-//NICKNAME
+/* ************************************************************************** */
+/* Defines                                                                    */
+/* ************************************************************************** */
 #define ERR_NONICKNAMEGIVEN "431 nonick :No nickname given\r\n"
 #define ERR_ERRONEUSNICKNAME(nickname) "432 '" + nickname + "' :Erroneus nickname\r\n"
 #define ERR_NICKNAMEINUSE(nickname) " 433 '" + nickname + "' :Nickname is already in use\r\n"
 #define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
-
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -16,15 +17,6 @@
 Nick::Nick() : ACommand("NICK") {}
 
 Nick::~Nick() {}
-
-
-/* ************************************************************************** */
-/* Getters & Setters                                                          */
-/* ************************************************************************** */
-
-string Nick::getCommandArgs() {
-	return this->_command_args;
-}
 
 /* ************************************************************************** */
 /* Functions                                                                  */
@@ -69,7 +61,3 @@ bool Nick::isNickValid(string nickname) {
 	}
 	return true;
 }
-
-/* ************************************************************************** */
-/* Exceptions                                                                 */
-/* ************************************************************************** */
