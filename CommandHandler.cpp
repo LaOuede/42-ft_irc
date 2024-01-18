@@ -16,8 +16,8 @@ CommandHandler::CommandHandler() {
 CommandHandler::~CommandHandler() {
 	map<string, ACommand *>::iterator it;
 
-	it = this->_command_caller.begin();
-	for (; it != this->_command_caller.end(); it++ ) {
+	it = this->_command_caller.begin();for (; it != this->_command_caller.end(); it++ 
+	) {
 		delete it->second;
 	}
 	this->_command_caller.clear();
