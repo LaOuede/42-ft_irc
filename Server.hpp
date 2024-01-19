@@ -60,6 +60,7 @@ class Server {
 		string					&getHostname();
 		struct pollfd			*getFds();
 		map<string, Channel *>	&getChannelList();
+		Channel 				*getChannel(string const &channel_name);
 
 		// Methods
 		void					createSocket();

@@ -5,6 +5,8 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
+#define ERR_ALREADYINCHANNEL(name) "400 JOIN :You are already in the channel '" + name + "'\r\n"
+#define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)"
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
 #define ERR_CHANNELNAMETOOLONG(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters)\r\n"
 #define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
@@ -175,13 +177,22 @@ string Join::parseChannelNameAndKey(string name, string key) {
 void Join::joinChannel(Server *server, string const &channel_name) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 	string &user = server->getUserDB()[fd]._nickname;
-	string join_msg;
+	string error_msg;
 
+	cout << "--- I'm: " << user << " ---\n" << endl;
 	if (isChannelExisting(server, channel_name)) {
-		join_msg = RPL_JOINCHANNEL(user, channel_name);
-		server->sendToClient(&join_msg);
+		Channel *channel = server->getChannel(channel_name);
+		if (channel->isUserInChannel(fd)) {
+			error_msg = ERR_ALREADYINCHANNEL(channel_name);
+			server->sendToClient(&error_msg);
+		} else if (channel->getUsersNb() < MAXINCHANNEL) {
+			channel->addUserToChannel(server, user, fd, USER);
+		} else {
+			error_msg = ERR_CHANNELISFULL;
+			server->sendToClient(&error_msg);
+		}
 	} else {
-		createChannel(server, channel_name, user);
+		createChannel(server, channel_name, user, fd);
 	}
 }
 
@@ -197,13 +208,13 @@ bool Join::isChannelExisting(Server *server, string const &channel_name) {
 	return false;
 }
 
-void Join::createChannel(Server *server, string const &channel_name, string &user) {
+void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
 	string msg;
 
 	if (server->getChannelList().size() < MAXCHANNEL) {
-		server->getChannelList().insert(pair<string, Channel *>(channel_name, new Channel));
-		msg = RPL_JOINCHANNEL(user, channel_name);
-		server->sendToClient(&msg);
+		Channel *channel = new Channel(channel_name);
+		server->getChannelList()[channel_name] = channel;
+		channel->addUserToChannel(server, user, fd, OPERATOR);
 	} else {
 		msg = ERR_TOOMANYCHANNELSLIST;
 		server->sendToClient(&msg);
