@@ -5,6 +5,7 @@
 
 #include "ACommand.hpp"
 #include "CommandHandler.hpp"
+#include "Channel.hpp"
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -28,6 +29,7 @@
 #define MAXCLIENT 10
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
+#define MAXCHANNEL 10
 
 using std::cout;
 using std::endl;
@@ -58,6 +60,7 @@ class Server {
 		CommandHandler			&getCommandHandler();
 		string					&getHostname();
 		struct pollfd			*getFds();
+		map<string, Channel *>	&getChannelList();
 
 		// Methods
 		void					createSocket();
@@ -78,6 +81,8 @@ class Server {
 		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					cleanup();
+		void					cleanChannelList();
 		void					sendToClient(string *response);
 		void					closeFds();
 
@@ -111,6 +116,7 @@ class Server {
 		map<int, clientInfo>	_userDB;
 		struct pollfd			_fds[MAXFDS];
 		nfds_t					_nfds;
+		map<string, Channel *>	_channel_list;
 };
 
 #include "CommandHandler.hpp"
