@@ -8,7 +8,8 @@
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
 #define ERR_CHANNELNAMETOOLONG(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters)\r\n"
 #define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
-#define ERR_TOOMANYCHANNELS "400 JOIN :Trying to connect to too many channels at the same time\r\n"
+#define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
+#define ERR_TOOMANYCHANNELSLIST "400 JOIN :Maximum number of channels on server has been reached\n"
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
@@ -39,12 +40,14 @@ string Join::executeCommand(Server *server) {
 
 	// 1. PARSING
 	this->_error_msg = parseCommand(server);
-	if (this->_error_msg.compare("") != 0)
+	if (this->_error_msg.compare("") != 0) {
+		cleanup();
 		return this->_error_msg;
+	}
 	// 2. Get a map from the request in order to process
-	createChannelsMap();
+	createChannelMap();
 	// 3. Process connections
-	processChannelsConnections(server);
+	processChannelConnections(server);
 	// 4. Clean Up
 	cleanup();
 	return ("");
@@ -76,6 +79,20 @@ string Join::parseParameters(const list<string> &command) {
 	return "";
 }
 
+string Join::parseAttributes(const list<string> &command) {
+	splitParameters(command.front(), this->_channel_name);
+	if (command.size() == 2) {
+		splitParameters(command.back(), this->_channel_key);
+	}
+	if (this->_channel_name.size() > CHANLIMIT) {
+		return ERR_TOOMANYCHANNELSCONNECTION;
+	}
+	if (this->_channel_key.size() > this->_channel_name.size()) {
+		return ERR_TOOMANYKEYS;
+	}
+	return "";
+}
+
 void Join::splitParameters(string to_split, list<string> &to_fill) {
 	istringstream stream(to_split);
 	char delimiter = ',';
@@ -97,65 +114,47 @@ void Join::splitParameters(string to_split, list<string> &to_fill) {
 	cout << "\n" << endl;
 }
 
-string Join::parseAttributes(const list<string> &command) {
-	splitParameters(command.front(), this->_channels_names);
-	if (command.size() == 2) {
-		splitParameters(command.back(), this->_channels_keys);
-	}
-	if (this->_channels_names.size() > 3) {
-		return ERR_TOOMANYCHANNELS;
-	}
-	if (this->_channels_keys.size() > this->_channels_names.size()) {
-		return ERR_TOOMANYKEYS;
-	}
-	return "";
-}
-
 //2. CREATING A MAP<CHANNEL_NAME, CHANNEL_KEY>
-void Join::createChannelsMap() {
+void Join::createChannelMap() {
 	string name;
 	string key;
-	size_t map_size = this->_channels_names.size();
+	size_t map_size = this->_channel_name.size();
 
 	for (size_t i = 0; i < map_size; i++) {
-		if (this->_channels_keys.empty()) {
+		if (this->_channel_key.empty()) {
 			key = "";
 		} else {
-			key = this->_channels_keys.front();
-			this->_channels_keys.pop_front();
+			key = this->_channel_key.front();
+			this->_channel_key.pop_front();
 		}
-		this->_channels_map[this->_channels_names.front()] = key;
-		this->_channels_names.pop_front();
+		this->_channel_map[this->_channel_name.front()] = key;
+		this->_channel_name.pop_front();
 	}
 
 	// DEBUG Print map
 	cout << "--- Elements in map ---" << endl;
 	map<string, string>::const_iterator it;
 	int index = -1;
-	it = this->_channels_map.begin();
-	for (; it != this->_channels_map.end(); ++it) {
+	it = this->_channel_map.begin();
+	for (; it != this->_channel_map.end(); ++it) {
 		std::cout << "index " << ++index << " : " << it->first << " - " << it->second << std::endl;
 	}
 	cout << "\n" << endl;
 }
 
 //3. PROCESS CONNECTIONS
-string Join::processChannelsConnections(Server *server) {
-	int &fd = server->getFds()[server->getClientIndex()].fd;
-	string &user = server->getUserDB()[fd]._nickname;
-	string joined_msg;
+string Join::processChannelConnections(Server *server) {
 	map<string, string>::const_iterator it;
 
-	it = this->_channels_map.begin();
-	for (; it != this->_channels_map.end(); ++it) {
+	it = this->_channel_map.begin();
+	for (; it != this->_channel_map.end(); ++it) {
 		this->_error_msg = "";
 		parseChannelNameAndKey(it->first, it->second);
 		if (!this->_error_msg.empty()) {
 			server->sendToClient(&this->_error_msg);
 			continue;
 		}
-		joined_msg = RPL_JOINCHANNEL(user, it->first);
-		server->sendToClient(&joined_msg);
+		joinChannel(server, it->first);
 	}
 	return "";
 }
@@ -173,11 +172,49 @@ string Join::parseChannelNameAndKey(string name, string key) {
 	return "";
 }
 
+void Join::joinChannel(Server *server, string const &channel_name) {
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	string &user = server->getUserDB()[fd]._nickname;
+	string join_msg;
+
+	if (isChannelExisting(server, channel_name)) {
+		join_msg = RPL_JOINCHANNEL(user, channel_name);
+		server->sendToClient(&join_msg);
+	} else {
+		createChannel(server, channel_name, user);
+	}
+}
+
+bool Join::isChannelExisting(Server *server, string const &channel_name) {
+	map<string, Channel *>::const_iterator it;
+
+	it = server->getChannelList().begin();
+	for (; it != server->getChannelList().end(); ++it) {
+		if (!it->first.compare(channel_name)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void Join::createChannel(Server *server, string const &channel_name, string &user) {
+	string msg;
+
+	if (server->getChannelList().size() < MAXCHANNEL) {
+		server->getChannelList().insert(pair<string, Channel *>(channel_name, new Channel));
+		msg = RPL_JOINCHANNEL(user, channel_name);
+		server->sendToClient(&msg);
+	} else {
+		msg = ERR_TOOMANYCHANNELSLIST;
+		server->sendToClient(&msg);
+	}
+}
+
 // 4. CLEAN UP
 void Join::cleanup() {
-	this->_channels_names.clear();
-	this->_channels_keys.clear();
-	this->_channels_map.clear();
+	this->_channel_name.clear();
+	this->_channel_key.clear();
+	this->_channel_map.clear();
 }
 
 
