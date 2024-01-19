@@ -62,6 +62,10 @@ map<string, Channel *> &Server::getChannelList() {
 	return this->_channel_list;
 }
 
+Channel *Server::getChannel(string const &channel_name) {
+	return this->_channel_list[channel_name];
+}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */
