@@ -39,6 +39,7 @@ struct	clientInfo {
 	string	_nickname;
 	string	_username;
 	string	_realname;
+	int		_nb_channel;
 };
 
 class CommandHandler;

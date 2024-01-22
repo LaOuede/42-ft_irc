@@ -177,6 +177,7 @@ string Join::parseChannelNameAndKey(string name, string key) {
 void Join::joinChannel(Server *server, string const &channel_name) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 	string &user = server->getUserDB()[fd]._nickname;
+	int &nb_channel = server->getUserDB()[fd]._nb_channel;
 	string error_msg;
 
 	cout << "--- I'm: " << user << " ---\n" << endl;
@@ -185,7 +186,7 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 		if (channel->isUserInChannel(fd)) {
 			error_msg = ERR_ALREADYINCHANNEL(channel_name);
 			server->sendToClient(&error_msg);
-		} else if (channel->getUsersNb() < MAXINCHANNEL) {
+		} else if (channel->getUsersNb() < MAXINCHANNEL && nb_channel < MAXINCHANNEL) {
 			channel->addUserToChannel(server, user, fd, USER);
 		} else {
 			error_msg = ERR_CHANNELISFULL;
@@ -210,8 +211,9 @@ bool Join::isChannelExisting(Server *server, string const &channel_name) {
 
 void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
 	string msg;
+	int &nb_channel = server->getUserDB()[fd]._nb_channel;
 
-	if (server->getChannelList().size() < MAXCHANNEL) {
+	if (server->getChannelList().size() < MAXCHANNEL && nb_channel < MAXINCHANNEL) {
 		Channel *channel = new Channel(channel_name);
 		server->getChannelList()[channel_name] = channel;
 		channel->addUserToChannel(server, user, fd, OPERATOR);
