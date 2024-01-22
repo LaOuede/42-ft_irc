@@ -55,6 +55,11 @@ struct pollfd *Server::getFds() {
 	return this->_fds;
 }
 
+string &Server::getPassword() {
+	return this->_password;
+}
+
+
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
@@ -94,6 +99,8 @@ void Server::socketListening() {
 	cout << endl;
 	cout << "To connect to the server, use the following commands:" << endl;
 	cout << "/server add IRCserv host.docker.internal/6667 -notls" << endl;
+	cout << "to set the password on your client, type this:" << endl;
+	cout << "/set irc.server.IRCserv.password pass" << endl;
 	cout << "/connect IRCserv" << endl;
 }
 
@@ -232,10 +239,11 @@ void Server::welcomeMessage() {
 	int &fd = this->_fds[this->_client_index].fd;
 	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
 	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
+	bool &passworded = this->_userDB[this->_fds[this->_client_index].fd]._password_valid;
 	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
 	//manque le mot de passe
 
-	if (username != "" && nickname != "" && welcomed == false) {
+	if (username != "" && nickname != "" && welcomed == false && passworded == true) {
 		welcomed = true;
 		string response = WELCOME(hostname, nickname, username);
 		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);

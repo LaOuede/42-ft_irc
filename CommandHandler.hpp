@@ -16,6 +16,7 @@
 #include "Nick.hpp"
 #include "User.hpp"
 #include "Ping.hpp"
+#include "Pass.hpp"
 
 using std::cout;
 using std::endl;

@@ -15,6 +15,7 @@
 #define ERR_WRONGCHAR42 "400 :Supposed to be * after the 0\r\n"
 #define ERR_WRONGCHAR3 "400 :Supposed to be : at the beginning of the realname\r\n"
 #define ERR_USERTOOLONG "400 :Username too long\r\n"
+#define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the username\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -33,6 +34,8 @@ string User::executeCommand(Server *server) {
 	string	&username = server->getUserDB()[fd]._username;
 	string	&realname = server->getUserDB()[fd]._realname;
 	
+	if (server->getUserDB()[fd]._password_valid == false)
+		return (ERR_PASSWORDNEEDED);
 	if (username_token.empty())
 		return (defaultUser(username, realname));
 	if (server->getCommandHandler().getCommandTokens().size() < 4)

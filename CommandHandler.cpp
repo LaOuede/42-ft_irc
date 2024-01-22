@@ -35,6 +35,7 @@ void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
 	this->_command_caller.insert(pair<string, ACommand *>("USER", new User));
 	this->_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
+	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {

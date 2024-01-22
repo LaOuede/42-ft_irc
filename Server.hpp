@@ -37,6 +37,7 @@ struct	clientInfo {
 	string	_nickname;
 	string	_username;
 	string	_realname;
+	bool	_password_valid;
 	bool	_welcomed;
 };
 
@@ -58,6 +59,7 @@ class Server {
 		CommandHandler			&getCommandHandler();
 		string					&getHostname();
 		struct pollfd			*getFds();
+		string					&getPassword();
 
 		// Methods
 		void					createSocket();
