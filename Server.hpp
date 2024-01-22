@@ -43,7 +43,6 @@ struct	clientInfo {
 	bool	_password_valid;
 	bool	_welcomed;
 	int		_nb_channel;
-	bool	_welcomed;
 };
 
 class CommandHandler;
