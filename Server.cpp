@@ -19,6 +19,7 @@ Server::Server(string port, string password) :
 
 Server::~Server() {
 	cout << "Server destructor call" << endl;
+	cleanup();
 	closeFds();
 }
 
@@ -56,6 +57,15 @@ string &Server::getHostname() {
 struct pollfd *Server::getFds() {
 	return this->_fds;
 }
+
+map<string, Channel *> &Server::getChannelList() {
+	return this->_channel_list;
+}
+
+Channel *Server::getChannel(string const &channel_name) {
+	return this->_channel_list[channel_name];
+}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */
@@ -236,6 +246,21 @@ void Server::parseCommand() {
 		this->_command_received = this->_command_received.substr(0, pos);
 		cout << "Command received: " << this->_command_received << endl;
 	}
+}
+
+void Server::cleanup() {
+	this->_userDB.clear();
+	cleanChannelList();
+}
+
+void Server::cleanChannelList() {
+	map<string, Channel *>::iterator it;
+
+	it = this->_channel_list.begin();
+	for (; it != this->_channel_list.end(); it++ ) {
+		delete it->second;
+	}
+	this->_channel_list.clear();
 }
 
 void	Server::closeFds() {
