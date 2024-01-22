@@ -34,7 +34,7 @@ int const &Channel::getOperatorsNb() const {
 	return this->_nb_operators;
 }
 
-map<int, int> &Channel::getUserList() {
+unordered_map<int, int> &Channel::getUserList() {
 	return this->_user_list;
 }
 
@@ -43,7 +43,8 @@ map<int, int> &Channel::getUserList() {
 /* Functions                                                                  */
 /* ************************************************************************** */
 void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int role) {
-	this->_user_list.insert(pair<int, int>(user_fd, role));
+	this->_user_list[user_fd] = role;
+
 	if (role == OPERATOR) {
 		this->_nb_operators++;
 	} else {
@@ -54,9 +55,9 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 	server->sendToClient(&msg);
 	printListUser(server);
 
-	// DEBUG Print map
+	// DEBUG Print unordered_map
 	cout << "--- User in channel: ---" << this->_channel_name << endl;
-	map<int, int>::const_iterator ite;
+	unordered_map<int, int>::const_iterator ite;
 	int index = -1;
 	ite = this->_user_list.begin();
 	for (; ite != this->_user_list.end(); ++ite) {
@@ -66,7 +67,7 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 }
 
 bool Channel::isUserInChannel(int &fd) {
-	map<int, int>::const_iterator it;
+	unordered_map<int, int>::const_iterator it;
 
 	it = this->getUserList().begin();
 	for (; it != this->getUserList().end(); ++it) {
@@ -78,7 +79,7 @@ bool Channel::isUserInChannel(int &fd) {
 }
 
 void Channel::printListUser(Server *server) {
-	map<int, int>::const_iterator it;
+	unordered_map<int, int>::const_iterator it;
 	string list_user;
 
 	list_user = "353 " + this->_channel_name + " :";
@@ -100,6 +101,49 @@ void Channel::rplEndOfNames(Server *server) {
 	string &channel = this->_channel_name;
 	string msg = RPL_ENDOFNAMES(channel);
 	server->sendToClient(&msg);
+}
+
+void Channel::removeUserFromChannel(Server *server, int &user_fd) {
+	unordered_map<int, int>::iterator it = this->_user_list.find(user_fd);
+
+	if (it != this->_user_list.end()) {
+		checkRole(this, it->second);
+		this->_user_list.erase(it);
+	
+
+		if (!server->isChannelEmpty(this) && this->_nb_operators == 0) {
+			unordered_map<int, int>::iterator newOper = this->_user_list.begin();
+			newOper->second = OPERATOR;
+		}
+
+		server->getUserDB()[user_fd]._nb_channel--;
+
+		// DEBUG: Print updated unordered_map
+		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
+		cout << "--- Updated list of users in channel '" << this->_channel_name << "' ---" << endl;
+		unordered_map<int, int>::const_iterator it;
+		string list_user;
+
+		cout << "353 " + this->_channel_name + " :";
+		it = this->_user_list.begin();
+		for (; it != this->_user_list.end(); ++it) {
+			string &user = server->getUserDB()[it->first]._nickname;
+			if (it->second == OPERATOR) {
+				cout << "@" << user << " ";
+			} else {
+				cout << user << " ";
+			}
+		}
+		cout << "\n" << endl;
+	}
+}
+
+void Channel::checkRole(Channel *channel, int &role) {
+	if (role == OPERATOR) {
+		channel->_nb_operators--;
+	} else {
+		channel->_nb_users--;
+	}
 }
 
 

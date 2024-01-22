@@ -41,6 +41,7 @@ struct	clientInfo {
 	string	_username;
 	string	_realname;
 	int		_nb_channel;
+	bool	_welcomed;
 };
 
 class CommandHandler;
@@ -87,6 +88,8 @@ class Server {
 		void					cleanChannelList();
 		void					sendToClient(string *response);
 		void					closeFds();
+		void					closeChannelFds();
+		bool					isChannelEmpty(Channel *channel);
 
 		// Exceptions
 		std::exception			socketFailureException();
