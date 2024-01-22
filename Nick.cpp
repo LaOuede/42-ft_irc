@@ -5,10 +5,12 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
+#define NICKNAMESET(nickname) "400 :Nickname set to: '" + nickname + "'\r\n"
 #define ERR_NONICKNAMEGIVEN "431 nonick :No nickname given\r\n"
 #define ERR_ERRONEUSNICKNAME(nickname) "432 '" + nickname + "' :Erroneus nickname\r\n"
 #define ERR_NICKNAMEINUSE(nickname) " 433 '" + nickname + "' :Nickname is already in use\r\n"
 #define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
+#define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the nickname\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -29,6 +31,8 @@ string Nick::executeCommand(Server *server) {
 	string	&username = server->getUserDB()[fd]._username;
 	string	&current_nickname = server->getUserDB()[fd]._nickname;
 
+	if (server->getUserDB()[fd]._password_valid == false)
+		return (ERR_PASSWORDNEEDED);
 	if (nickname_token.empty())
 		return (ERR_NONICKNAMEGIVEN);
 	if (!isNickValid(nickname_token))
@@ -38,7 +42,7 @@ string Nick::executeCommand(Server *server) {
 	}
 	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
 		current_nickname = nickname_token;
-		return ("\r\n");
+		return (NICKNAMESET(nickname_token));
 	}
 	string old_nickname = current_nickname;
 	current_nickname = nickname_token;

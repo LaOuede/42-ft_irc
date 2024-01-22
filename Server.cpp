@@ -1,6 +1,8 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
+
 extern bool g_running;
 
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
@@ -58,6 +60,11 @@ struct pollfd *Server::getFds() {
 	return this->_fds;
 }
 
+string &Server::getPassword() {
+	return this->_password;
+}
+
+
 map<string, Channel *> &Server::getChannelList() {
 	return this->_channel_list;
 }
@@ -106,6 +113,8 @@ void Server::socketListening() {
 	cout << endl;
 	cout << "To connect to the server, use the following commands:" << endl;
 	cout << "/server add IRCserv host.docker.internal/6667 -notls" << endl;
+	cout << "to set the password on your client, type this:" << endl;
+	cout << "/set irc.server.IRCserv.password pass" << endl;
 	cout << "/connect IRCserv" << endl;
 }
 
@@ -220,21 +229,40 @@ void Server::trimBuffer(size_t pos) {
 
 void Server::messageHandler() {
 	string response;
+	int &fd = this->_fds[this->_client_index].fd;
 
-	cout << "Message received from client socket " << this->_fds[this->_client_index].fd << ": " << this->_command_received << endl;
+	cout << "Message received from client socket " << fd << ": " << this->_command_received << endl;
 	this->_command_handler.commandTokenizer( this );
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
 	}
 	if (this->_bytes_sent == -1)
 		sendFailureException();
 	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << this->_fds[this->_client_index].fd << " to confirm reception" << endl;
+		cout << "Message sent to client socket " << fd << " to confirm reception" << endl;
 	} else {
-		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
+		cout << "Message partially sent to client socket " << fd << ": " << this->_bytes_sent << endl;
 	}
-	//verification flag welcome si pas welcome et que nick user pass son ok welcome true
+	welcomeMessage();
+}
+
+void Server::welcomeMessage() {
+	string &hostname = this->_hostname;
+	int &fd = this->_fds[this->_client_index].fd;
+	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
+	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
+	bool &passworded = this->_userDB[this->_fds[this->_client_index].fd]._password_valid;
+	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
+	//manque le mot de passe
+
+	if (username != "" && nickname != "" && welcomed == false && passworded == true) {
+		welcomed = true;
+		string response = WELCOME(hostname, nickname, username);
+		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
+		if (this->_bytes_sent == -1)
+			sendFailureException();
+	}
 }
 
 // DEGUG - Print command name

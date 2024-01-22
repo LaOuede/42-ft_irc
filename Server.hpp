@@ -40,6 +40,8 @@ struct	clientInfo {
 	string	_nickname;
 	string	_username;
 	string	_realname;
+	bool	_password_valid;
+	bool	_welcomed;
 	int		_nb_channel;
 };
 
@@ -61,6 +63,7 @@ class Server {
 		CommandHandler			&getCommandHandler();
 		string					&getHostname();
 		struct pollfd			*getFds();
+		string					&getPassword();
 		map<string, Channel *>	&getChannelList();
 		Channel 				*getChannel(string const &channel_name);
 
@@ -83,6 +86,7 @@ class Server {
 		void 					trimBuffer(size_t pos);
 		void					messageHandler();
 		void					parseCommand();
+		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
 		void					sendToClient(string *response);

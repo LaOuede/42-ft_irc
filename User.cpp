@@ -5,6 +5,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
+#define USERNAMESET(username, realname) "400 :Username set to: '" + username + "' and the realname set to: '" + realname + "'\r\n"
 #define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
 #define ERR_ALREADYREGISTRED "462 PRIVMSG :You may not reregister\r\n"
 #define ERR_NOUSERNAME "400 :No username given\r\n"
@@ -14,7 +15,7 @@
 #define ERR_WRONGCHAR42 "400 :Supposed to be * after the 0\r\n"
 #define ERR_WRONGCHAR3 "400 :Supposed to be : at the beginning of the realname\r\n"
 #define ERR_USERTOOLONG "400 :Username too long\r\n"
-#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
+#define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the username\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -29,18 +30,18 @@ User::~User() {}
 string User::executeCommand(Server *server) {
 	list<string>::iterator it = server->getCommandHandler().getCommandTokens().begin();
 	string	&username_token = *it;
-	string	&hostname = server->getHostname();
 	int		&fd = server->getFds()[server->getClientIndex()].fd;
-	string	&nickname = server->getUserDB()[fd]._nickname;
 	string	&username = server->getUserDB()[fd]._username;
 	string	&realname = server->getUserDB()[fd]._realname;
 	
+	if (server->getUserDB()[fd]._password_valid == false)
+		return (ERR_PASSWORDNEEDED);
 	if (username_token.empty())
 		return (defaultUser(username, realname));
 	if (server->getCommandHandler().getCommandTokens().size() < 4)
 		return (ERR_NEEDMOREPARAMS);
-	for (; it != server->getCommandHandler().getCommandTokens().end(); it++) {
-
+	while (it != server->getCommandHandler().getCommandTokens().end()) {
+		
 		string message_parsing = parsingUsername(*it, server);
 		if (!message_parsing.empty())
 			return (message_parsing);
@@ -57,6 +58,7 @@ string User::executeCommand(Server *server) {
 				return (ERR_WRONGCHARREAL);
 			string old_realname = realname;
 			realname = old_realname + " " + *it;
+			it = server->getCommandHandler().getCommandTokens().end();
 		}
 		else
 			break;
@@ -67,7 +69,7 @@ string User::executeCommand(Server *server) {
 	// for (; it2 != server->getUserDB().end(); ++it2) {
 	// 	std::cout << it2->first << ", " << it2->second._nickname << it2->second._username << it2->second._realname << std::endl;
 	// }
-	return (WELCOME(hostname, nickname, username));
+	return (USERNAMESET(username, realname));
 }
 
 string User::defaultUser(string &username, string &realname){
