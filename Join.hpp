@@ -36,7 +36,8 @@ class Join : public ACommand {
 		string processChannelConnections(Server *Server);
 		string parseChannelNameAndKey(string name, string key);
 		void joinChannel(Server *server, string const &channel_name);
-		bool isChannelExisting(Server *server, string const &channel_name);		void createChannel(Server *server, string const &channel_name, string &user, int &fd);
+		bool isChannelExisting(Server *server, string const &channel_name);
+		void createChannel(Server *server, string const &channel_name, string &user, int &fd);
 		void cleanup();
 
 	private:
