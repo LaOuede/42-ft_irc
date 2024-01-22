@@ -29,6 +29,7 @@
 #define MAXCLIENT 10
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
+#define MAXMSGLEN 512
 #define MAXCHANNEL 10
 
 using std::cout;
@@ -74,13 +75,13 @@ class Server {
 		void					bindSocket();
 		void					socketListening();
 		void					serverRoutine();
-		void					signalHandler(int sig);
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
 		void 					receiver();
 		int						getBuffer(string &buffer);
 		int						closeConnection();
+		int						inputTooLongError(string &buffer);
 		void 					processRequests(string &buffer);
 		void 					splitBuffer(string &buffer);
 		void 					buildCommandReceived(size_t pos, string &buffer);

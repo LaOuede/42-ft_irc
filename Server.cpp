@@ -1,3 +1,6 @@
+//Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel sapien eu odio ullamcorper commodo. Vivamus id orci in sem mattis scelerisque. Quisque tristique, tortor ac condimentum congue, urna orci cursus arcu, nec dictum justo mi id elit. Fusce ut velit vel sapien vehicula sodales. Sed bibendum leo non lectus fermentum, ac facilisis dui tincidunt. Curabitur bibendum urna et nunc congue, sit amet lacinia turpis facilisis. Nullam vel ex at mauris congue vulputate. Integer in magna eu ex feugiat volutpat. Nunc ultrices leo eu ante malesuada, vel bibendum tortor fermentum. Phasellus ut nisl ac nisl ultricies fermentum non a dolor. Integer eget condimentum justo. Fusce vehicula ultricies augue, eu tincidunt ligula ullamcorper eu. Sed et justo ut lectus aliquam aliquam vel id odio. Aenean tincidunt, velit vel sagittis aliquam, justo purus varius lectus, at fermentum ex mi in libero. Suspendisse potenti. Vestibulum vehicula scelerisque hendrerit. Aliquam erat volutpat. Etiam a lectus id quam blandit vulputate. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed dapibus auctor nisl, non vulputate tortor malesuada eu. Praesent id urna sit amet orci ultrices pharetra vel vel ligula. In hac habitasse platea dictumst. Integer vel libero aliquam, malesuada dui at, commodo tortor. Etiam eget justo nec nisi volutpat vehicula. Vivamus vitae urna ac nisi aliquam consectetur a ut odio. Maecenas fermentum mi a sem dignissim tincidunt. Integer euismod a ligula eu posuere. Fusce quis commodo neque. Nullam ultrices arcu nec justo rhoncus, et tempus metus malesuada. Proin vel facilisis lectus, sit amet dapibus turpis.
+//Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel sapien eu odio ullamcorper commodo. Vivamus id orci in sem mattis scelerisque. Quisque tristique, tortor ac condimentum congue, urna orci cursus arcu, nec dictum justo mi id elit. Fusce ut velit vel sapien vehicula sodales. Sed bibendum leo non lectus fermentum, ac facilisis dui tincidunt. Curabitur bibendum urna et nunc congue, sit amet lacinia turpis facilisis. Nullam vel ex at mauris congue vulputate. Integer in magna eu ex feugiat volutp
+
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
@@ -6,6 +9,7 @@
 extern bool g_running;
 
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
+# define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -184,20 +188,16 @@ int Server::getBuffer(string &buffer) {
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-		if(bytes > 0)
+		if(buffer.length() > MAXMSGLEN)
+			return inputTooLongError(buffer);
+		else if(bytes > 0)
 			buffer.append(_buf, strlen(_buf));
 		else if(bytes == 0)
 			return closeConnection();
 		else if(buffer.find("\n") != string::npos)
 			return 0;
-		else{
-			// sleep(1);
-			// timeout++;
-			// if(timeout > 10){
-			// 	cout << "timeout" << endl;
-			// 	send(this->_fds[this->_client_index].fd, "ERROR :Connection timeout", strlen("ERROR :Connection timeout"), 0);
+		else
 			return -1;
-		}
 	}
 }
 
@@ -209,6 +209,13 @@ int Server::closeConnection() {
 	_fds[_client_index].fd = -1;
 	return -1;
 }
+
+int	Server::inputTooLongError(string &buffer){
+	send(this->_fds[this->_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
+	buffer.clear();
+	return -1;
+}
+
 
 void Server::processRequests(string &buffer) {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
