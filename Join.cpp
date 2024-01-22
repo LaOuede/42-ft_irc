@@ -15,6 +15,7 @@
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_WRONGCHARCHANNELNAME(name) "400 :Wrong characters used in name '" + name + "'\r\n"
 #define ERR_WRONGCHARCHANNELKEY(key) "400 :Wrong characters used in key '" + key + "'\r\n"
 #define RPL_JOINCHANNEL(user, name) ":" + user + " JOIN " + name + "\r\n"
@@ -40,6 +41,11 @@ Join::~Join() {}
 string Join::executeCommand(Server *server) {
 	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
 
+	// 0. Am I authentificated ?
+/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
+	if (server->getUserDB()[fd]._welcomed == false) {
+		return (ERR_WELCOMED);
+	} */
 	// 1. PARSING
 	this->_error_msg = parseCommand(server);
 	if (this->_error_msg.compare("") != 0) {
@@ -126,16 +132,16 @@ void Join::createChannelMap() {
 		if (this->_channel_key.empty()) {
 			key = "";
 		} else {
-			key = this->_channel_key.front();
-			this->_channel_key.pop_front();
+			key = this->_channel_key.back();
+			this->_channel_key.pop_back();
 		}
-		this->_channel_map[this->_channel_name.front()] = key;
-		this->_channel_name.pop_front();
+		this->_channel_map[this->_channel_name.back()] = key;
+		this->_channel_name.pop_back();
 	}
 
 	// DEBUG Print map
 	cout << "--- Elements in map ---" << endl;
-	map<string, string>::const_iterator it;
+	unordered_map<string, string>::const_iterator it;
 	int index = -1;
 	it = this->_channel_map.begin();
 	for (; it != this->_channel_map.end(); ++it) {
@@ -146,7 +152,7 @@ void Join::createChannelMap() {
 
 //3. PROCESS CONNECTIONS
 string Join::processChannelConnections(Server *server) {
-	map<string, string>::const_iterator it;
+	unordered_map<string, string>::const_iterator it;
 
 	it = this->_channel_map.begin();
 	for (; it != this->_channel_map.end(); ++it) {
@@ -197,16 +203,8 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 	}
 }
 
-bool Join::isChannelExisting(Server *server, string const &channel_name) {
-	map<string, Channel *>::const_iterator it;
-
-	it = server->getChannelList().begin();
-	for (; it != server->getChannelList().end(); ++it) {
-		if (!it->first.compare(channel_name)) {
-			return true;
-		}
-	}
-	return false;
+bool Join::isChannelExisting(Server *server, const string &channel_name) {
+	return server->getChannelList().find(channel_name) != server->getChannelList().end();
 }
 
 void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
