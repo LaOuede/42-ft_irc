@@ -6,7 +6,8 @@
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(name) "400 JOIN :You are already in the channel '" + name + "'\r\n"
 #define RPL_JOINCHANNEL(user, name) ":" + user + " JOIN " + name + "\r\n"
-#define RPL_NAMREPLY (user, channel) ""
+#define RPL_NAMREPLY(user, channel) ""
+#define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -80,7 +81,7 @@ void Channel::printListUser(Server *server) {
 	map<int, int>::const_iterator it;
 	string list_user;
 
-	list_user = "353 " + this->_channel_name + " : ";
+	list_user = "353 " + this->_channel_name + " :";
 	it = this->_user_list.begin();
 	for (; it != this->_user_list.end(); ++it) {
 		string &user = server->getUserDB()[it->first]._nickname;
@@ -90,9 +91,17 @@ void Channel::printListUser(Server *server) {
 			list_user += user + " ";
 		}
 	}
-	list_user +=  "\r\n";
+	list_user += "\n";
 	server->sendToClient(&list_user);
+	rplEndOfNames(server);
 }
+
+void Channel::rplEndOfNames(Server *server) {
+	string &channel = this->_channel_name;
+	string msg = RPL_ENDOFNAMES(channel);
+	server->sendToClient(&msg);
+}
+
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */

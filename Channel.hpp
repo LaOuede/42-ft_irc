@@ -37,6 +37,7 @@ class Channel {
 		void addUserToChannel(Server *Server, string &user, int &user_fd, int role);
 		bool isUserInChannel(int &user_fd);
 		void printListUser(Server *Server);
+		void rplEndOfNames(Server *server);
 
 		// Exceptions
 
