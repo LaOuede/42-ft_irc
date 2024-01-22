@@ -118,9 +118,12 @@ void Server::serverRoutine(){
 					acceptConnection();
 				}else if(_fds[this->_client_index].revents & POLLIN)
 					receiver();
+				else if(_fds[this->_client_index].revents & (POLLNVAL | POLLERR | POLLHUP)){
+					cout << "(POLLNVAL | POLLERR | POLLHUP)" << endl;
+					closeConnection();
+				}
 			}
 		}
-
 		// only for visualition of the fd
 		// for(int i = 0; i < MAXFDS; i++)
 		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
