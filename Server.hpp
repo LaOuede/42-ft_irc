@@ -43,6 +43,7 @@ struct	clientInfo {
 	bool	_password_valid;
 	bool	_welcomed;
 	int		_nb_channel;
+	bool	_welcomed;
 };
 
 class CommandHandler;
@@ -91,6 +92,8 @@ class Server {
 		void					cleanChannelList();
 		void					sendToClient(string *response);
 		void					closeFds();
+		void					closeChannelFds();
+		bool					isChannelEmpty(Channel *channel);
 
 		// Exceptions
 		std::exception			socketFailureException();

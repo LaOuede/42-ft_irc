@@ -15,6 +15,7 @@
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_WRONGCHARCHANNELNAME(name) "400 :Wrong characters used in name '" + name + "'\r\n"
 #define ERR_WRONGCHARCHANNELKEY(key) "400 :Wrong characters used in key '" + key + "'\r\n"
 #define RPL_JOINCHANNEL(user, name) ":" + user + " JOIN " + name + "\r\n"
@@ -40,6 +41,11 @@ Join::~Join() {}
 string Join::executeCommand(Server *server) {
 	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
 
+	// 0. Am I authentificated ?
+/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
+	if (server->getUserDB()[fd]._welcomed == false) {
+		return (ERR_WELCOMED);
+	} */
 	// 1. PARSING
 	this->_error_msg = parseCommand(server);
 	if (this->_error_msg.compare("") != 0) {

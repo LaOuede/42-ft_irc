@@ -5,7 +5,7 @@
 
 #include <exception>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <stdexcept>
 #include <string.h>
 
@@ -15,9 +15,11 @@
 
 using std::cout;
 using std::endl;
-using std::map;
+using std::unordered_map;
 using std::pair;
+using std::make_pair;
 using std::string;
+using std::reverse_iterator;
 
 class Server;
 
@@ -31,13 +33,15 @@ class Channel {
 		string const &getChannelName() const;
 		int const &getUsersNb() const;
 		int const &getOperatorsNb() const;
-		map<int, int> &getUserList();
+		unordered_map<int, int> &getUserList();
 
 		// Methods
 		void addUserToChannel(Server *Server, string &user, int &user_fd, int role);
 		bool isUserInChannel(int &user_fd);
 		void printListUser(Server *Server);
 		void rplEndOfNames(Server *server);
+		void removeUserFromChannel(Server *server, int &user_fd);
+		void checkRole(Channel *channel, int &role);
 
 		// Exceptions
 
@@ -45,10 +49,10 @@ class Channel {
 		// Construtors & Destructors
 		Channel();
 		// Attributes
-		int				_nb_users;
-		int				_nb_operators;
-		string			_channel_name;
-		map<int, int>	_user_list;
+		int						_nb_users;
+		int						_nb_operators;
+		string					_channel_name;
+		unordered_map<int, int>	_user_list;
 };
 
 #include "Server.hpp"
