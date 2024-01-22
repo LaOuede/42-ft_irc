@@ -43,6 +43,7 @@ struct	clientInfo {
 	bool	_password_valid;
 	bool	_welcomed;
 	int		_nb_channel;
+	string	_buffer;
 };
 
 class CommandHandler;
@@ -78,12 +79,12 @@ class Server {
 		void					acceptConnection();
 		void					addNewClient(int status);
 		void 					receiver();
-		int						getBuffer();
+		int						getBuffer(string &buffer);
 		int						closeConnection();
-		void 					processRequests();
-		void 					splitBuffer();
-		void 					buildCommandReceived(size_t pos);
-		void 					trimBuffer(size_t pos);
+		void 					processRequests(string &buffer);
+		void 					splitBuffer(string &buffer);
+		void 					buildCommandReceived(size_t pos, string &buffer);
+		void 					trimBuffer(size_t pos, string &buffer);
 		void					messageHandler();
 		void					parseCommand();
 		void					welcomeMessage();
@@ -116,7 +117,7 @@ class Server {
 		int 					_port;
 		string 					_password;
 		CommandHandler 			_command_handler;
-		string					_buffer;
+
 		string					_command_received;
 		string					_hostname;
 		map<int, clientInfo>	_userDB;

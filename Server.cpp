@@ -170,22 +170,34 @@ void Server::addNewClient(int status) {
 }
 
 void Server::receiver() {
-	if(getBuffer() == -1)
+	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
+	if(getBuffer(buffer) == -1){
+		cout << "buffer : " << buffer << " / Client index : " << _client_index << endl;
 		return;
-	processRequests();
+	}
+	processRequests(buffer);
 }
 
-int Server::getBuffer() {
+int Server::getBuffer(string &buffer) {
 	int bytes = 0;
+	// int timeout = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
 		if(bytes > 0)
-			_buffer.append(_buf, BUFFERSIZE);
+			buffer.append(_buf, strlen(_buf));
 		else if(bytes == 0)
 			return closeConnection();
-		else
+		else if(buffer.find("\n") != string::npos)
 			return 0;
+		else{
+			// sleep(1);
+			// timeout++;
+			// if(timeout > 10){
+			// 	cout << "timeout" << endl;
+			// 	send(this->_fds[this->_client_index].fd, "ERROR :Connection timeout", strlen("ERROR :Connection timeout"), 0);
+			return -1;
+		}
 	}
 }
 
@@ -198,36 +210,36 @@ int Server::closeConnection() {
 	return -1;
 }
 
-void Server::processRequests() {
+void Server::processRequests(string &buffer) {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	if(_buf[0] != 0)
 		return;
-	while(_buffer.empty() == false){
-		splitBuffer();
+	while(buffer.empty() == false){
+		splitBuffer(buffer);
 		messageHandler();
 		_command_received.clear();
 	}
 }
 
-void Server::splitBuffer() {
+void Server::splitBuffer(string &buffer) {
 	size_t pos = 0;
-	pos = _buffer.find("\n");
-	buildCommandReceived(pos);
-	trimBuffer(pos);
+	pos = buffer.find("\n");
+	buildCommandReceived(pos, buffer);
+	trimBuffer(pos, buffer);
 }
 
-void Server::buildCommandReceived(size_t pos) {
+void Server::buildCommandReceived(size_t pos, string &buffer) {
 	if(pos != std::string::npos)
-		_command_received.assign(_buffer.substr(0, pos));
-	if(_command_received.find("\r") != string::npos)
+		_command_received.assign(buffer.substr(0, pos));
+	while(_command_received.find("\r") != string::npos || _command_received.find("\n") != string::npos)
 		_command_received.pop_back();
 }
 
-void Server::trimBuffer(size_t pos) {
-	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
-		_buffer.assign(_buffer.substr(pos + 1));
+void Server::trimBuffer(size_t pos, string &buffer) {
+	if(buffer.find("\n", buffer.find("\n") + 1) != string::npos)
+		buffer.assign(buffer.substr(pos + 1));
 	else
-		_buffer.clear();
+		buffer.clear();
 }
 
 void Server::messageHandler() {
