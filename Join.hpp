@@ -6,7 +6,7 @@
 # include "ACommand.hpp"
 # include <iostream>
 # include <list>
-# include <map>
+# include <unordered_map>
 # include <string>
 
 # define CHANLIMIT 5
@@ -14,7 +14,7 @@
 using std::cout;
 using std::endl;
 using std::list;
-using std::map;
+using std::unordered_map;
 using std::pair;
 using std::string;
 
@@ -46,7 +46,7 @@ class Join : public ACommand {
 		string				_error_msg;
 		list<string>		_channel_name;
 		list<string>		_channel_key;
-		map<string, string>	_channel_map;
+		unordered_map<string, string>	_channel_map;
 
 };
 

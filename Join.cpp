@@ -126,16 +126,16 @@ void Join::createChannelMap() {
 		if (this->_channel_key.empty()) {
 			key = "";
 		} else {
-			key = this->_channel_key.front();
-			this->_channel_key.pop_front();
+			key = this->_channel_key.back();
+			this->_channel_key.pop_back();
 		}
-		this->_channel_map[this->_channel_name.front()] = key;
-		this->_channel_name.pop_front();
+		this->_channel_map[this->_channel_name.back()] = key;
+		this->_channel_name.pop_back();
 	}
 
 	// DEBUG Print map
 	cout << "--- Elements in map ---" << endl;
-	map<string, string>::const_iterator it;
+	unordered_map<string, string>::const_iterator it;
 	int index = -1;
 	it = this->_channel_map.begin();
 	for (; it != this->_channel_map.end(); ++it) {
@@ -146,7 +146,7 @@ void Join::createChannelMap() {
 
 //3. PROCESS CONNECTIONS
 string Join::processChannelConnections(Server *server) {
-	map<string, string>::const_iterator it;
+	unordered_map<string, string>::const_iterator it;
 
 	it = this->_channel_map.begin();
 	for (; it != this->_channel_map.end(); ++it) {
@@ -197,16 +197,8 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 	}
 }
 
-bool Join::isChannelExisting(Server *server, string const &channel_name) {
-	map<string, Channel *>::const_iterator it;
-
-	it = server->getChannelList().begin();
-	for (; it != server->getChannelList().end(); ++it) {
-		if (!it->first.compare(channel_name)) {
-			return true;
-		}
-	}
-	return false;
+bool Join::isChannelExisting(Server *server, const string &channel_name) {
+	return server->getChannelList().find(channel_name) != server->getChannelList().end();
 }
 
 void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
