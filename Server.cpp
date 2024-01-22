@@ -1,6 +1,10 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
+extern bool g_running;
+
+#define ERR_SERVERFULL "400 :No empty server slot\r\n"
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -15,8 +19,8 @@ Server::Server(string port, string password) :
 
 Server::~Server() {
 	cout << "Server destructor call" << endl;
+	closeFds();
 }
-
 
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
@@ -97,7 +101,7 @@ void Server::socketListening() {
 
 void Server::serverRoutine(){
 	initPollfd();
-	while(1){
+	while(g_running){
 		if(poll(this->_fds, MAXFDS, 100) == 1){
 			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
@@ -106,6 +110,7 @@ void Server::serverRoutine(){
 					receiver();
 			}
 		}
+
 		// only for visualition of the fd
 		// for(int i = 0; i < MAXFDS; i++)
 		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
@@ -113,7 +118,7 @@ void Server::serverRoutine(){
 	}
 }
 
-void Server::initPollfd(){
+void Server::initPollfd() {
 	this->_fds[0].fd = this->_socket_fd;
 	this->_fds[0].events = POLLIN;
 	this->_nfds++;
@@ -124,32 +129,31 @@ void Server::initPollfd(){
 void Server::acceptConnection() {
 	int status = accept(this->_socket_fd, 0, 0);
 	if(status != -1){
-		// besoin d'un recv pour save les info NICK/USER
 		addNewClient(status);
 	}else
 		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
 }
 
-void Server::addNewClient(int status){
-	for(uint32_t i = 0; i <= _nfds; i++){
+void Server::addNewClient(int status) {
+	for(uint32_t i = 0; i < MAXFDS; i++){
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
-			_nfds++;
 			return;
 		}
 	}
-	//besoin d'un send pour pas de place au server pour un nouveau client
+	send(status, ERR_SERVERFULL, strlen(ERR_SERVERFULL), 0);
+	close(status);
 }
 
-void Server::receiver(){
+void Server::receiver() {
 	if(getBuffer() == -1)
 		return;
 	processRequests();
 }
 
-int Server::getBuffer(){
+int Server::getBuffer() {
 	int bytes = 0;
 	while(1){
 		bzero(_buf, BUFFERSIZE);
@@ -163,19 +167,16 @@ int Server::getBuffer(){
 	}
 }
 
-int Server::closeConnection(){
+int Server::closeConnection() {
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
 	close(_fds[_client_index].fd);
+	if(_userDB.find(_fds[_client_index].fd) != _userDB.end())
+		_userDB.erase(_userDB.find(_fds[_client_index].fd));
 	_fds[_client_index].fd = -1;
-	// if(_userDB.find(_fds[_client_index].fd) != _userDB.end()) //TODO utiliser avec frank merge
-	// 	_userDB.erase(_userDB.find(_fds[_client_index].fd));
-	if(_userDB.find(_client_index) != _userDB.end()) //TODO delete apres merge frank
-		_userDB.erase(_client_index);
 	return -1;
-	//TODO verifier les structure client savoir quoi detruire a la deconnection
 }
 
-void Server::processRequests(){
+void Server::processRequests() {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	if(_buf[0] != 0)
 		return;
@@ -186,21 +187,21 @@ void Server::processRequests(){
 	}
 }
 
-void Server::splitBuffer(){
+void Server::splitBuffer() {
 	size_t pos = 0;
 	pos = _buffer.find("\n");
 	buildCommandReceived(pos);
 	trimBuffer(pos);
 }
 
-void Server::buildCommandReceived(size_t pos){
+void Server::buildCommandReceived(size_t pos) {
 	if(pos != std::string::npos)
 		_command_received.assign(_buffer.substr(0, pos));
 	if(_command_received.find("\r") != string::npos)
 		_command_received.pop_back();
 }
 
-void Server::trimBuffer(size_t pos){
+void Server::trimBuffer(size_t pos) {
 	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
 		_buffer.assign(_buffer.substr(pos + 1));
 	else
@@ -223,8 +224,8 @@ void Server::messageHandler() {
 	} else {
 		cout << "Message partially sent to client socket " << this->_fds[this->_client_index].fd << ": " << this->_bytes_sent << endl;
 	}
+	//verification flag welcome si pas welcome et que nick user pass son ok welcome true
 }
-
 
 // DEGUG - Print command name
 void Server::parseCommand() {
@@ -237,33 +238,39 @@ void Server::parseCommand() {
 	}
 }
 
+void	Server::closeFds() {
+	for(int i = 0; i < MAXFDS; i++)
+		if(_fds[i].fd != -1)
+			close(_fds[i].fd);
+}
+
 /* ************************************************************************** */
 /* Exceptions                                                                 */
 /* ************************************************************************** */
-std::exception Server::socketFailureException(){
+std::exception Server::socketFailureException() {
 	throw std::runtime_error("socket() error");
 }
 
-std::exception Server::bindFailureException(){
+std::exception Server::bindFailureException() {
 	throw std::runtime_error("bind() error");
 }
 
-std::exception Server::listenFailureException(){
+std::exception Server::listenFailureException() {
 	throw std::runtime_error("listen() error");
 }
 
-std::exception Server::acceptFailureException(){
+std::exception Server::acceptFailureException() {
 	throw std::runtime_error("accept() error");
 }
 
-std::exception Server::recvFailureException(){
+std::exception Server::recvFailureException() {
 	throw std::runtime_error("recv() error");
 }
 
-std::exception Server::sendFailureException(){
+std::exception Server::sendFailureException() {
 	throw std::runtime_error("send() error");
 }
 
-std::exception Server::setsockoptFailureException(){
+std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
 }

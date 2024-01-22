@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+extern bool g_running;
+
 bool parsingPort(string port) {
 	if (port.empty() || port.length() > 4
 		|| port.find_first_not_of("0123456789") != string::npos
@@ -21,4 +23,9 @@ bool parsingPassword(string password) {
 
 void Server::sendToClient(string *response) {
 	send(this->_fds[this->_client_index].fd, response->c_str(), response->size(), 0);
+}
+
+void shutdown(int sig){
+	(void)sig;
+	g_running = false;
 }
