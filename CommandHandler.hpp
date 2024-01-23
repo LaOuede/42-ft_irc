@@ -15,6 +15,7 @@
 #include "Cap.hpp"
 #include "Join.hpp"
 #include "Nick.hpp"
+#include "Part.hpp"
 #include "Ping.hpp"
 #include "User.hpp"
 #include "Pass.hpp"
