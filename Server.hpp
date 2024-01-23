@@ -23,13 +23,17 @@
 #include <sys/poll.h>
 #include <vector>
 #include <csignal>
+#include <ctime>
 
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 10
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
+#define MAXMSGLEN 512
 #define MAXCHANNEL 10
+#define FLOODCOUNTLIMIT 10
+#define FLOODTIMELIMIT 1
 
 using std::cout;
 using std::endl;
@@ -43,6 +47,9 @@ struct	clientInfo {
 	bool	_password_valid;
 	bool	_welcomed;
 	int		_nb_channel;
+	string	_buffer;
+	int		_floodCount;
+	time_t	_lastTime;
 };
 
 class CommandHandler;
@@ -73,17 +80,19 @@ class Server {
 		void					bindSocket();
 		void					socketListening();
 		void					serverRoutine();
-		void					signalHandler(int sig);
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
 		void 					receiver();
-		int						getBuffer();
+		int						getBuffer(string &buffer);
 		int						closeConnection();
-		void 					processRequests();
-		void 					splitBuffer();
-		void 					buildCommandReceived(size_t pos);
-		void 					trimBuffer(size_t pos);
+		int						inputTooLongError(string &buffer);
+		void					floodProtection();
+		bool					parseBuffer(string &buffer);
+		void 					processRequests(string &buffer);
+		void 					splitBuffer(string &buffer);
+		void 					buildCommandReceived(size_t pos, string &buffer);
+		void 					trimBuffer(size_t pos, string &buffer);
 		void					messageHandler();
 		void					parseCommand();
 		void					welcomeMessage();
@@ -116,7 +125,7 @@ class Server {
 		int 					_port;
 		string 					_password;
 		CommandHandler 			_command_handler;
-		string					_buffer;
+
 		string					_command_received;
 		string					_hostname;
 		map<int, clientInfo>	_userDB;
