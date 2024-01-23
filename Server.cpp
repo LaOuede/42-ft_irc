@@ -8,6 +8,7 @@ extern bool g_running;
 
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
 # define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
+# define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -139,8 +140,10 @@ void Server::initPollfd() {
 	this->_fds[0].fd = this->_socket_fd;
 	this->_fds[0].events = POLLIN;
 	this->_nfds++;
-	for(int i = 1; i < MAXFDS; i++)
+	for(int i = 1; i < MAXFDS; i++){
 		this->_fds[i].fd = -1;
+		_userDB[_fds[i].fd]._floodCount = 0;
+	}
 }
 
 void Server::acceptConnection() {
@@ -152,6 +155,8 @@ void Server::acceptConnection() {
 }
 
 void Server::addNewClient(int status) {
+	
+	
 	for(uint32_t i = 0; i < MAXFDS; i++){
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
@@ -170,23 +175,31 @@ void Server::receiver() {
 		cout << "buffer : " << buffer << " / Client index : " << _client_index << endl;
 		return;
 	}
-	processRequests(buffer);
+	if(buffer != "\n" && parseBuffer(buffer))
+		processRequests(buffer);
+	else
+		buffer.clear();
 }
 
 int Server::getBuffer(string &buffer) {
 	int bytes = 0;
-	// int timeout = 0;
+	
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-		if(buffer.length() > MAXMSGLEN)
+		if(bytes == 0 || _userDB[_fds[this->_client_index].fd]._floodCount > FLOODCOUNTLIMIT){
+			if(_userDB[_fds[this->_client_index].fd]._floodCount > 5)
+				send(_fds[_client_index].fd, ERR_FLOOD, strlen(ERR_FLOOD), 0);
+			return closeConnection();
+		}
+		else if(buffer.length() > MAXMSGLEN)
 			return inputTooLongError(buffer);
 		else if(bytes > 0)
 			buffer.append(_buf, strlen(_buf));
-		else if(bytes == 0)
-			return closeConnection();
-		else if(buffer.find("\n") != string::npos)
+		else if(buffer.find("\n") != string::npos){
+			floodProtection();
 			return 0;
+		}
 		else
 			return -1;
 	}
@@ -204,9 +217,28 @@ int Server::closeConnection() {
 int	Server::inputTooLongError(string &buffer){
 	send(this->_fds[this->_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
 	buffer.clear();
+	_userDB[_fds[_client_index].fd]._floodCount++;
 	return -1;
 }
 
+void Server::floodProtection(){
+	time_t currentTime = time(nullptr);
+		// cout << "current time :" << currentTime << endl;
+		// cout << "last time :" << _userDB[_fds[_client_index].fd]._lastTime << endl;
+	if(currentTime - _userDB[_fds[_client_index].fd]._lastTime > FLOODTIMELIMIT){
+		_userDB[_fds[this->_client_index].fd]._floodCount = 0;
+		_userDB[_fds[_client_index].fd]._lastTime = currentTime;
+	}
+	else
+		_userDB[_fds[this->_client_index].fd]._floodCount++;
+}
+
+bool Server::parseBuffer(string &buffer) {
+	for (string::iterator it = buffer.begin(); it != buffer.end(); it++)
+		if (!std::isprint(static_cast<unsigned char>(*it)) && (*it != '\r' && *it != '\n'))
+			return false;
+	return true;
+}
 
 void Server::processRequests(string &buffer) {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
