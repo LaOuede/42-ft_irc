@@ -118,6 +118,7 @@ void Server::socketListening() {
 	cout << "to set the password on your client, type this:" << endl;
 	cout << "/set irc.server.IRCserv.password pass" << endl;
 	cout << "/connect IRCserv" << endl;
+	cout << "/set irc.server.IRCserv.username user2" << endl;
 }
 
 void Server::serverRoutine(){

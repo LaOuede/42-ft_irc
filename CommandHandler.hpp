@@ -19,6 +19,7 @@
 #include "User.hpp"
 #include "Pass.hpp"
 #include "Kick.hpp"
+#include "Privmsg.hpp"
 #include "Invite.hpp"
 
 using std::cout;
