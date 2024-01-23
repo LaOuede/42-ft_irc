@@ -42,6 +42,7 @@ void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
 	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
 	this->_command_caller.insert(pair<string, ACommand *>("JOIN", new Join));
+	this->_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
@@ -65,10 +66,11 @@ void CommandHandler::commandTokenizer(Server *server) {
 
 string CommandHandler::sendResponse(Server *server) {
 	map<string, ACommand *>::iterator it;
-	string response;
-	string command = this->_command_tokens.front();
-	string &hostname = server->getHostname();
-	string &nickname = server->getUserDB()[server->getClientIndex()]._nickname;
+	string	response;
+	int		&fd = server->getFds()[server->getClientIndex()].fd;
+	string	command = this->_command_tokens.front();
+	string	&hostname = server->getHostname();
+	string	&nickname = server->getUserDB()[fd]._nickname;
 
 	it = this->_command_caller.find(this->_command_tokens.front());
 	for (; it != this->_command_caller.end(); ++it) {
