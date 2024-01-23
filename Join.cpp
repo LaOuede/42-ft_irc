@@ -6,12 +6,12 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(name) "400 JOIN :You are already in the channel '" + name + "'\r\n"
-#define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)"
+#define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)\r\n"
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
 #define ERR_CHANNELNAMETOOLONG(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters)\r\n"
 #define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
 #define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
-#define ERR_TOOMANYCHANNELSLIST "400 JOIN :Maximum number of channels on server has been reached\n"
+#define ERR_TOOMANYCHANNELSLIST "400 JOIN :You have reached your maximum number of channels (5)\n"
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
@@ -53,7 +53,7 @@ string Join::executeCommand(Server *server) {
 		return this->_error_msg;
 	}
 	// 2. Get a map from the request in order to process
-	createChannelMap();
+	createChannelVector();
 	// 3. Process connections
 	processChannelConnections(server);
 	// 4. Clean Up
@@ -122,40 +122,36 @@ void Join::splitParameters(string to_split, list<string> &to_fill) {
 	cout << "\n" << endl;
 }
 
-//2. CREATING A MAP<CHANNEL_NAME, CHANNEL_KEY>
-void Join::createChannelMap() {
-	string name;
-	string key;
-	size_t map_size = this->_channel_name.size();
+//2. CREATING A VECTOR<pair<CHANNEL_NAME, CHANNEL_KEY>>
+void Join::createChannelVector() {
+	size_t vector_size = this->_channel_name.size();
 
-	for (size_t i = 0; i < map_size; i++) {
-		if (this->_channel_key.empty()) {
-			key = "";
-		} else {
-			key = this->_channel_key.back();
-			this->_channel_key.pop_back();
+	for (size_t i = 0; i < vector_size; i++) {
+		string name = this->_channel_name.front();
+		string key = this->_channel_key.empty() ? "" : this->_channel_key.front();
+
+		this->_channel_vector.push_back(make_pair(name, key));
+
+		this->_channel_name.pop_front();
+		if (!this->_channel_key.empty()) {
+			this->_channel_key.pop_front();
 		}
-		this->_channel_map[this->_channel_name.back()] = key;
-		this->_channel_name.pop_back();
 	}
 
-	// DEBUG Print map
-	cout << "--- Elements in map ---" << endl;
-	unordered_map<string, string>::const_iterator it;
-	int index = -1;
-	it = this->_channel_map.begin();
-	for (; it != this->_channel_map.end(); ++it) {
-		std::cout << "index " << ++index << " : " << it->first << " - " << it->second << std::endl;
+	// DEBUG Print vector
+	cout << "--- Elements in vector ---" << endl;
+	for (size_t i = 0; i < this->_channel_vector.size(); ++i) {
+	std::cout << "index " << i << " : " << this->_channel_vector[i].first << " - " << this->_channel_vector[i].second << std::endl;
 	}
 	cout << "\n" << endl;
 }
 
 //3. PROCESS CONNECTIONS
 string Join::processChannelConnections(Server *server) {
-	unordered_map<string, string>::const_iterator it;
+	vector<pair<string, string> >::const_iterator it;
 
-	it = this->_channel_map.begin();
-	for (; it != this->_channel_map.end(); ++it) {
+	it = this->_channel_vector.begin();
+	for (; it != this->_channel_vector.end(); ++it) {
 		this->_error_msg = "";
 		parseChannelNameAndKey(it->first, it->second);
 		if (!this->_error_msg.empty()) {
@@ -192,7 +188,7 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 		if (channel->isUserInChannel(fd)) {
 			error_msg = ERR_ALREADYINCHANNEL(channel_name);
 			server->sendToClient(&error_msg);
-		} else if (channel->getUsersNb() < MAXINCHANNEL && nb_channel < MAXINCHANNEL) {
+		} else if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
 			channel->addUserToChannel(server, user, fd, USER);
 		} else {
 			error_msg = ERR_CHANNELISFULL;
@@ -225,7 +221,7 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 void Join::cleanup() {
 	this->_channel_name.clear();
 	this->_channel_key.clear();
-	this->_channel_map.clear();
+	this->_channel_vector.clear();
 }
 
 
