@@ -19,7 +19,7 @@ class User : public ACommand {
 	public:
 		// Construtors & Destructors
 		User();
-		virtual ~User();
+		virtual	~User();
 
 		// Methods
 		string	executeCommand(Server *server);
@@ -33,6 +33,7 @@ class User : public ACommand {
 
 	private:
 		// Attributes
+		string _name;
 };
 
 #endif

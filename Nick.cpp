@@ -32,21 +32,21 @@ string Nick::executeCommand(Server *server) {
 	string	&current_nickname = server->getUserDB()[fd]._nickname;
 
 	if (server->getUserDB()[fd]._password_valid == false)
-		return (ERR_PASSWORDNEEDED);
+		return ERR_PASSWORDNEEDED;
 	if (nickname_token.empty())
-		return (ERR_NONICKNAMEGIVEN);
+		return ERR_NONICKNAMEGIVEN;
 	if (!isNickValid(nickname_token))
-		return (ERR_ERRONEUSNICKNAME(nickname_token));
+		return ERR_ERRONEUSNICKNAME(nickname_token);
 	if (isNickInUse(nickname_token, server)) {
-		return (ERR_NICKNAMEINUSE(nickname_token));
+		return ERR_NICKNAMEINUSE(nickname_token);
 	}
 	else if (!isNickInUse(nickname_token, server) && current_nickname.empty()) {
 		current_nickname = nickname_token;
-		return (NICKNAMESET(nickname_token));
+		return NICKNAMESET(nickname_token);
 	}
 	string old_nickname = current_nickname;
 	current_nickname = nickname_token;
-	return (CHANGINGNICK(old_nickname, username, hostname, nickname_token));
+	return CHANGINGNICK(old_nickname, username, hostname, nickname_token);
 }
 
 bool Nick::isNickInUse(string nickname, Server *server) {
