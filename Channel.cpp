@@ -8,7 +8,6 @@
 #define ERR_NOTONCHANNEL(channel) "442 PART : '" + channel + "' :You're not on that channel\r\n"
 #define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
 #define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
-#define RPL_QUITCHANNEL(user, channel) ": 400 PART :" + user + " is leaving the channel '" + channel + "'\r\n"
 
 
 /* ************************************************************************** */
@@ -55,7 +54,7 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 	}
 	server->getUserDB()[user_fd]._nb_channel++;
 	string msg = RPL_JOINCHANNEL(user, this->_channel_name);
-	server->sendToClient(&msg);
+	server->sendToClient(msg);
 	printListUser(server);
 
 	// DEBUG Print map
@@ -97,14 +96,14 @@ void Channel::printListUser(Server *server) {
 		}
 	}
 	list_user += "\n";
-	server->sendToClient(&list_user);
+	server->sendToClient(list_user);
 	rplEndOfNames(server);
 }
 
 void Channel::rplEndOfNames(Server *server) {
 	string &channel = this->_channel_name;
 	string msg = RPL_ENDOFNAMES(channel);
-	server->sendToClient(&msg);
+	server->sendToClient(msg);
 }
 
 void Channel::broadcastListUser(Server *server) {
@@ -147,11 +146,6 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		this->_user_list.erase(it);
 		updateChannelOperator(server);
 		server->getUserDB()[user_fd]._nb_channel--;
-		
-		string &user = server->getUserDB()[user_fd]._nickname;
-		string &channel = this->_channel_name;
-		string msg = RPL_QUITCHANNEL(user, channel);
-		broadcastToAll(msg);
 
 		// DEBUG: Print updated map
 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
@@ -173,7 +167,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 	} else {
 		string &channel = this->_channel_name;
 		string error_msg = ERR_NOTONCHANNEL(channel);
-		server->sendToClient(&error_msg);
+		server->sendToClient(error_msg);
 	}
 }
 

@@ -8,6 +8,8 @@ extern bool g_running;
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
 # define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
 # define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
+# define RPL_QUITCHANNEL(function, user, channel) ": 400 " + function + " :" + user + " is leaving the channel '" + channel + "'\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -386,6 +388,7 @@ void Server::closeChannelFds() {
 	it = this->_channel_list.begin();
 	for (; it != this->_channel_list.end(); it++ ) {
 		it->second->removeUserFromChannel(this, _fds[_client_index].fd);
+		broadcastUserQuitMessage(it->second, this->_userDB[_client_index]._nickname);
 		if (isChannelEmpty(it->second)) {
 			channelsToDelete.push_back(it->first);
 		}
@@ -395,6 +398,13 @@ void Server::closeChannelFds() {
 		delete this->_channel_list[*delIt];
 		this->_channel_list.erase(*delIt);
 	}
+}
+
+void Server::broadcastUserQuitMessage(Channel *channel, const string &user) {
+	const string &channel_name = channel->getChannelName();
+	string cmd = "QUIT";
+	string msg = RPL_QUITCHANNEL(cmd, user, channel_name);
+	channel->broadcastToAll(msg);
 }
 
 bool Server::isChannelEmpty(Channel *channel) {
