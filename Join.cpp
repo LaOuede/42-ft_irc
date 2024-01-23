@@ -9,12 +9,12 @@
 #define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)\r\n"
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
 #define ERR_CHANNELNAME(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters) or too short (<2)\r\n"
-#define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
+#define ERR_NEEDMOREPARAMS(function) "461 " + function + " :Not enough parameters\r\n"
 #define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
 #define ERR_TOOMANYCHANNELSLIST "400 JOIN :You have reached your maximum number of channels (5)\n"
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
-#define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
-#define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
+#define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
 #define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_WRONGCHARCHANNELNAME(name) "400 :Wrong characters used in name '" + name + "'\r\n"
 #define ERR_WRONGCHARCHANNELKEY(key) "400 :Wrong characters used in key '" + key + "'\r\n"
@@ -79,10 +79,10 @@ string Join::parseCommand(Server *server) {
 
 string Join::parseParameters(const list<string> &command) {
 	if (command.empty()) {
-		return ERR_NEEDMOREPARAMS;
+		return ERR_NEEDMOREPARAMS(this->_name);
 	}
 	if (command.size() > 2) {
-		return ERR_TOOMANYPARAMS;
+		return ERR_TOOMANYPARAMS(this->_name);
 	}
 	return "";
 }
@@ -165,7 +165,7 @@ string Join::processChannelConnections(Server *server) {
 
 string Join::parseChannelNameAndKey(string name, string key) {
 	if (name[0] != '#' && name[0] != '&' ) {
-		this->_error_msg = ERR_UNKNOWNERROR(name);
+		this->_error_msg = ERR_UNKNOWNERROR(this->_name, name);
 	} else if (name.size() > 10 || name.size() < 2) {
 		this->_error_msg = ERR_CHANNELNAME(name);
 	} else if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
