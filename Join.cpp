@@ -8,7 +8,7 @@
 #define ERR_ALREADYINCHANNEL(name) "400 JOIN :You are already in the channel '" + name + "'\r\n"
 #define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)\r\n"
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
-#define ERR_CHANNELNAMETOOLONG(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters)\r\n"
+#define ERR_CHANNELNAME(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters) or too short (<2)\r\n"
 #define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
 #define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
 #define ERR_TOOMANYCHANNELSLIST "400 JOIN :You have reached your maximum number of channels (5)\n"
@@ -166,8 +166,8 @@ string Join::processChannelConnections(Server *server) {
 string Join::parseChannelNameAndKey(string name, string key) {
 	if (name[0] != '#' && name[0] != '&' ) {
 		this->_error_msg = ERR_UNKNOWNERROR(name);
-	} else if (name.size() > 10) {
-		this->_error_msg = ERR_CHANNELNAMETOOLONG(name);
+	} else if (name.size() > 10 || name.size() < 2) {
+		this->_error_msg = ERR_CHANNELNAME(name);
 	} else if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
 		this->_error_msg = ERR_WRONGCHARCHANNELNAME(name);
 	} else if (key.size() > 10) {
