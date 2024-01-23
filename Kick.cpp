@@ -35,46 +35,41 @@ string Kick::executeCommand(Server *server) {
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 
-	if (user_info._welcomed == false)
-		return (ERR_WELCOMED);
+	if (!user_info._welcomed)
+		return ERR_WELCOMED;
 	if (tokens.size() < 2)
-		return (ERR_NEEDMOREPARAMS);
+		return ERR_NEEDMOREPARAMS;
 	if (!server->getChannel(channel_token))
-		return (ERR_NOSUCHCHANNEL(channel_token));
-	Channel &channels = *server->getChannel(channel_token);
-	map<int, int> &user_list = channels.getUserList();
-	if (!user_list.find(fd)->first)
-		return (ERR_NOTONCHANNEL(nickname, channel_token));
-	if (user_list.find(fd)->second != OPERATOR)
-		return (ERR_CHANOPRIVSNEEDED(nickname, channel_token));
+		return ERR_NOSUCHCHANNEL(channel_token);
+	Channel *channel = server->getChannel(channel_token);
+	map<int, int> &user_list = channel->getUserList();
+	if (user_list.find(fd) == user_list.end())
+		return ERR_NOTONCHANNEL(nickname, channel_token);
+	if (user_list[fd] != OPERATOR)
+		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
 	string &user_kicked = *++tokens.begin();
 	map<int, clientInfo> &user_db = server->getUserDB();
 	map<int, clientInfo>::iterator it = user_db.begin();
 	int fd_kicked = 0;
-	for (; it != user_db.end(); it++) {
+	for (; it != user_db.end(); it++)
 		if (it->second._username == user_kicked)
 			fd_kicked = it->first;
-	}
 	if (fd_kicked == fd)
-		return (ERR_CANTKICKSELF);
+		return ERR_CANTKICKSELF;
 	else if (fd_kicked == 0)
-		return (ERR_USERNOTEXIST(user_kicked));
-	if (!user_list.find(fd_kicked)->first)
-		return (ERR_USERNOTINCHANNEL(user_kicked, channel_token));
+		return ERR_USERNOTEXIST(user_kicked);
+	if (user_list.find(fd_kicked) == user_list.end())
+		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
 	list<string>::iterator it2 = ++tokens.begin();
 	string comment = *++it2;
 	if (tokens.size() == 2) {
 		comment = ":No comment";
 		it2 = --tokens.end();
-		cout << "comment: " << comment << endl;
 	}
 	else if (comment[0] != ':')
-		return (ERR_WRONGCHAR4);
-	string old_comment;
-	while (++it2 != tokens.end()) {
-		old_comment = comment;
-		comment = old_comment + " " + *it2;
-	}
+		return ERR_WRONGCHAR4;
+	while (++it2 != tokens.end())
+		comment += " " + *it2;
 	user_list.erase(fd_kicked);
-	return (KICK(nickname, hostname, user_kicked, channel_token, comment));
+	return KICK(nickname, hostname, user_kicked, channel_token, comment);
 }
