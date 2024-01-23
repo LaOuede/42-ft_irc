@@ -1,6 +1,3 @@
-//Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel sapien eu odio ullamcorper commodo. Vivamus id orci in sem mattis scelerisque. Quisque tristique, tortor ac condimentum congue, urna orci cursus arcu, nec dictum justo mi id elit. Fusce ut velit vel sapien vehicula sodales. Sed bibendum leo non lectus fermentum, ac facilisis dui tincidunt. Curabitur bibendum urna et nunc congue, sit amet lacinia turpis facilisis. Nullam vel ex at mauris congue vulputate. Integer in magna eu ex feugiat volutpat. Nunc ultrices leo eu ante malesuada, vel bibendum tortor fermentum. Phasellus ut nisl ac nisl ultricies fermentum non a dolor. Integer eget condimentum justo. Fusce vehicula ultricies augue, eu tincidunt ligula ullamcorper eu. Sed et justo ut lectus aliquam aliquam vel id odio. Aenean tincidunt, velit vel sagittis aliquam, justo purus varius lectus, at fermentum ex mi in libero. Suspendisse potenti. Vestibulum vehicula scelerisque hendrerit. Aliquam erat volutpat. Etiam a lectus id quam blandit vulputate. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed dapibus auctor nisl, non vulputate tortor malesuada eu. Praesent id urna sit amet orci ultrices pharetra vel vel ligula. In hac habitasse platea dictumst. Integer vel libero aliquam, malesuada dui at, commodo tortor. Etiam eget justo nec nisi volutpat vehicula. Vivamus vitae urna ac nisi aliquam consectetur a ut odio. Maecenas fermentum mi a sem dignissim tincidunt. Integer euismod a ligula eu posuere. Fusce quis commodo neque. Nullam ultrices arcu nec justo rhoncus, et tempus metus malesuada. Proin vel facilisis lectus, sit amet dapibus turpis.
-//Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vel sapien eu odio ullamcorper commodo. Vivamus id orci in sem mattis scelerisque. Quisque tristique, tortor ac condimentum congue, urna orci cursus arcu, nec dictum justo mi id elit. Fusce ut velit vel sapien vehicula sodales. Sed bibendum leo non lectus fermentum, ac facilisis dui tincidunt. Curabitur bibendum urna et nunc congue, sit amet lacinia turpis facilisis. Nullam vel ex at mauris congue vulputate. Integer in magna eu ex feugiat volutp
-
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
@@ -346,7 +343,6 @@ void Server::cleanChannelList() {
 	this->_channel_list.clear();
 }
 
-
 void	Server::closeFds() {
 	for(int i = 0; i < MAXFDS; i++)
 		if(_fds[i].fd != -1)
@@ -378,7 +374,6 @@ bool Server::isChannelEmpty(Channel *channel) {
 	}
 	return false;
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
