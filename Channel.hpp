@@ -42,6 +42,7 @@ class Channel {
 		void rplEndOfNames(Server *server);
 		void removeUserFromChannel(Server *server, int &user_fd);
 		void checkRole(Channel *channel, int &role);
+		void updateChannelOperator(Server *server);
 		void broadcastListUser(Server *server);
 		void broadcastToAll(string &msg);
 
@@ -54,7 +55,7 @@ class Channel {
 		int						_nb_users;
 		int						_nb_operators;
 		string					_channel_name;
-		map<int, int>	_user_list;
+		map<int, int>			_user_list;
 };
 
 #include "Server.hpp"

@@ -5,8 +5,8 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(channel) "400 JOIN :You are already in the channel '" + channel + "'\r\n"
+#define ERR_NOTONCHANNEL(channel) "442 PART : '" + channel + "' :You're not on that channel\r\n"
 #define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
-#define RPL_NAMREPLY(user, channel) ""
 #define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
 #define RPL_QUITCHANNEL(user, channel) ": 400 PART :" + user + " is leaving the channel '" + channel + "'\r\n"
 
@@ -145,13 +145,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 	if (it != this->_user_list.end()) {
 		checkRole(this, it->second);
 		this->_user_list.erase(it);
-	
-
-		if (!server->isChannelEmpty(this) && this->_nb_operators == 0) {
-			map<int, int>::iterator newOper = this->_user_list.begin();
-			newOper->second = OPERATOR;
-		}
-
+		updateChannelOperator(server);
 		server->getUserDB()[user_fd]._nb_channel--;
 		
 		string &user = server->getUserDB()[user_fd]._nickname;
@@ -160,22 +154,26 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		broadcastToAll(msg);
 
 		// DEBUG: Print updated map
-/* 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
+		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
 		cout << "--- Updated list of users in channel '" << this->_channel_name << "' ---" << endl;
 		map<int, int>::const_iterator it;
 		string list_user;
 
-		cout << "353 " + this->_channel_name + " :";
+		cout << "DEBUG LIST " + this->_channel_name + " :";
 		it = this->_user_list.begin();
 		for (; it != this->_user_list.end(); ++it) {
 			string &user = server->getUserDB()[it->first]._nickname;
 			if (it->second == OPERATOR) {
-				cout << "@" << user << " ";
+				cout << "@" + user + " ";
 			} else {
-				cout << user << " ";
+				cout << user + " ";
 			}
 		}
-		cout << "\n" << endl; */
+		cout << "\n" << endl;
+	} else {
+		string &channel = this->_channel_name;
+		string error_msg = ERR_NOTONCHANNEL(channel);
+		server->sendToClient(&error_msg);
 	}
 }
 
@@ -184,6 +182,15 @@ void Channel::checkRole(Channel *channel, int &role) {
 		channel->_nb_operators--;
 	} else {
 		channel->_nb_users--;
+	}
+}
+
+void Channel::updateChannelOperator(Server *server) {
+	if (!server->isChannelEmpty(this) && this->_nb_operators == 0) {
+		map<int, int>::iterator newOper = this->_user_list.begin();
+		newOper->second = OPERATOR;
+		this->_nb_operators++;
+		this->_nb_users--;
 	}
 }
 
