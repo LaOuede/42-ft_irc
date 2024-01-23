@@ -5,9 +5,10 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(channel) "400 JOIN :You are already in the channel '" + channel + "'\r\n"
-#define ERR_NOTONCHANNEL(channel) "442 PART '" + channel + "' :You're not on that channel\r\n"
-#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n";
-#define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
+#define ERR_NOTONCHANNEL(channel) "442 PART : '" + channel + "' :You're not on that channel\r\n"
+#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
+#define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
+#define RPL_QUITCHANNEL(user, channel) ": 400 PART :" + user + " is leaving the channel '" + channel + "'\r\n"
 
 
 /* ************************************************************************** */
@@ -118,7 +119,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		broadcastListUser(server, user_fd);
 
 		// DEBUG: Print updated map
-/* 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
+		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
 		cout << "--- Updated list of users in channel '" << this->_channel_name << "' ---" << endl;
 		map<int, int>::const_iterator it;
 		string list_user;
@@ -133,11 +134,12 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 				cout << user + " ";
 			}
 		}
-		cout << "\n" << endl; */
-	}/*  else {
+		cout << "\n" << endl;
+	} else {
 		string &channel = this->_channel_name;
-		server->sendToClient(ERR_NOTONCHANNEL(channel));
-	} */
+		string error_msg = ERR_NOTONCHANNEL(channel);
+		server->sendToClient(&error_msg);
+	}
 }
 
 void Channel::checkRole(Channel *channel, int &role) {
