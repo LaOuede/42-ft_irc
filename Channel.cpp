@@ -8,7 +8,6 @@
 #define ERR_NOTONCHANNEL(channel) "442 PART : '" + channel + "' :You're not on that channel\r\n"
 #define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
 #define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
-#define RPL_QUITCHANNEL(user, channel) ": 400 PART :" + user + " is leaving the channel '" + channel + "'\r\n"
 
 
 /* ************************************************************************** */
@@ -138,7 +137,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 	} else {
 		string &channel = this->_channel_name;
 		string error_msg = ERR_NOTONCHANNEL(channel);
-		server->sendToClient(&error_msg);
+		server->sendToClient(error_msg);
 	}
 }
 
