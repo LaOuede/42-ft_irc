@@ -6,17 +6,19 @@
 # include "ACommand.hpp"
 # include <iostream>
 # include <list>
-# include <map>
+# include <unordered_map>
 # include <string>
+# include <vector>
 
 # define CHANLIMIT 5
 
 using std::cout;
 using std::endl;
 using std::list;
-using std::map;
+using std::unordered_map;
 using std::pair;
 using std::string;
+using std::vector;
 
 class Server;
 
@@ -32,7 +34,7 @@ class Join : public ACommand {
 		string parseParameters(const list<string> &command);
 		void splitParameters(string to_split, list<string> &to_fill);
 		string parseAttributes(const list<string> &command);
-		void createChannelMap();
+		void createChannelVector();
 		string processChannelConnections(Server *Server);
 		string parseChannelNameAndKey(string name, string key);
 		void joinChannel(Server *server, string const &channel_name);
@@ -46,7 +48,7 @@ class Join : public ACommand {
 		string				_error_msg;
 		list<string>		_channel_name;
 		list<string>		_channel_key;
-		map<string, string>	_channel_map;
+		vector<pair<string, string> > _channel_vector;
 
 };
 

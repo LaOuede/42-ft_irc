@@ -91,6 +91,8 @@ class Server {
 		void					cleanChannelList();
 		void					sendToClient(string *response);
 		void					closeFds();
+		void					closeChannelFds();
+		bool					isChannelEmpty(Channel *channel);
 
 		// Exceptions
 		std::exception			socketFailureException();

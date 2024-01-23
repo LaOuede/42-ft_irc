@@ -17,7 +17,9 @@ using std::cout;
 using std::endl;
 using std::map;
 using std::pair;
+using std::make_pair;
 using std::string;
+using std::reverse_iterator;
 
 class Server;
 
@@ -37,6 +39,11 @@ class Channel {
 		void addUserToChannel(Server *Server, string &user, int &user_fd, int role);
 		bool isUserInChannel(int &user_fd);
 		void printListUser(Server *Server);
+		void rplEndOfNames(Server *server);
+		void removeUserFromChannel(Server *server, int &user_fd);
+		void checkRole(Channel *channel, int &role);
+		void broadcastListUser(Server *server);
+		void broadcastToAll(string &msg);
 
 		// Exceptions
 
@@ -44,9 +51,9 @@ class Channel {
 		// Construtors & Destructors
 		Channel();
 		// Attributes
-		int				_nb_users;
-		int				_nb_operators;
-		string			_channel_name;
+		int						_nb_users;
+		int						_nb_operators;
+		string					_channel_name;
 		map<int, int>	_user_list;
 };
 

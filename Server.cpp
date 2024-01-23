@@ -188,6 +188,7 @@ int Server::getBuffer() {
 
 int Server::closeConnection() {
 	cout << "Closing connection #" << _fds[_client_index].fd << endl;
+	closeChannelFds();
 	close(_fds[_client_index].fd);
 	if(_userDB.find(_fds[_client_index].fd) != _userDB.end())
 		_userDB.erase(_userDB.find(_fds[_client_index].fd));
@@ -291,11 +292,39 @@ void Server::cleanChannelList() {
 	this->_channel_list.clear();
 }
 
+
 void	Server::closeFds() {
 	for(int i = 0; i < MAXFDS; i++)
 		if(_fds[i].fd != -1)
 			close(_fds[i].fd);
 }
+
+void Server::closeChannelFds() {
+	list<string>::iterator delIt;
+	map<string, Channel *>::iterator it;
+	list<string> channelsToDelete;
+
+	it = this->_channel_list.begin();
+	for (; it != this->_channel_list.end(); it++ ) {
+		it->second->removeUserFromChannel(this, _fds[_client_index].fd);
+		if (isChannelEmpty(it->second)) {
+			channelsToDelete.push_back(it->first);
+		}
+	}
+	delIt = channelsToDelete.begin();
+	for (; delIt != channelsToDelete.end(); ++delIt) {
+		delete this->_channel_list[*delIt];
+		this->_channel_list.erase(*delIt);
+	}
+}
+
+bool Server::isChannelEmpty(Channel *channel) {
+	if (channel->getUsersNb() == 0 && channel->getOperatorsNb() == 0) {
+		return true;
+	}
+	return false;
+}
+
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
