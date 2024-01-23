@@ -58,8 +58,10 @@ string Kick::executeCommand(Server *server) {
 		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
 		
 	string comment = getComment(tokens);
-	user_list.erase(fd_kicked);
-	return KICK(nickname, hostname, user_kicked, channel_token, comment);
+	channel->removeUserFromChannel(server, fd_kicked);
+	string message = KICK(nickname, hostname, user_kicked, channel_token, comment);
+	channel->broadcastToAll(message);
+	return "";
 }
 
 string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {

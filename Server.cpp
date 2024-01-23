@@ -168,7 +168,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
-			initBaseUser(status, i);
+			// initBaseUser(status, i);
 			return;
 		}
 	}
@@ -176,33 +176,33 @@ void Server::addNewClient(int status) {
 	close(status);
 }
 
-void Server::initBaseUser(int status, int i)
-{
-	if(status == 4)
-	{
-		_userDB[_fds[i].fd]._nickname = "Emman";
-		_userDB[_fds[i].fd]._realname = "Emmanuel Lamothe";
-		_userDB[_fds[i].fd]._username = "Emman";
-		_userDB[_fds[i].fd]._password_valid = true;
-		_userDB[_fds[i].fd]._welcomed = true;
-	}
-	if(status == 5)
-	{
-		_userDB[_fds[i].fd]._nickname = "Prez";
-		_userDB[_fds[i].fd]._realname = "Francis Bouchard";
-		_userDB[_fds[i].fd]._username = "Prez";
-		_userDB[_fds[i].fd]._password_valid = true;
-		_userDB[_fds[i].fd]._welcomed = true;
-	}
-	if(status == 6)
-	{
-		_userDB[_fds[i].fd]._nickname = "Gwen";
-		_userDB[_fds[i].fd]._realname = "Gwenola LeRoux";
-		_userDB[_fds[i].fd]._username = "Gwen";
-		_userDB[_fds[i].fd]._password_valid = true;
-		_userDB[_fds[i].fd]._welcomed = true;
-	}
-}
+// void Server::initBaseUser(int status, int i)
+// {
+// 	if(status == 4)
+// 	{
+// 		_userDB[_fds[i].fd]._nickname = "Emman";
+// 		_userDB[_fds[i].fd]._realname = "Emmanuel Lamothe";
+// 		_userDB[_fds[i].fd]._username = "Emman";
+// 		_userDB[_fds[i].fd]._password_valid = true;
+// 		_userDB[_fds[i].fd]._welcomed = true;
+// 	}
+// 	if(status == 5)
+// 	{
+// 		_userDB[_fds[i].fd]._nickname = "Prez";
+// 		_userDB[_fds[i].fd]._realname = "Francis Bouchard";
+// 		_userDB[_fds[i].fd]._username = "Prez";
+// 		_userDB[_fds[i].fd]._password_valid = true;
+// 		_userDB[_fds[i].fd]._welcomed = true;
+// 	}
+// 	if(status == 6)
+// 	{
+// 		_userDB[_fds[i].fd]._nickname = "Gwen";
+// 		_userDB[_fds[i].fd]._realname = "Gwenola LeRoux";
+// 		_userDB[_fds[i].fd]._username = "Gwen";
+// 		_userDB[_fds[i].fd]._password_valid = true;
+// 		_userDB[_fds[i].fd]._welcomed = true;
+// 	}
+// }
 
 void Server::receiver() {
 	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
