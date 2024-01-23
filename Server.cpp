@@ -6,6 +6,8 @@
 extern bool g_running;
 
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
+# define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
+# define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -127,9 +129,12 @@ void Server::serverRoutine(){
 					acceptConnection();
 				}else if(_fds[this->_client_index].revents & POLLIN)
 					receiver();
+				else if(_fds[this->_client_index].revents & (POLLNVAL | POLLERR | POLLHUP)){
+					cout << "(POLLNVAL | POLLERR | POLLHUP)" << endl;
+					closeConnection();
+				}
 			}
 		}
-
 		// only for visualition of the fd
 		// for(int i = 0; i < MAXFDS; i++)
 		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
@@ -141,8 +146,10 @@ void Server::initPollfd() {
 	this->_fds[0].fd = this->_socket_fd;
 	this->_fds[0].events = POLLIN;
 	this->_nfds++;
-	for(int i = 1; i < MAXFDS; i++)
+	for(int i = 1; i < MAXFDS; i++){
 		this->_fds[i].fd = -1;
+		_userDB[_fds[i].fd]._floodCount = 0;
+	}
 }
 
 void Server::acceptConnection() {
@@ -154,6 +161,8 @@ void Server::acceptConnection() {
 }
 
 void Server::addNewClient(int status) {
+	
+	
 	for(uint32_t i = 0; i < MAXFDS; i++){
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
@@ -167,22 +176,38 @@ void Server::addNewClient(int status) {
 }
 
 void Server::receiver() {
-	if(getBuffer() == -1)
+	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
+	if(getBuffer(buffer) == -1){
+		cout << "buffer : " << buffer << " / Client index : " << _client_index << endl;
 		return;
-	processRequests();
+	}
+	if(buffer != "\n" && parseBuffer(buffer))
+		processRequests(buffer);
+	else
+		buffer.clear();
 }
 
-int Server::getBuffer() {
+int Server::getBuffer(string &buffer) {
 	int bytes = 0;
+	
 	while(1){
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-		if(bytes > 0)
-			_buffer.append(_buf, BUFFERSIZE);
-		else if(bytes == 0)
+		if(bytes == 0 || _userDB[_fds[this->_client_index].fd]._floodCount > FLOODCOUNTLIMIT){
+			if(_userDB[_fds[this->_client_index].fd]._floodCount > 5)
+				send(_fds[_client_index].fd, ERR_FLOOD, strlen(ERR_FLOOD), 0);
 			return closeConnection();
-		else
+		}
+		else if(buffer.length() > MAXMSGLEN)
+			return inputTooLongError(buffer);
+		else if(bytes > 0)
+			buffer.append(_buf, strlen(_buf));
+		else if(buffer.find("\n") != string::npos){
+			floodProtection();
 			return 0;
+		}
+		else
+			return -1;
 	}
 }
 
@@ -196,36 +221,62 @@ int Server::closeConnection() {
 	return -1;
 }
 
-void Server::processRequests() {
+int	Server::inputTooLongError(string &buffer){
+	send(this->_fds[this->_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
+	buffer.clear();
+	_userDB[_fds[_client_index].fd]._floodCount++;
+	return -1;
+}
+
+void Server::floodProtection(){
+	time_t currentTime = time(nullptr);
+		// cout << "current time :" << currentTime << endl;
+		// cout << "last time :" << _userDB[_fds[_client_index].fd]._lastTime << endl;
+	if(currentTime - _userDB[_fds[_client_index].fd]._lastTime > FLOODTIMELIMIT){
+		_userDB[_fds[this->_client_index].fd]._floodCount = 0;
+		_userDB[_fds[_client_index].fd]._lastTime = currentTime;
+	}
+	else
+		_userDB[_fds[this->_client_index].fd]._floodCount++;
+}
+
+bool Server::parseBuffer(string &buffer) {
+	for (string::iterator it = buffer.begin(); it != buffer.end(); it++)
+		if (!std::isprint(static_cast<unsigned char>(*it)) && (*it != '\r' && *it != '\n'))
+			return false;
+	return true;
+}
+
+void Server::processRequests(string &buffer) {
 	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	if(_buf[0] != 0)
 		return;
-	while(_buffer.empty() == false){
-		splitBuffer();
+	while(buffer.empty() == false){
+		splitBuffer(buffer);
 		messageHandler();
 		_command_received.clear();
 	}
 }
 
-void Server::splitBuffer() {
+void Server::splitBuffer(string &buffer) {
 	size_t pos = 0;
-	pos = _buffer.find("\n");
-	buildCommandReceived(pos);
-	trimBuffer(pos);
+	pos = buffer.find("\n");
+	buildCommandReceived(pos, buffer);
+	trimBuffer(pos, buffer);
 }
 
-void Server::buildCommandReceived(size_t pos) {
+void Server::buildCommandReceived(size_t pos, string &buffer) {
 	if(pos != std::string::npos)
-		_command_received.assign(_buffer.substr(0, pos));
-	if(_command_received.find("\r") != string::npos)
+		_command_received.assign(buffer.substr(0, pos));
+	while(_command_received.find("\r") != string::npos || _command_received.find("\n") != string::npos)
 		_command_received.pop_back();
 }
 
-void Server::trimBuffer(size_t pos) {
-	if(_buffer.find("\n", _buffer.find("\n") + 1) != string::npos)
-		_buffer.assign(_buffer.substr(pos + 1));
+void Server::trimBuffer(size_t pos, string &buffer) {
+	if(buffer.find("\n", buffer.find("\n") + 1) != string::npos)
+		buffer.assign(buffer.substr(pos + 1));
 	else
-		_buffer.clear();
+		buffer.clear();
 }
 
 void Server::messageHandler() {
@@ -292,7 +343,6 @@ void Server::cleanChannelList() {
 	this->_channel_list.clear();
 }
 
-
 void	Server::closeFds() {
 	for(int i = 0; i < MAXFDS; i++)
 		if(_fds[i].fd != -1)
@@ -324,7 +374,6 @@ bool Server::isChannelEmpty(Channel *channel) {
 	}
 	return false;
 }
-
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */
