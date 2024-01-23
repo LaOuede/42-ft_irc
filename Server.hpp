@@ -99,10 +99,12 @@ class Server {
 		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
-		void					sendToClient(string *response);
+		void					sendToClient(const string &response);
 		void					closeFds();
 		void					closeChannelFds();
 		bool					isChannelEmpty(Channel *channel);
+		void 					broadcastUserQuitMessage(Channel *channel, const string &user);
+
 		bool					isNickInServer(string nickname);
 		bool					isChannelInServer(string channelName);
 

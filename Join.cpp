@@ -58,7 +58,7 @@ string Join::executeCommand(Server *server) {
 	processChannelConnections(server);
 	// 4. Clean Up
 	cleanup();
-	return ("");
+	return "";
 }
 
 
@@ -155,7 +155,7 @@ string Join::processChannelConnections(Server *server) {
 		this->_error_msg = "";
 		parseChannelNameAndKey(it->first, it->second);
 		if (!this->_error_msg.empty()) {
-			server->sendToClient(&this->_error_msg);
+			server->sendToClient(this->_error_msg);
 			continue;
 		}
 		joinChannel(server, it->first);
@@ -186,12 +186,12 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 		Channel *channel = server->getChannel(channel_name);
 		if (channel->isUserInChannel(fd)) {
 			error_msg = ERR_ALREADYINCHANNEL(channel_name);
-			server->sendToClient(&error_msg);
+			server->sendToClient(error_msg);
 		} else if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
 			channel->addUserToChannel(server, user, fd, USER);
 		} else {
 			error_msg = ERR_CHANNELISFULL;
-			server->sendToClient(&error_msg);
+			server->sendToClient(error_msg);
 		}
 	} else {
 		createChannel(server, channel_name, user, fd);
@@ -212,7 +212,7 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 		channel->addUserToChannel(server, user, fd, OPERATOR);
 	} else {
 		msg = ERR_TOOMANYCHANNELSLIST;
-		server->sendToClient(&msg);
+		server->sendToClient(msg);
 	}
 }
 
