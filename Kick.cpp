@@ -35,41 +35,67 @@ string Kick::executeCommand(Server *server) {
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 
+	string error = parseFirstPart(server, tokens, channel_token);
+	if (!error.empty())
+		return error;
+
+	Channel *channel = server->getChannel(channel_token);
+	map<int, int> &user_list = channel->getUserList();
+	if (user_list.find(fd) == user_list.end())
+		return ERR_NOTONCHANNEL(nickname, channel_token);
+
+	if (user_list[fd] != OPERATOR)
+		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
+
+	string &user_kicked = *++tokens.begin();
+	int fd_kicked = findClientToKick(server, user_kicked);
+	if (fd_kicked == fd)
+		return ERR_CANTKICKSELF;
+	else if (fd_kicked == 0)
+		return ERR_USERNOTEXIST(user_kicked);
+
+	if (user_list.find(fd_kicked) == user_list.end())
+		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
+		
+	string comment = getComment(tokens);
+	user_list.erase(fd_kicked);
+	return KICK(nickname, hostname, user_kicked, channel_token, comment);
+}
+
+string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
+	int	&fd = server->getFds()[server->getClientIndex()].fd;
+	clientInfo &user_info = server->getUserDB()[fd];
+
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
 		return ERR_NEEDMOREPARAMS;
 	if (!server->getChannel(channel_token))
 		return ERR_NOSUCHCHANNEL(channel_token);
-	Channel *channel = server->getChannel(channel_token);
-	map<int, int> &user_list = channel->getUserList();
-	if (user_list.find(fd) == user_list.end())
-		return ERR_NOTONCHANNEL(nickname, channel_token);
-	if (user_list[fd] != OPERATOR)
-		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
-	string &user_kicked = *++tokens.begin();
+	return "";
+}
+
+int Kick::findClientToKick(Server *server, const string &user_kicked) {
 	map<int, clientInfo> &user_db = server->getUserDB();
-	map<int, clientInfo>::iterator it = user_db.begin();
-	int fd_kicked = 0;
-	for (; it != user_db.end(); it++)
-		if (it->second._username == user_kicked)
-			fd_kicked = it->first;
-	if (fd_kicked == fd)
-		return ERR_CANTKICKSELF;
-	else if (fd_kicked == 0)
-		return ERR_USERNOTEXIST(user_kicked);
-	if (user_list.find(fd_kicked) == user_list.end())
-		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
-	list<string>::iterator it2 = ++tokens.begin();
+	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it) {
+		if (it->second._username == user_kicked) {
+			return it->first;
+		}
+	}
+	return 0;
+}
+
+string Kick::getComment(const list<string> &tokens) {
+	list<string>::const_iterator it2 = ++tokens.begin();
 	string comment = *++it2;
 	if (tokens.size() == 2) {
 		comment = ":No comment";
 		it2 = --tokens.end();
-	}
-	else if (comment[0] != ':')
+	} else if (comment[0] != ':') {
 		return ERR_WRONGCHAR4;
-	while (++it2 != tokens.end())
+	}
+	while (++it2 != tokens.end()) {
 		comment += " " + *it2;
-	user_list.erase(fd_kicked);
-	return KICK(nickname, hostname, user_kicked, channel_token, comment);
+	}
+	return comment;
 }
