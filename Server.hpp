@@ -73,10 +73,10 @@ class Server {
 		void					bindSocket();
 		void					socketListening();
 		void					serverRoutine();
-		void					signalHandler(int sig);
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
+		void					initBaseUser(int status, int i);
 		void 					receiver();
 		int						getBuffer();
 		int						closeConnection();

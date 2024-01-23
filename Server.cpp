@@ -159,11 +159,40 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
+			initBaseUser(status, i);
 			return;
 		}
 	}
 	send(status, ERR_SERVERFULL, strlen(ERR_SERVERFULL), 0);
 	close(status);
+}
+
+void Server::initBaseUser(int status, int i)
+{
+	if(status == 4)
+	{
+		_userDB[_fds[i].fd]._nickname = "Emman";
+		_userDB[_fds[i].fd]._realname = "Emmanuel Lamothe";
+		_userDB[_fds[i].fd]._username = "Emman";
+		_userDB[_fds[i].fd]._password_valid = true;
+		_userDB[_fds[i].fd]._welcomed = true;
+	}
+	if(status == 5)
+	{
+		_userDB[_fds[i].fd]._nickname = "Prez";
+		_userDB[_fds[i].fd]._realname = "Francis Bouchard";
+		_userDB[_fds[i].fd]._username = "Prez";
+		_userDB[_fds[i].fd]._password_valid = true;
+		_userDB[_fds[i].fd]._welcomed = true;
+	}
+	if(status == 6)
+	{
+		_userDB[_fds[i].fd]._nickname = "Gwen";
+		_userDB[_fds[i].fd]._realname = "Gwenola LeRoux";
+		_userDB[_fds[i].fd]._username = "Gwen";
+		_userDB[_fds[i].fd]._password_valid = true;
+		_userDB[_fds[i].fd]._welcomed = true;
+	}
 }
 
 void Server::receiver() {
