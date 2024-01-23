@@ -23,6 +23,7 @@
 #include <sys/poll.h>
 #include <vector>
 #include <csignal>
+#include <ctime>
 
 #define PORT 6667
 #define BACKLOG 20
@@ -31,6 +32,8 @@
 #define BUFFERSIZE 512
 #define MAXMSGLEN 512
 #define MAXCHANNEL 10
+#define FLOODCOUNTLIMIT 10
+#define FLOODTIMELIMIT 1
 
 using std::cout;
 using std::endl;
@@ -45,6 +48,8 @@ struct	clientInfo {
 	bool	_welcomed;
 	int		_nb_channel;
 	string	_buffer;
+	int		_floodCount;
+	time_t	_lastTime;
 };
 
 class CommandHandler;
@@ -82,6 +87,8 @@ class Server {
 		int						getBuffer(string &buffer);
 		int						closeConnection();
 		int						inputTooLongError(string &buffer);
+		void					floodProtection();
+		bool					parseBuffer(string &buffer);
 		void 					processRequests(string &buffer);
 		void 					splitBuffer(string &buffer);
 		void 					buildCommandReceived(size_t pos, string &buffer);
