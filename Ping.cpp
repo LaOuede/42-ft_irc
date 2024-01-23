@@ -22,6 +22,6 @@ string Ping::executeCommand(Server *server) {
 	string &ping_token = *server->getCommandHandler().getCommandTokens().begin();
 
 	if (ping_token.empty())
-		return (ERR_NEEDMOREPARAMS);
-	return ("PONG " + ping_token + "\r\n");
+		return ERR_NEEDMOREPARAMS;
+	return "PONG " + ping_token + "\r\n";
 }

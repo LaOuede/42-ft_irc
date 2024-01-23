@@ -19,16 +19,16 @@ class Nick : public ACommand {
 	public:
 		// Construtors & Destructors
 		Nick();
-		virtual ~Nick();
+		virtual	~Nick();
 
 		// Methods
-		string executeCommand(Server *server);
-		bool isNickInUse(string nickname, Server *server);
-		bool isNickValid(string nickname);
+		string	executeCommand(Server *server);
+		bool	isNickInUse(string nickname, Server *server);
+		bool	isNickValid(string nickname);
 
 	private:
 		// Attributes
-
+		string _name;
 };
 
 #endif

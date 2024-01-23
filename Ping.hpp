@@ -17,15 +17,14 @@ class Ping : public ACommand {
 	public:
 		// Construtors & Destructors
 		Ping();
-		virtual ~Ping();
+		virtual	~Ping();
 
 		// Methods
-		string executeCommand(Server *server);
+		string	executeCommand(Server *server);
 
 	private:
 		// Attributes
 		string _name;
-
 };
 
 #endif
