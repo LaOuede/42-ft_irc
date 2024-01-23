@@ -18,6 +18,7 @@
 #include "Ping.hpp"
 #include "User.hpp"
 #include "Pass.hpp"
+#include "Privmsg.hpp"
 
 using std::cout;
 using std::endl;
