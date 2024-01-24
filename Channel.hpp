@@ -38,12 +38,12 @@ class Channel {
 		// Methods
 		void addUserToChannel(Server *Server, string &user, int &user_fd, int role);
 		bool isUserInChannel(int &user_fd);
-		void printListUser(Server *Server);
-		void rplEndOfNames(Server *server);
+		void printListUser(Server *Server, int &user_fd);
+		void rplEndOfNames(Server *server, int &user_fd);
 		void removeUserFromChannel(Server *server, int &user_fd);
 		void checkRole(Channel *channel, int &role);
 		void updateChannelOperator(Server *server);
-		void broadcastListUser(Server *server);
+		void broadcastListUser(Server *server, int &user_fd);
 		void broadcastToAll(string &msg);
 
 		// Exceptions

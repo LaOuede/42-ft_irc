@@ -12,8 +12,7 @@
 #define ERR_TOOMANYCHANNELSDECONNECTION "400 PART :Trying to deconnect from too many channels\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
-#define RPL_QUITCHANNEL(function, user, channel, reason) ": 400 " + function + " :" + user + " is leaving the channel '" + channel + "' for the reason " + reason + "\r\n"
-
+#define RPL_QUITCHANNEL(user, function, channel, reason) ":" + user + " " + function + " " + channel + " " + reason + "\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -63,6 +62,13 @@ string Part::parseCommand(Server *server) {
 }
 
 string Part::parseParameters(const list<string> &command) {
+	cout << "command.size() = " << command.size() << endl;
+
+	list<string>::const_iterator it = command.begin();
+	for (; it != command.end(); it++) {
+		cout << *it << endl;
+	}
+
 	if (command.empty()) {
 		return ERR_NEEDMOREPARAMS(this->_name);
 	}
@@ -100,13 +106,14 @@ string Part::processChannelDeconnections(Server *server) {
 	list<string>::const_iterator it;
 	string error_msg;
 	int &user_fd = server->getFds()[server->getClientIndex()].fd;
+	Channel *channel;
 
 	it = this->_channel_name.begin();
 	for (; it != this->_channel_name.end(); ++it) {
 		map<string, Channel *>::const_iterator mapIt = server->getChannelList().find(*it);
 
 		if (mapIt != server->getChannelList().end()) {
-			Channel *channel = mapIt->second;
+			channel = mapIt->second;
 			channel->removeUserFromChannel(server, user_fd);
 			if (this->_reason.empty()) {
 				this->_reason = "[No specific reason mentionned]";
@@ -115,15 +122,17 @@ string Part::processChannelDeconnections(Server *server) {
 			continue;
 		} else {
 			error_msg = ERR_NOSUCHCHANNEL(this->_name, *it);
-			server->sendToClient(error_msg);;
+			server->sendToClient(error_msg);
 		}
 	}
+	string msg = RPL_QUITCHANNEL(server->getUserDB()[user_fd]._nickname, this->getCommandName(), channel->getChannelName(), this->_reason);
+	server->sendToClient(msg);
 	return "";
 }
 
 void Part::broadcastUserQuitMessage(Channel *channel, const string &user, const string &reason) {
 	const string &channel_name = channel->getChannelName();
-	string msg = RPL_QUITCHANNEL(this->_name, user, channel_name, reason);
+	string msg = RPL_QUITCHANNEL(user, this->getCommandName(), channel_name, reason);
 	channel->broadcastToAll(msg);
 }
 
