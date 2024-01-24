@@ -103,6 +103,8 @@ class Server {
 		void					closeFds();
 		void					closeChannelFds();
 		bool					isChannelEmpty(Channel *channel);
+		bool					isNickInServer(string nickname);
+		bool					isChannelInServer(string channelName);
 
 		// Exceptions
 		std::exception			socketFailureException();
@@ -117,7 +119,6 @@ class Server {
 		// Attributes
 		int 					_reuse;
 		int 					_socket_fd;
-		int 					_client_fd;
 		uint32_t 				_client_index;
 		struct sockaddr_in 		_sa;
 		struct sockadr_storage 	*_client_addr;

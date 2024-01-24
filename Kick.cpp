@@ -28,7 +28,6 @@ Kick::~Kick() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Kick::executeCommand(Server *server) {
-	string &hostname = server->getHostname();
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
 	string &channel_token = *tokens.begin();
@@ -61,12 +60,11 @@ string Kick::executeCommand(Server *server) {
 	channel->removeUserFromChannel(server, fd_kicked);
 	string message = KICK(nickname, channel_token, user_kicked, comment);
 	channel->broadcastToAll(message);
-	return message;
+	return "";
 }
 
 string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	clientInfo &user_info = server->getUserDB()[fd];
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 
