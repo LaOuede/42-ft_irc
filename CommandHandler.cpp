@@ -46,6 +46,7 @@ void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
 	this->_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
 	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
+	this->_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
