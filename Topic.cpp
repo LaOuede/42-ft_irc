@@ -75,7 +75,7 @@ string Topic::findTopic(Server *server, const list<string> &tokens, Channel *cha
 	if (tokens.size() == 1) {
 		if (channel->getTopic().empty()) {
 			string topic_message = RPL_NOTOPIC(channel->getChannelName());
-			server->sendToClient(&topic_message);
+			server->sendToClient(topic_message);
 			return "";
 		}
 		else
@@ -84,7 +84,7 @@ string Topic::findTopic(Server *server, const list<string> &tokens, Channel *cha
 		cout << "it2 == :" << *it2 << endl;
 		channel->setTopic("");
 		string topic_message = RPL_TOPICISSETTONO(channel->getChannelName());
-		server->sendToClient(&topic_message);
+		server->sendToClient(topic_message);
 		return "";
 	} else {
 		topic = *it2;
