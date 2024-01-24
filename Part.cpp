@@ -7,12 +7,12 @@
 /* ************************************************************************** */
 #define ERR_NEEDMOREPARAMS(function) "461 " + function + " :Not enough parameters\r\n"
 #define ERR_NOSUCHCHANNEL(function, channel) "463 " + function + "'" + channel + "' :No such channel\r\n"
-#define ERR_REASONBADFORMAT(function) "400 " + function + " :Reason bad format (eg. ':Reason')\r\n"
 #define ERR_REASONTOOLONG(function) "400 " + function + " :Reason is too long (max. 10 characters)\r\n"
 #define ERR_TOOMANYCHANNELSDECONNECTION "400 PART :Trying to deconnect from too many channels\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
 #define RPL_QUITCHANNEL(user, function, channel, reason) ":" + user + " " + function + " " + channel + " " + reason + "\r\n"
+#define ERR_NOTONCHANNEL(channel_name) "442 PART '" + channel_name + "' :You're not on that channel\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -62,33 +62,42 @@ string Part::parseCommand(Server *server) {
 }
 
 string Part::parseParameters(const list<string> &command) {
-	cout << "command.size() = " << command.size() << endl;
+	//DEBUG:
+/* 	cout << "command.size() = " << command.size() << endl;
 
 	list<string>::const_iterator it = command.begin();
 	for (; it != command.end(); it++) {
 		cout << *it << endl;
-	}
+	} */
 
 	if (command.empty()) {
 		return ERR_NEEDMOREPARAMS(this->_name);
-	}
-	if (command.size() > 2) {
-		return ERR_TOOMANYPARAMS(this->_name);
 	}
 	return "";
 }
 
 string Part::parseAttributes(const list<string> &command) {
 	splitParameters(command.front(), this->_channel_name);
-	if (command.size() == 2) {
-		this->_reason = command.back();
-		if (this->_reason[0] != ':' || this->_reason.size() < 2 || this->_reason.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
-			return ERR_REASONBADFORMAT(this->_name);
-		} else if (this->_reason.size() > 10) {
+	if (command.size() > 1) {
+		this->_reason = getReason(command);
+		if (this->_reason.size() > 50) {
 			return ERR_REASONTOOLONG(this->_name);
 		}
 	}
 	return "";
+}
+
+string Part::getReason(const list<string> &command) {
+	list<string>::const_iterator it = command.begin();
+	string reason = *++it;
+	if (reason == ":WeeChat") {
+		return "";
+	}
+	it++;
+	for (; it != command.end(); ++it) {
+		reason += " " + *it;
+	}
+	return reason;
 }
 
 void Part::splitParameters(string to_split, list<string> &to_fill) {
@@ -114,19 +123,19 @@ string Part::processChannelDeconnections(Server *server) {
 
 		if (mapIt != server->getChannelList().end()) {
 			channel = mapIt->second;
-			channel->removeUserFromChannel(server, user_fd);
-			if (this->_reason.empty()) {
-				this->_reason = "[No specific reason mentionned]";
+			if (channel->isUserInChannel(user_fd)) {
+				broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, this->_reason);
+				channel->removeUserFromChannel(server, user_fd);
+				continue;
+			} else {
+				const string &channel_name = channel->getChannelName();
+				server->sendToClient(ERR_NOTONCHANNEL(channel_name));
 			}
-			broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, this->_reason);
-			continue;
 		} else {
 			error_msg = ERR_NOSUCHCHANNEL(this->_name, *it);
 			server->sendToClient(error_msg);
 		}
 	}
-	string msg = RPL_QUITCHANNEL(server->getUserDB()[user_fd]._nickname, this->getCommandName(), channel->getChannelName(), this->_reason);
-	server->sendToClient(msg);
 	return "";
 }
 

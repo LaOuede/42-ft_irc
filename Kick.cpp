@@ -15,6 +15,8 @@
 #define ERR_CANTKICKSELF "437 :You can't kick yourself\r\n"
 #define KICK(nickname, channel, user_kicked, comment) ":" + nickname + " KICK " + channel + " " + user_kicked + comment + "\r\n"
 #define ERR_WRONGCHAR4 "400 :Supposed to be : at the beginning of the comment\r\n"
+#define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -28,7 +30,6 @@ Kick::~Kick() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Kick::executeCommand(Server *server) {
-	string &hostname = server->getHostname();
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
 	string &channel_token = *tokens.begin();
@@ -58,15 +59,22 @@ string Kick::executeCommand(Server *server) {
 		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
 		
 	string comment = getComment(tokens);
-	channel->removeUserFromChannel(server, fd_kicked);
 	string message = KICK(nickname, channel_token, user_kicked, comment);
 	channel->broadcastToAll(message);
-	return message;
+	string &nick_kicked = server->getUserDB()[fd_kicked]._nickname;
+	broadcastUserQuitMessage(channel, nick_kicked);
+	channel->removeUserFromChannel(server, fd_kicked);
+	return "";
+}
+
+void Kick::broadcastUserQuitMessage(Channel *channel, const string &user) {
+	const string &channel_name = channel->getChannelName();
+	string msg = RPL_QUITCHANNEL(user, channel_name);
+	channel->broadcastToAll(msg);
 }
 
 string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	clientInfo &user_info = server->getUserDB()[fd];
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 

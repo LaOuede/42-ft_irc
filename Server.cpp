@@ -8,7 +8,8 @@ extern bool g_running;
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
 # define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
 # define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
-# define RPL_QUITCHANNEL(function, user, channel) ": 400 " + function + " :" + user + " is leaving the channel '" + channel + "'\r\n"
+//# define RPL_QUITCHANNEL(function, user, channel) ": 400 " + function + " :" + user + " is leaving the channel '" + channel + "'\r\n"
+# define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
 
 
 /* ************************************************************************** */
@@ -98,7 +99,7 @@ void Server::setSocket() {
 void Server::bindSocket() {
 	memset(&this->_sa, 0, sizeof this->_sa);
 	this->_sa.sin_family = AF_INET;
-	this->_sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	this->_sa.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->_sa.sin_port = htons(this->_port);
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
@@ -170,7 +171,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
-			initBaseUser(status, i);
+			//initBaseUser(status, i);
 			return;
 		}
 	}
@@ -178,7 +179,7 @@ void Server::addNewClient(int status) {
 	close(status);
 }
 
-void Server::initBaseUser(int status, int i)
+/* void Server::initBaseUser(int status, int i)
 {
 	if(status == 4)
 	{
@@ -204,7 +205,7 @@ void Server::initBaseUser(int status, int i)
 		_userDB[_fds[i].fd]._password_valid = true;
 		_userDB[_fds[i].fd]._welcomed = true;
 	}
-}
+} */
 
 void Server::receiver() {
 	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
@@ -386,9 +387,11 @@ void Server::closeChannelFds() {
 	list<string> channelsToDelete;
 
 	it = this->_channel_list.begin();
-	for (; it != this->_channel_list.end(); it++ ) {
-		it->second->removeUserFromChannel(this, _fds[_client_index].fd);
-		broadcastUserQuitMessage(it->second, this->_userDB[_client_index]._nickname);
+	for (; it != this->_channel_list.end(); it++) {
+		if (it->second->isUserInChannel(this->_fds[this->_client_index].fd)) {
+			broadcastUserQuitMessage(it->second, this->_userDB[_fds[_client_index].fd]._nickname);
+			it->second->removeUserFromChannel(this, _fds[_client_index].fd);
+		}
 		if (isChannelEmpty(it->second)) {
 			channelsToDelete.push_back(it->first);
 		}
@@ -402,8 +405,7 @@ void Server::closeChannelFds() {
 
 void Server::broadcastUserQuitMessage(Channel *channel, const string &user) {
 	const string &channel_name = channel->getChannelName();
-	string cmd = "QUIT";
-	string msg = RPL_QUITCHANNEL(cmd, user, channel_name);
+	string msg = RPL_QUITCHANNEL(user, channel_name);
 	channel->broadcastToAll(msg);
 }
 
