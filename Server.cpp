@@ -96,7 +96,7 @@ void Server::setSocket() {
 void Server::bindSocket() {
 	memset(&this->_sa, 0, sizeof this->_sa);
 	this->_sa.sin_family = AF_INET;
-	this->_sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	this->_sa.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->_sa.sin_port = htons(this->_port);
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();

@@ -49,7 +49,7 @@ string Invite::executeCommand(Server *server) {
 	else if (fd_invited == 0)
 		return ERR_USERNOTEXIST(nickname_invited);
 
-	channel->addUserToChannel(server, nickname_invited, fd_invited, 0);
+	channel->addUserToChannel(server, nickname_invited, fd_invited, USER);
 	string message = RPL_INVITING(nickname, nickname_invited, channel_token);
 	channel->broadcastToAll(message);
 	return "";

@@ -20,6 +20,7 @@
 #include "Pass.hpp"
 #include "Kick.hpp"
 #include "Invite.hpp"
+#include "Topic.hpp"
 
 using std::cout;
 using std::endl;
