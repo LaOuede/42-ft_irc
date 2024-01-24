@@ -36,28 +36,29 @@ string User::executeCommand(Server *server) {
 	
 	if (server->getUserDB()[fd]._password_valid == false)
 		return ERR_PASSWORDNEEDED;
+
 	if (username_token.empty())
 		return defaultUser(username, realname);
+
 	if (server->getCommandHandler().getCommandTokens().size() < 4)
 		return ERR_NEEDMOREPARAMS;
+
 	while (it != server->getCommandHandler().getCommandTokens().end()) {
-		
 		string message_parsing = parsingUsername(*it, server);
+		
 		if (!message_parsing.empty())
 			return message_parsing;
 		it++;
 
 		message_parsing = parsingMiddleTokensAndRealname(it, server);
-		if (!message_parsing.empty()) {
+		if (!message_parsing.empty())
 			return message_parsing;
-		}
 		it++;
 
 		if (it != server->getCommandHandler().getCommandTokens().end()) {
 			if (!isValidChar(*it))
 				return ERR_WRONGCHARREAL;
-			string old_realname = realname;
-			realname = old_realname + " " + *it;
+			realname += " " + *it;
 			it = server->getCommandHandler().getCommandTokens().end();
 		}
 		else
@@ -81,12 +82,12 @@ string User::defaultUser(string &username, string &realname){
 string User::parsingUsername(string username, Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 
-	if (!isValidChar(username)) {
+	if (!isValidChar(username))
 		return ERR_WRONGCHAR;
-	}
-	if (usernameTooLong(username)) {
+
+	if (usernameTooLong(username))
 		return ERR_USERTOOLONG;
-	}
+
 	if (!isUserInUse(username, server)) {
 		server->getUserDB()[fd]._username = username;
 		return "";

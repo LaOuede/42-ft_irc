@@ -5,7 +5,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
+#define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " KICK :Not enough parameters\r\n"
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
@@ -13,7 +13,7 @@
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
 #define ERR_CANTKICKSELF "437 :You can't kick yourself\r\n"
-#define KICK(nickname, hostname, user, channel, comment) ":" + nickname + "@" + hostname + " KICK " + user + " from channel " + channel + " " + comment + "\r\n"
+#define KICK(nickname, channel, user_kicked, comment) ":" + nickname + " KICK " + channel + " " + user_kicked + comment + "\r\n"
 #define ERR_WRONGCHAR4 "400 :Supposed to be : at the beginning of the comment\r\n"
 
 /* ************************************************************************** */
@@ -59,19 +59,21 @@ string Kick::executeCommand(Server *server) {
 		
 	string comment = getComment(tokens);
 	channel->removeUserFromChannel(server, fd_kicked);
-	string message = KICK(nickname, hostname, user_kicked, channel_token, comment);
+	string message = KICK(nickname, channel_token, user_kicked, comment);
 	channel->broadcastToAll(message);
-	return "";
+	return message;
 }
 
 string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	clientInfo &user_info = server->getUserDB()[fd];
+	clientInfo &user_info = server->getUserDB()[fd];
+	string &nickname = user_info._nickname;
 
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
-		return ERR_NEEDMOREPARAMS;
+		return ERR_NEEDMOREPARAMS(nickname);
 	if (!server->getChannel(channel_token))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";
@@ -93,11 +95,12 @@ string Kick::getComment(const list<string> &tokens) {
 	if (tokens.size() == 2) {
 		comment = ":No comment";
 		it2 = --tokens.end();
-	} else if (comment[0] != ':') {
+	} else if (comment[0] != ':')
 		return ERR_WRONGCHAR4;
-	}
 	while (++it2 != tokens.end()) {
 		comment += " " + *it2;
+		if (comment.length() > 50)
+			break;
 	}
 	return comment;
 }
