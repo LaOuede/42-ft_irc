@@ -136,6 +136,8 @@ string Part::processChannelDeconnections(Server *server) {
 			server->sendToClient(error_msg);
 		}
 	}
+	string msg = RPL_QUITCHANNEL(server->getUserDB()[user_fd]._nickname, this->getCommandName(), channel->getChannelName(), this->_reason);
+	server->sendToClient(msg);
 	return "";
 }
 
