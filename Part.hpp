@@ -28,6 +28,7 @@ class Part : public ACommand {
 		string parseParameters(const list<string> &command);
 		string parseAttributes(const list<string> &command);
 		void splitParameters(string to_split, list<string> &to_fill);
+		string getReason(const list<string> &command);
 		string processChannelDeconnections(Server *server);
 		void broadcastUserQuitMessage(Channel *channel, const string &user, const string &reason);
 		void cleanup();

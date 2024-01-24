@@ -6,7 +6,7 @@
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(channel) "400 JOIN :You are already in the channel '" + channel + "'\r\n"
 #define ERR_NOTONCHANNEL(channel) "442 PART '" + channel + "' :You're not on that channel\r\n"
-#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
+#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n";
 #define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
 
 
@@ -46,28 +46,22 @@ map<int, int> &Channel::getUserList() {
 /* ************************************************************************** */
 void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int role) {
 	this->_user_list[user_fd] = role;
-
-	if (role == OPERATOR) {
-		this->_nb_operators++;
-	} else {
-		this->_nb_users++;
-	}
+	role == OPERATOR ? this->_nb_operators++ : this->_nb_users++;
 	server->getUserDB()[user_fd]._nb_channel++;
-	//string msg = RPL_JOINCHANNEL(user, this->_channel_name);
-	string msg = ":" + user + " JOIN " + this->_channel_name + "\r\n";
-	server->sendToClient(msg);
-	//printListUser(server, user_fd);
+	cout << "Channels I'm in: " << server->getUserDB()[user_fd]._nb_channel << endl;
+	string msg = RPL_JOINCHANNEL(user, this->_channel_name);
+	broadcastToAll(msg);
 	broadcastListUser(server, user_fd);
 
 	// DEBUG Print map
-/* 	cout << "--- User in channel: ---" << this->_channel_name << endl;
+	cout << "--- User in channel: ---" << this->_channel_name << endl;
 	map<int, int>::const_iterator ite;
 	int index = -1;
 	ite = this->_user_list.begin();
 	for (; ite != this->_user_list.end(); ++ite) {
 		cout << "index " << ++index << " : fd= " << ite->first << " - role= " << ite->second << endl;
 	}
-	cout << "\n" << endl; */
+	cout << "\n" << endl;
 }
 
 bool Channel::isUserInChannel(int &fd) {
@@ -82,57 +76,25 @@ bool Channel::isUserInChannel(int &fd) {
 	return false;
 }
 
-/* When client joins the channel it receives the list of all users in this channel
-"<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"*/
-void Channel::printListUser(Server *server, int &user_fd) {
-	string &nickname = server->getUserDB()[user_fd]._nickname;
-	map<int, int>::const_iterator it;
-	string list_user;
-
-	list_user = "353 " + nickname + " " + this->_channel_name + " :";
-	it = this->_user_list.begin();
-	for (; it != this->_user_list.end(); ++it) {
-		string &user = server->getUserDB()[it->first]._nickname;
-		if (it->second == OPERATOR) {
-			list_user += "@" + user + " ";
-		} else {
-			list_user += user + " ";
-		}
-	}
-	list_user += "\r\n";
-	server->sendToClient(list_user);
-	rplEndOfNames(server, user_fd);
-}
-
 void Channel::rplEndOfNames(Server *server, int &user_fd) {
 	string &nickname = server->getUserDB()[user_fd]._nickname;
 	string &channel = this->_channel_name;
 	string msg = RPL_ENDOFNAMES(nickname, channel);
-	server->sendToClient(msg);
+	broadcastToAll(msg);
 }
 
 void Channel::broadcastListUser(Server *server, int &user_fd) {
-	map<int, int>::iterator it;
-	map<int, int>::iterator ite;
-	string list_user;
 	string &nickname = server->getUserDB()[user_fd]._nickname;
-
-	list_user = "353 " + nickname + " " + this->_channel_name + " :";
-	it = this->_user_list.begin();
+	string list_user = "353 " + nickname + " " + this->_channel_name + " :";
+	map<int, int>::iterator it = this->_user_list.begin();
+		
 	for (; it != this->_user_list.end(); ++it) {
-		string &user = server->getUserDB()[it->first]._nickname;
-		if (it->second == OPERATOR) {
-			list_user += "@" + user + " ";
-		} else {
-			list_user += user + " ";
-		}
+		string &userNickname = server->getUserDB()[it->first]._nickname;
+		list_user += (it->second == OPERATOR) ? ("@" + userNickname + " ") : (userNickname + " ");
 	}
 	list_user += "\r\n";
 
-	ite = this->_user_list.begin();
-	for (; ite != this->_user_list.end(); ++ite) {
-		send(ite->first, list_user.c_str(), list_user.size(), 0);
-	}
+	broadcastToAll(list_user);
 	rplEndOfNames(server, user_fd);
 }
 
@@ -156,7 +118,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		broadcastListUser(server, user_fd);
 
 		// DEBUG: Print updated map
-		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
+/* 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
 		cout << "--- Updated list of users in channel '" << this->_channel_name << "' ---" << endl;
 		map<int, int>::const_iterator it;
 		string list_user;
@@ -171,12 +133,11 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 				cout << user + " ";
 			}
 		}
-		cout << "\n" << endl;
-	} else {
+		cout << "\n" << endl; */
+	}/*  else {
 		string &channel = this->_channel_name;
-		string error_msg = ERR_NOTONCHANNEL(channel);
-		server->sendToClient(error_msg);
-	}
+		server->sendToClient(ERR_NOTONCHANNEL(channel));
+	} */
 }
 
 void Channel::checkRole(Channel *channel, int &role) {
