@@ -41,7 +41,7 @@ string Invite::executeCommand(Server *server) {
 	if (user_list.find(fd) == user_list.end())
 		return ERR_NOTONCHANNEL(nickname, channel_token);
 
-	if (user_list[fd] != OPERATOR) //TODO ajuster quand il y aura des channels private
+	if (user_list[fd] != OPERATOR) //TODO ajuster quand il y aura des channels private avec les MOD?
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
 	int fd_invited = findClientToInvite(server, nickname_invited);
 	if (fd_invited == fd)
