@@ -5,9 +5,9 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_ALREADYINCHANNEL(channel) "400 JOIN :You are already in the channel '" + channel + "'\r\n"
-#define ERR_NOTONCHANNEL(channel) "442 PART : '" + channel + "' :You're not on that channel\r\n"
+#define ERR_NOTONCHANNEL(channel) "442 PART '" + channel + "' :You're not on that channel\r\n"
 #define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
-#define RPL_ENDOFNAMES(channel) "366 " + channel + " :End of /NAMES list\r\n"
+#define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
 
 
 /* ************************************************************************** */
@@ -53,9 +53,11 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 		this->_nb_users++;
 	}
 	server->getUserDB()[user_fd]._nb_channel++;
-	string msg = RPL_JOINCHANNEL(user, this->_channel_name);
+	//string msg = RPL_JOINCHANNEL(user, this->_channel_name);
+	string msg = ":" + user + " JOIN " + this->_channel_name + "\r\n";
 	server->sendToClient(msg);
-	printListUser(server);
+	//printListUser(server, user_fd);
+	broadcastListUser(server, user_fd);
 
 	// DEBUG Print map
 /* 	cout << "--- User in channel: ---" << this->_channel_name << endl;
@@ -80,12 +82,14 @@ bool Channel::isUserInChannel(int &fd) {
 	return false;
 }
 
-/* When client joins the channel it receives the list of all users in this channel */
-void Channel::printListUser(Server *server) {
+/* When client joins the channel it receives the list of all users in this channel
+"<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"*/
+void Channel::printListUser(Server *server, int &user_fd) {
+	string &nickname = server->getUserDB()[user_fd]._nickname;
 	map<int, int>::const_iterator it;
 	string list_user;
 
-	list_user = "353 " + this->_channel_name + " :";
+	list_user = "353 " + nickname + " " + this->_channel_name + " :";
 	it = this->_user_list.begin();
 	for (; it != this->_user_list.end(); ++it) {
 		string &user = server->getUserDB()[it->first]._nickname;
@@ -95,23 +99,25 @@ void Channel::printListUser(Server *server) {
 			list_user += user + " ";
 		}
 	}
-	list_user += "\n";
+	list_user += "\r\n";
 	server->sendToClient(list_user);
-	rplEndOfNames(server);
+	rplEndOfNames(server, user_fd);
 }
 
-void Channel::rplEndOfNames(Server *server) {
+void Channel::rplEndOfNames(Server *server, int &user_fd) {
+	string &nickname = server->getUserDB()[user_fd]._nickname;
 	string &channel = this->_channel_name;
-	string msg = RPL_ENDOFNAMES(channel);
+	string msg = RPL_ENDOFNAMES(nickname, channel);
 	server->sendToClient(msg);
 }
 
-void Channel::broadcastListUser(Server *server) {
+void Channel::broadcastListUser(Server *server, int &user_fd) {
 	map<int, int>::iterator it;
 	map<int, int>::iterator ite;
 	string list_user;
+	string &nickname = server->getUserDB()[user_fd]._nickname;
 
-	list_user = "353 " + this->_channel_name + " :";
+	list_user = "353 " + nickname + " " + this->_channel_name + " :";
 	it = this->_user_list.begin();
 	for (; it != this->_user_list.end(); ++it) {
 		string &user = server->getUserDB()[it->first]._nickname;
@@ -121,12 +127,13 @@ void Channel::broadcastListUser(Server *server) {
 			list_user += user + " ";
 		}
 	}
-	list_user += "\n";
+	list_user += "\r\n";
 
 	ite = this->_user_list.begin();
 	for (; ite != this->_user_list.end(); ++ite) {
 		send(ite->first, list_user.c_str(), list_user.size(), 0);
 	}
+	rplEndOfNames(server, user_fd);
 }
 
 void Channel::broadcastToAll(string &msg) {
@@ -146,6 +153,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		this->_user_list.erase(it);
 		updateChannelOperator(server);
 		server->getUserDB()[user_fd]._nb_channel--;
+		broadcastListUser(server, user_fd);
 
 		// DEBUG: Print updated map
 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
