@@ -35,29 +35,30 @@ string User::executeCommand(Server *server) {
 	string	&realname = server->getUserDB()[fd]._realname;
 	
 	if (server->getUserDB()[fd]._password_valid == false)
-		return (ERR_PASSWORDNEEDED);
+		return ERR_PASSWORDNEEDED;
+
 	if (username_token.empty())
-		return (defaultUser(username, realname));
+		return defaultUser(username, realname);
+
 	if (server->getCommandHandler().getCommandTokens().size() < 4)
-		return (ERR_NEEDMOREPARAMS);
+		return ERR_NEEDMOREPARAMS;
+
 	while (it != server->getCommandHandler().getCommandTokens().end()) {
-		
 		string message_parsing = parsingUsername(*it, server);
+		
 		if (!message_parsing.empty())
-			return (message_parsing);
+			return message_parsing;
 		it++;
 
 		message_parsing = parsingMiddleTokensAndRealname(it, server);
-		if (!message_parsing.empty()) {
-			return (message_parsing);
-		}
+		if (!message_parsing.empty())
+			return message_parsing;
 		it++;
 
 		if (it != server->getCommandHandler().getCommandTokens().end()) {
 			if (!isValidChar(*it))
-				return (ERR_WRONGCHARREAL);
-			string old_realname = realname;
-			realname = old_realname + " " + *it;
+				return ERR_WRONGCHARREAL;
+			realname += " " + *it;
 			it = server->getCommandHandler().getCommandTokens().end();
 		}
 		else
@@ -69,29 +70,29 @@ string User::executeCommand(Server *server) {
 	// for (; it2 != server->getUserDB().end(); ++it2) {
 	// 	std::cout << it2->first << ", " << it2->second._nickname << it2->second._username << it2->second._realname << std::endl;
 	// }
-	return (USERNAMESET(username, realname));
+	return USERNAMESET(username, realname);
 }
 
 string User::defaultUser(string &username, string &realname){
 	username = "defaultusername" + timestamp();
 	realname = "defaultrealname" + timestamp();
-	return (ERR_NOUSERNAME);
+	return ERR_NOUSERNAME;
 }
 
 string User::parsingUsername(string username, Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 
-	if (!isValidChar(username)) {
-		return (ERR_WRONGCHAR);
-	}
-	if (usernameTooLong(username)) {
-		return (ERR_USERTOOLONG);
-	}
+	if (!isValidChar(username))
+		return ERR_WRONGCHAR;
+
+	if (usernameTooLong(username))
+		return ERR_USERTOOLONG;
+
 	if (!isUserInUse(username, server)) {
 		server->getUserDB()[fd]._username = username;
-		return ("");
+		return "";
 	}
-	return (ERR_ALREADYREGISTRED);
+	return ERR_ALREADYREGISTRED;
 }
 
 bool User::isValidChar(string username) {
@@ -119,20 +120,20 @@ string User::parsingMiddleTokensAndRealname(list<string>::iterator& it, Server *
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	
 	if (*it != "0")
-		return (ERR_WRONGCHAR0);
+		return ERR_WRONGCHAR0;
 	++it;
 
 	if (*it != "*")
-		return (ERR_WRONGCHAR42);
+		return ERR_WRONGCHAR42;
 	++it;
 
 	if (it->find_first_of(":") != 0)
-		return (ERR_WRONGCHAR3);
+		return ERR_WRONGCHAR3;
 
 	server->getUserDB()[fd]._realname = it->erase(0, 1);
 	if (!isValidChar(server->getUserDB()[fd]._realname))
-		return (ERR_WRONGCHARREAL);
-	return ("");
+		return ERR_WRONGCHARREAL;
+	return "";
 }
 
 string User::timestamp() {

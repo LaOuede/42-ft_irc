@@ -83,6 +83,7 @@ class Server {
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
+		void					initBaseUser(int status, int i);
 		void 					receiver();
 		int						getBuffer(string &buffer);
 		int						closeConnection();

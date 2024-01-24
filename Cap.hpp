@@ -17,15 +17,14 @@ class Cap : public ACommand {
 	public:
 		// Construtors & Destructors
 		Cap();
-		virtual ~Cap();
+		virtual	~Cap();
 
 		// Methods
-		string executeCommand(Server *server);
+		string	executeCommand(Server *server);
 
 	private:
 		// Attributes
 		string _name;
-
 };
 
 #endif
