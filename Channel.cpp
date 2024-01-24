@@ -118,7 +118,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 		broadcastListUser(server, user_fd);
 
 		// DEBUG: Print updated map
-		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
+/* 		cout << "--- " << server->getUserDB()[user_fd]._nickname << " has been removed from channel '" << this->_channel_name << "' ---" << endl;
 		cout << "--- Updated list of users in channel '" << this->_channel_name << "' ---" << endl;
 		map<int, int>::const_iterator it;
 		string list_user;
@@ -134,7 +134,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 			}
 		}
 		cout << "\n" << endl; */
-	}/*  else {
+	}/* else {
 		string &channel = this->_channel_name;
 		server->sendToClient(ERR_NOTONCHANNEL(channel));
 	} */
