@@ -3,10 +3,10 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
-# include <list>
+#include "ACommand.hpp"
+#include <iostream>
+#include <string>
+#include <list>
 
 using std::cout;
 using std::endl;
@@ -30,8 +30,8 @@ class Topic : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
-		string _topic;
+		string	_name;
+		string	_topic;
 };
 
 #endif
