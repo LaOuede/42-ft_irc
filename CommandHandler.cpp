@@ -43,6 +43,7 @@ void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
 	this->_command_caller.insert(pair<string, ACommand *>("JOIN", new Join));
 	this->_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
+	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
