@@ -3,19 +3,20 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
-# include <map>
-# include <list>
+#include "ACommand.hpp"
+#include <iostream>
+#include <list>
+#include <map>
+#include <string>
 
 using std::cout;
 using std::endl;
-using std::string;
-using std::map;
 using std::list;
+using std::map;
+using std::string;
 
 class Server;
+class Channel;
 
 class Kick : public ACommand {
 	public:
@@ -28,11 +29,11 @@ class Kick : public ACommand {
 		string	parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token);
 		string	getComment(const list<string> &tokens);
 		int		findClientToKick(Server *server, const string &user_kicked);
+		void	broadcastUserQuitMessage(Channel *channel, const string &user);
 
 	private:
 		// Attributes
-		string _name;
-
+		string	_name;
 };
 
 #endif

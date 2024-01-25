@@ -1,6 +1,6 @@
-# include "Invite.hpp"
-# include "Server.hpp"
-# include "CommandHandler.hpp"
+#include "Invite.hpp"
+#include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -13,6 +13,8 @@
 #define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
 #define ERR_CANTINVITESELF "437 :You can't invite yourself\r\n"
 #define RPL_INVITING(nickname, nickname_invited, channel) ":" + nickname + " INVITE " + nickname_invited + " " + channel + "\r\n"
+
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */

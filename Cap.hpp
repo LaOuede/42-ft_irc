@@ -3,9 +3,9 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
+#include "ACommand.hpp"
+#include <iostream>
+#include <string>
 
 using std::cout;
 using std::endl;
@@ -24,7 +24,7 @@ class Cap : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
+		string	_name;
 };
 
 #endif

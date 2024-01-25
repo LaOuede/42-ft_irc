@@ -9,16 +9,17 @@
 #define ERR_CHANNELISFULL "471 JOIN :Cannot join channel (+l)\r\n"
 #define ERR_CHANNELKEYTOOLONG(key) "400 JOIN :Channel key '" + key + "' is too long (> 10 characters)\r\n"
 #define ERR_CHANNELNAME(name) "400 JOIN :Channel name '" + name + "' is too long (> 10 characters) or too short (<2)\r\n"
-#define ERR_NEEDMOREPARAMS "461 JOIN :Not enough parameters\r\n"
+#define ERR_NEEDMOREPARAMS(function) "461 " + function + " :Not enough parameters\r\n"
 #define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
 #define ERR_TOOMANYCHANNELSLIST "400 JOIN :You have reached your maximum number of channels (5)\n"
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
-#define ERR_TOOMANYPARAMS "400 JOIN :Too many parameters\r\n"
-#define ERR_UNKNOWNERROR(name) "400 JOIN :Missing # at the begining of channel name '" + name + "'\r\n"
+#define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
+#define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
 #define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_WRONGCHARCHANNELNAME(name) "400 :Wrong characters used in name '" + name + "'\r\n"
 #define ERR_WRONGCHARCHANNELKEY(key) "400 :Wrong characters used in key '" + key + "'\r\n"
 #define RPL_JOINCHANNEL(user, name) ":" + user + " JOIN " + name + "\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -39,26 +40,29 @@ Join::~Join() {}
 /* ************************************************************************** */
 // MAIN FUNCTION
 string Join::executeCommand(Server *server) {
+	/* DEBUG À SUPPRIMER */
 	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
 
 	// 0. Am I authentificated ?
 /* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	if (server->getUserDB()[fd]._welcomed == false) {
-		return (ERR_WELCOMED);
+		return (ERR_WELCOMED); 
 	} */
 	// 1. PARSING
 	this->_error_msg = parseCommand(server);
-	if (this->_error_msg.compare("") != 0) {
+	if (!this->_error_msg.empty()) {
 		cleanup();
 		return this->_error_msg;
 	}
-	// 2. Get a map from the request in order to process
-	createChannelVector();
+
 	// 3. Process connections
+	createChannelVector();
 	processChannelConnections(server);
+
 	// 4. Clean Up
 	cleanup();
-	return ("");
+
+	return "";
 }
 
 
@@ -79,10 +83,10 @@ string Join::parseCommand(Server *server) {
 
 string Join::parseParameters(const list<string> &command) {
 	if (command.empty()) {
-		return ERR_NEEDMOREPARAMS;
+		return ERR_NEEDMOREPARAMS(this->_name);
 	}
 	if (command.size() > 2) {
-		return ERR_TOOMANYPARAMS;
+		return ERR_TOOMANYPARAMS(this->_name);
 	}
 	return "";
 }
@@ -101,7 +105,7 @@ string Join::parseAttributes(const list<string> &command) {
 	return "";
 }
 
-void Join::splitParameters(string to_split, list<string> &to_fill) {
+void Join::splitParameters(string const &to_split, list<string> &to_fill) {
 	istringstream stream(to_split);
 	char delimiter = ',';
 	string token;
@@ -125,6 +129,7 @@ void Join::splitParameters(string to_split, list<string> &to_fill) {
 //2. CREATING A VECTOR<pair<CHANNEL_NAME, CHANNEL_KEY>>
 void Join::createChannelVector() {
 	size_t vector_size = this->_channel_name.size();
+	this->_channel_vector.reserve(vector_size);
 
 	for (size_t i = 0; i < vector_size; i++) {
 		string name = this->_channel_name.front();
@@ -155,7 +160,7 @@ string Join::processChannelConnections(Server *server) {
 		this->_error_msg = "";
 		parseChannelNameAndKey(it->first, it->second);
 		if (!this->_error_msg.empty()) {
-			server->sendToClient(&this->_error_msg);
+			server->sendToClient(this->_error_msg);
 			continue;
 		}
 		joinChannel(server, it->first);
@@ -163,15 +168,22 @@ string Join::processChannelConnections(Server *server) {
 	return "";
 }
 
-string Join::parseChannelNameAndKey(string name, string key) {
-	if (name[0] != '#' && name[0] != '&' ) {
-		this->_error_msg = ERR_UNKNOWNERROR(name);
-	} else if (name.size() > 10 || name.size() < 2) {
+string Join::parseChannelNameAndKey(string const &name, string key) {
+	if (name.empty() || (name[0] != '#' && name[0] != '&')) {
+		this->_error_msg = ERR_UNKNOWNERROR(this->_name, name);
+		return this->_error_msg;
+	}
+	if (name.size() > 10 || name.size() < 2) {
 		this->_error_msg = ERR_CHANNELNAME(name);
-	} else if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
+		return this->_error_msg;
+	}
+	if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
 		this->_error_msg = ERR_WRONGCHARCHANNELNAME(name);
-	} else if (key.size() > 10) {
+		return this->_error_msg;
+	}
+	if (!key.empty() && key.size() > 10) {
 		this->_error_msg = ERR_CHANNELKEYTOOLONG(key);
+		return this->_error_msg;
 	}
 	return "";
 }
@@ -185,13 +197,13 @@ void Join::joinChannel(Server *server, string const &channel_name) {
 	if (isChannelExisting(server, channel_name)) {
 		Channel *channel = server->getChannel(channel_name);
 		if (channel->isUserInChannel(fd)) {
-			error_msg = ERR_ALREADYINCHANNEL(channel_name);
-			server->sendToClient(&error_msg);
-		} else if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
+			server->sendToClient(ERR_ALREADYINCHANNEL(channel_name));
+			return;
+		}
+		if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
 			channel->addUserToChannel(server, user, fd, USER);
 		} else {
-			error_msg = ERR_CHANNELISFULL;
-			server->sendToClient(&error_msg);
+			server->sendToClient(ERR_CHANNELISFULL);
 		}
 	} else {
 		createChannel(server, channel_name, user, fd);
@@ -206,24 +218,21 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 	string msg;
 	int &nb_channel = server->getUserDB()[fd]._nb_channel;
 
-	if (server->getChannelList().size() < MAXCHANNEL && nb_channel < MAXINCHANNEL) {
-		Channel *channel = new Channel(channel_name);
-		server->getChannelList()[channel_name] = channel;
-		channel->addUserToChannel(server, user, fd, OPERATOR);
-	} else {
-		msg = ERR_TOOMANYCHANNELSLIST;
-		server->sendToClient(&msg);
+	if (server->getChannelList().size() >= MAXCHANNEL && nb_channel >= MAXINCHANNEL) {
+		server->sendToClient(ERR_TOOMANYCHANNELSLIST);
+		return;
 	}
+	Channel *channel = new Channel(channel_name);
+	if (!channel) {
+		server->sendFailureException();
+	}
+	server->getChannelList()[channel_name] = channel;
+	channel->addUserToChannel(server, user, fd, OPERATOR);
 }
 
 // 4. CLEAN UP
 void Join::cleanup() {
-	this->_channel_name.clear();
-	this->_channel_key.clear();
-	this->_channel_vector.clear();
+	list<string>().swap(this->_channel_name);
+	list<string>().swap(this->_channel_key);
+	vector<pair<string, string> >().swap(this->_channel_vector);
 }
-
-
-/* ************************************************************************** */
-/* Exceptions                                                                 */
-/* ************************************************************************** */

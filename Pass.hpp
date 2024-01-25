@@ -3,9 +3,9 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
+#include "ACommand.hpp"
+#include <iostream>
+#include <string>
 
 using std::cout;
 using std::endl;
@@ -20,13 +20,12 @@ class Pass : public ACommand {
 		virtual ~Pass();
 
 		// Methods
-		string executeCommand(Server *server);
-		bool isThePasswordValid(string &password, Server *server);
+		string	executeCommand(Server *server);
+		bool	isThePasswordValid(string &password, Server *server);
 
 	private:
 		// Attributes
-		string _name;
-
+		string	_name;
 };
 
 #endif

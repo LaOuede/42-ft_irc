@@ -3,11 +3,10 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
-# include <map>
-
+#include "ACommand.hpp"
+#include <iostream>
+#include <map>
+#include <string>
 
 using std::cout;
 using std::endl;
@@ -23,20 +22,18 @@ class Privmsg : public ACommand {
 
 		// Methods
 		string	executeCommand(Server *server);
-		string 	parseParameter(Server *server);
+		string	parseParameter(Server *server);
 		string	sendToChannel(Server *server);
-		string 	sendToUser(Server *server);
+		string	sendToUser(Server *server);
 		int		findTargetFd(Server *server);
 
 	private:
 		// Attributes
-		string _name;
-		string _response;
-		string _target;
-		string _msg;
-		string _nick;
-
-
+		string	_name;
+		string	_response;
+		string	_target;
+		string	_msg;
+		string	_nick;
 };
 
 #endif

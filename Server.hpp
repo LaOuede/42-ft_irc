@@ -4,11 +4,15 @@
 #pragma once
 
 #include "ACommand.hpp"
-#include "CommandHandler.hpp"
 #include "Channel.hpp"
+#include "CommandHandler.hpp"
+#include <cctype>
+#include <ctime>
+#include <csignal>
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
+#include <map>
 #include <netdb.h>
 #include <stdexcept>
 #include <stdio.h>
@@ -18,12 +22,14 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <map>
-#include <cctype>
-#include <sys/poll.h>
 #include <vector>
-#include <csignal>
-#include <ctime>
+
+#define C_BLU "\e[34m"
+#define C_BOL "\e[1m"
+#define C_ITA "\e[3m"
+#define C_GRN "\e[32m"
+#define C_RED "\e[31m"
+#define C_WHT "\e[0m"
 
 #define PORT 6667
 #define BACKLOG 20
@@ -37,8 +43,9 @@
 
 using std::cout;
 using std::endl;
-using std::string;
+using std::exception;
 using std::map;
+using std::string;
 
 struct	clientInfo {
 	string	_nickname;
@@ -79,11 +86,12 @@ class Server {
 		void					setSocket();
 		void					bindSocket();
 		void					socketListening();
+		void					clientInterfaceConnection();
 		void					serverRoutine();
 		void					initPollfd();
 		void					acceptConnection();
 		void					addNewClient(int status);
-		void					initBaseUser(int status, int i);
+		//void					initBaseUser(int status, int i);
 		void 					receiver();
 		int						getBuffer(string &buffer); //to rename
 		int						closeConnection();
@@ -99,21 +107,22 @@ class Server {
 		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
-		void					sendToClient(string *response);
+		void					sendToClient(const string &response);
 		void					closeFds();
 		void					closeChannelFds();
 		bool					isChannelEmpty(Channel *channel);
+		void 					broadcastUserQuitMessage(Channel *channel, const string &user);
 		bool					isNickInServer(string nickname);
 		bool					isChannelInServer(string channelName);
 
 		// Exceptions
-		std::exception			socketFailureException();
-		std::exception			bindFailureException();
-		std::exception			listenFailureException();
-		std::exception			acceptFailureException();
-		std::exception			recvFailureException();
-		std::exception			sendFailureException();
-		std::exception			setsockoptFailureException();
+		exception				socketFailureException();
+		exception				bindFailureException();
+		exception				listenFailureException();
+		exception				acceptFailureException();
+		exception				recvFailureException();
+		exception				sendFailureException();
+		exception				setsockoptFailureException();
 
 	private:
 		// Attributes
@@ -128,8 +137,7 @@ class Server {
 		int 					_bytes_sent;
 		int 					_port;
 		string 					_password;
-		CommandHandler 			_command_handler;
-
+		CommandHandler			_command_handler;
 		string					_command_received;
 		string					_hostname;
 		map<int, clientInfo>	_userDB;
@@ -141,4 +149,3 @@ class Server {
 #include "CommandHandler.hpp"
 
 #endif
-

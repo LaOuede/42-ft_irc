@@ -1,6 +1,6 @@
-# include "Kick.hpp"
-# include "Server.hpp"
-# include "CommandHandler.hpp"
+#include "Kick.hpp"
+#include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -13,8 +13,10 @@
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
 #define ERR_CANTKICKSELF "437 :You can't kick yourself\r\n"
-#define KICK(nickname, channel, user_kicked, comment) ":" + nickname + " KICK " + channel + " " + user_kicked + comment + "\r\n"
+#define KICK(nickname, channel, nickname_kicked, comment) ":" + nickname + " KICK " + channel + " " + nickname_kicked + " " + comment + "\r\n"
 #define ERR_WRONGCHAR4 "400 :Supposed to be : at the beginning of the comment\r\n"
+#define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -46,21 +48,29 @@ string Kick::executeCommand(Server *server) {
 	if (user_list[fd] != OPERATOR)
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
 
-	string &user_kicked = *++tokens.begin();
-	int fd_kicked = findClientToKick(server, user_kicked);
+	string &nickname_kicked = *++tokens.begin();
+	int fd_kicked = findClientToKick(server, nickname_kicked);
 	if (fd_kicked == fd)
 		return ERR_CANTKICKSELF;
 	else if (fd_kicked == 0)
-		return ERR_USERNOTEXIST(user_kicked);
+		return ERR_USERNOTEXIST(nickname_kicked);
 
 	if (user_list.find(fd_kicked) == user_list.end())
-		return ERR_USERNOTINCHANNEL(user_kicked, channel_token);
+		return ERR_USERNOTINCHANNEL(nickname_kicked, channel_token);
 		
 	string comment = getComment(tokens);
-	channel->removeUserFromChannel(server, fd_kicked);
-	string message = KICK(nickname, channel_token, user_kicked, comment);
+	string message = KICK(nickname, channel_token, nickname_kicked, comment);
 	channel->broadcastToAll(message);
+	string &nick_kicked = server->getUserDB()[fd_kicked]._nickname;
+	broadcastUserQuitMessage(channel, nick_kicked);
+	channel->removeUserFromChannel(server, fd_kicked);
 	return "";
+}
+
+void Kick::broadcastUserQuitMessage(Channel *channel, const string &user) {
+	const string &channel_name = channel->getChannelName();
+	string msg = RPL_QUITCHANNEL(user, channel_name);
+	channel->broadcastToAll(msg);
 }
 
 string Kick::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
@@ -77,10 +87,10 @@ string Kick::parseFirstPart(Server *server, const list<string> &tokens, const st
 	return "";
 }
 
-int Kick::findClientToKick(Server *server, const string &user_kicked) {
+int Kick::findClientToKick(Server *server, const string &nickname_kicked) {
 	map<int, clientInfo> &user_db = server->getUserDB();
 	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it) {
-		if (it->second._username == user_kicked) {
+		if (it->second._nickname == nickname_kicked) {
 			return it->first;
 		}
 	}
@@ -89,12 +99,12 @@ int Kick::findClientToKick(Server *server, const string &user_kicked) {
 
 string Kick::getComment(const list<string> &tokens) {
 	list<string>::const_iterator it2 = ++tokens.begin();
-	string comment = *++it2;
+
 	if (tokens.size() == 2) {
-		comment = ":No comment";
-		it2 = --tokens.end();
-	} else if (comment[0] != ':')
-		return ERR_WRONGCHAR4;
+		string comment = ":No comment";
+		return comment;
+	}
+	string comment = *++it2;
 	while (++it2 != tokens.end()) {
 		comment += " " + *it2;
 		if (comment.length() > 50)

@@ -3,15 +3,15 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
-# include <list>
+#include "ACommand.hpp"
+#include <iostream>
+#include <list>
+#include <string>
 
 using std::cout;
 using std::endl;
-using std::string;
 using std::list;
+using std::string;
 
 class Server;
 
@@ -19,7 +19,7 @@ class Invite : public ACommand {
 	public:
 		// Construtors & Destructors
 		Invite();
-		virtual	~Invite();
+		virtual ~Invite();
 
 		// Methods
 		string	executeCommand(Server *server);
@@ -28,7 +28,7 @@ class Invite : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
+		string	_name;
 };
 
 #endif
