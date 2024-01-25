@@ -85,7 +85,7 @@ class Server {
 		void					addNewClient(int status);
 		void					initBaseUser(int status, int i);
 		void 					receiver();
-		int						getBuffer(string &buffer);
+		int						getBuffer(string &buffer); //to rename
 		int						closeConnection();
 		int						inputTooLongError(string &buffer);
 		void					floodProtection();
