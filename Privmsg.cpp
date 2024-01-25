@@ -12,15 +12,6 @@
 #define ERR_NOTEXTTOSEND(target) "412 " + target + " :No text to send\r\n"
 #define ERR_NEEDMOREPARAMS "461 PRIVMSG :Not enough parameters\r\n"
 
-
-// ERR_NOTEXTTOSEND (412) 
-//   "<client> :No text to send"
-// ERR_NOSUCHNICK (401)
-// ERR_CANNOTSENDTOCHAN (404) 
-//   "<client> <channel> :Cannot send to channel"
-// string msgPrivate = ":" + liveUser.getNickname() + " PRIVMSG " + userDestination->getNickname() + " :" + infoMessage[MSG];
-
-
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -37,15 +28,15 @@ string Privmsg::executeCommand(Server *server) {
 	_target = *it++;
 	if(_target.empty())
 		return ERR_NEEDMOREPARAMS;
-	string msg = *it++;
-	if(msg.empty())
+	_msg = *it++;
+	if(_msg.empty())
 		return ERR_NOTEXTTOSEND(_target);
 	while(it != server->getCommandHandler().getCommandTokens().end()){
-		msg.append(" ");
-		msg.append(*it++);
+		_msg.append(" ");
+		_msg.append(*it++);
 	}
 	string nick = server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname;
-	string response = PRIVMSG(nick, _target, msg);
+	string response = PRIVMSG(nick, _target, _msg);
 	if(_target[0] == '#' || _target[0] == '&')
 		return sendToChannel(server, response);
 	else
@@ -53,13 +44,19 @@ string Privmsg::executeCommand(Server *server) {
 	return "";
 }
 
-int Privmsg::findTargetFd(Server *server) {
-	map<int, clientInfo> &user_db = server->getUserDB();
-	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it)
-		if (it->second._nickname == _target)
-			return it->first;
-	return 0;
-}
+// string Privmsg::parseParameter(Server *server){
+// 	list<string>::const_iterator it = server->getCommandHandler().getCommandTokens().begin();
+// 	_target = *it++;
+// 	if(_target.empty())
+// 		return ERR_NEEDMOREPARAMS;
+// 	_msg = *it++;
+// 	if(_msg.empty())
+// 		return ERR_NOTEXTTOSEND(_target);
+// 	while(it != server->getCommandHandler().getCommandTokens().end()){
+// 		_msg.append(" ");
+// 		_msg.append(*it++);
+// 	}
+// }
 
 string Privmsg::sendToChannel(Server *server, string const& response){
 	if(!server->isChannelInServer(_target))
@@ -81,5 +78,10 @@ string Privmsg::sendToUser(Server *server, string const& response){
 	return "";
 }
 
-
-// :Angel PRIVMSG Wiz :Hello are you receiving this message
+int Privmsg::findTargetFd(Server *server) {
+	map<int, clientInfo> &user_db = server->getUserDB();
+	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it)
+		if (it->second._nickname == _target)
+			return it->first;
+	return 0;
+}

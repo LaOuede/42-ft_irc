@@ -23,9 +23,11 @@ class Privmsg : public ACommand {
 
 		// Methods
 		string	executeCommand(Server *server);
-		int		findTargetFd(Server *server);
+		string 	parseParameter(Server *server);
+		void	rebuildMsg();
 		string	sendToChannel(Server *server, string const& response);
 		string 	sendToUser(Server *server, string const& response);
+		int		findTargetFd(Server *server);
 
 	private:
 		// Attributes
