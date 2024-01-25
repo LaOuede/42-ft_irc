@@ -21,10 +21,13 @@ bool parsingPassword(string password) {
 	return true;
 }
 
-void Server::sendToClient(string *response) {
+void Server::sendToClient(string &response) {
 	send(this->_fds[this->_client_index].fd, response->c_str(), response->size(), 0);
 }
 
+void Server::sendToTarget(string &response, fd) {
+	send(this->_fds[this->_client_index].fd, response->c_str(), response->size(), 0);
+}
 void shutdown(int sig){
 	(void)sig;
 	g_running = false;
