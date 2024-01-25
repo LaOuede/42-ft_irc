@@ -69,9 +69,9 @@ $(NAME) : $(OBJS)
 $(OBJS_DIR)%.o: %.cpp $(HEADS)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-run: re
+run: all
 	@echo "\n$W---------------------- $GLaunching $W$(NAME) 🚀 $W----------------------\n"
-	./$(NAME) 6667 allo
+	./$(NAME) 6667 pass
 
 # Remove objects and executables
 clean:

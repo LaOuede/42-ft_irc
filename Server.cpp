@@ -15,7 +15,7 @@ extern bool g_running;
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_fd(0), _client_index(0), _nfds(0) {
+	_reuse(1), _socket_fd(0), _client_index(0), _nfds(0) {
 	_port = atoi(port.c_str());
 	_password = password;
 	cout << "Server constructor call" << endl;
@@ -30,10 +30,6 @@ Server::~Server() {
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
-int &Server::getClientFd() {
-	return this->_client_fd;
-}
-
 int &Server::getSocketFd() {
 	return this->_socket_fd;
 }
@@ -96,7 +92,7 @@ void Server::setSocket() {
 void Server::bindSocket() {
 	memset(&this->_sa, 0, sizeof this->_sa);
 	this->_sa.sin_family = AF_INET;
-	this->_sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	this->_sa.sin_addr.s_addr = htonl(INADDR_ANY);
 	this->_sa.sin_port = htons(this->_port);
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
@@ -118,6 +114,8 @@ void Server::socketListening() {
 	cout << "to set the password on your client, type this:" << endl;
 	cout << "/set irc.server.IRCserv.password pass" << endl;
 	cout << "/connect IRCserv" << endl;
+	cout << "/set irc.server.IRCserv.username user2" << endl;
+	cout << "/set irc.server.IRCserv.nicks allo1" << endl;
 }
 
 void Server::serverRoutine(){
@@ -168,7 +166,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect #" << _fds[i].fd << endl;
-			initBaseUser(status, i);
+			// initBaseUser(status, i);
 			return;
 		}
 	}
@@ -401,6 +399,23 @@ bool Server::isChannelEmpty(Channel *channel) {
 	if (channel->getUsersNb() == 0 && channel->getOperatorsNb() == 0) {
 		return true;
 	}
+	return false;
+}
+
+bool Server::isNickInServer(string nickname){
+	map<int, clientInfo>::iterator it = _userDB.begin();
+	for(; it != _userDB.end(); it++)
+		if(it->second._nickname == nickname)
+			return true;
+	return false;
+}
+
+bool	Server::isChannelInServer(string channelName){
+	if(_channel_list.find(channelName) != _channel_list.end()){
+		cout << "channel trouver" << endl;
+		return true;
+	}
+	cout << "channel NON trouver" << endl;
 	return false;
 }
 
