@@ -21,11 +21,9 @@ Server::Server(string port, string password) :
 	_reuse(1), _socket_fd(0), _client_index(0), _nfds(0) {
 	_port = atoi(port.c_str());
 	_password = password;
-	cout << "Server constructor call" << endl;
 }
 
 Server::~Server() {
-	cout << "Server destructor call" << endl;
 	cleanup();
 	closeFds();
 }
@@ -82,14 +80,14 @@ void Server::createSocket() {
 	this->_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_socket_fd == -1)
 		socketFailureException();
-	cout << "Server created! socket_fd: " << this->_socket_fd << endl;
+	cout << "	...Server has been created! " << endl;
 }
 
 void Server::setSocket() {
 	if ((setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &this->_reuse, sizeof(this->_reuse)) == -1)
 		|| (fcntl(this->_socket_fd, F_SETFL, O_NONBLOCK) == -1))
 		setsockoptFailureException();
-	cout << "Server set! socket_fd: " << this->_socket_fd << endl;
+	cout << "	...Server has been set!" << endl;
 }
 
 void Server::bindSocket() {
@@ -99,7 +97,7 @@ void Server::bindSocket() {
 	this->_sa.sin_port = htons(this->_port);
 	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
 		bindFailureException();
-	cout << "Bound socket to localhost port: " << this->_port << endl;
+	cout << "	...Socket has been bound to localhost port: " << C_BOL C_BLU << this->_port << C_WHT << endl;
 	char hostname[1024];
 	gethostname(hostname, 1024);
 	_hostname = static_cast<string>(hostname);
@@ -109,16 +107,32 @@ void Server::socketListening() {
 	if (listen(this->_socket_fd, BACKLOG) != 0) {
 		listenFailureException();
 	}
-	cout << "Listening on port: " << this->_port << endl;
-	cout << endl;
-	cout << endl;
-	cout << "To connect to the server, use the following commands:" << endl;
-	cout << "/server add IRCserv host.docker.internal/6667 -notls" << endl;
-	cout << "to set the password on your client, type this:" << endl;
-	cout << "/set irc.server.IRCserv.password pass" << endl;
-	cout << "/connect IRCserv" << endl;
-	cout << "/set irc.server.IRCserv.username user2" << endl;
-	cout << "/set irc.server.IRCserv.nicks allo1" << endl;
+	cout << "	...Server listening on port: " << C_BOL C_BLU << this->_port << C_WHT << endl;
+	clientInterfaceConnection();
+}
+
+void Server::clientInterfaceConnection() {
+	cout << "\n\n\n********************* " << C_BLU << "Connection process: " << C_WHT << "**********************" << endl;
+	cout << "To connect to the server, use the following commands:\n" << endl;
+	cout << "- On " << C_GRN "WeeChat:" C_WHT << endl;
+	cout << C_ITA"    /server add IRCserv host.docker.internal/6667 -notls" C_WHT << endl;
+	cout << C_BOL "  to set the password on your client, type this:" C_WHT << endl;
+	cout << C_ITA "    /set irc.server.IRCserv.password pass" C_WHT << endl;
+	cout << C_BOL "  to set your username, type this:" C_WHT << endl;
+	cout << C_ITA "    /set irc.server.IRCserv.username User2" C_WHT << endl;
+	cout << C_BOL "  to set your nickname, type this:" C_WHT << endl;
+	cout << C_ITA "    /set irc.server.IRCserv.nicks allo1" C_WHT << endl;
+	cout << C_ITA "  /connect IRCserv" << endl;
+	cout << "\n- On " << C_GRN "NetCat:" C_WHT << endl;
+	cout << C_ITA "    nc 127.0.0.1 6667" C_WHT << endl;
+	cout << C_BOL "  to set the password on your client, type this:" C_WHT << endl;
+	cout << C_ITA "    PASS pass" C_WHT << endl;
+	cout << C_BOL "  to set your username, type this:" C_WHT << endl;
+	cout << C_ITA "    USER user2 0 * :user2" C_WHT << endl;
+	cout << C_BOL "  to set your nickname, type this:" C_WHT << endl;
+	cout << C_ITA "    NICK allo1" C_WHT << endl;
+	cout << "*****************************************************************\n" << endl;
+	cout << C_RED C_BOL "Log: " << C_WHT << endl;
 }
 
 void Server::serverRoutine(){
@@ -168,7 +182,7 @@ void Server::addNewClient(int status) {
 		if(_fds[i].fd == -1){
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
-			cout << "New connect #" << _fds[i].fd << endl;
+			cout << "New connect on socket #" << _fds[i].fd << endl;
 			//initBaseUser(status, i);
 			return;
 		}

@@ -57,14 +57,14 @@ void CommandHandler::commandTokenizer(Server *server) {
 	}
 
 	// DEBUG PRINT LIST
-	cout << "--- Elements in list: ---" << endl;
+/* 	cout << "--- Elements in list: ---" << endl;
 	list<string>::const_iterator it;
 	int index = -1;
 	it = this->_command_tokens.begin();
 	for (; it != this->_command_tokens.end(); ++it) {
 		std::cout << "index " << ++index << " :" << *it << "    size :" << it->length() << std::endl;
 	}
-	cout << "\n" << endl;
+	cout << "\n" << endl; */
 }
 
 string CommandHandler::sendResponse(Server *server) {

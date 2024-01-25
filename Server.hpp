@@ -25,6 +25,13 @@
 #include <csignal>
 #include <ctime>
 
+# define C_BLU "\e[34m"
+# define C_BOL "\e[1m"
+# define C_ITA "\e[3m"
+# define C_GRN "\e[32m"
+# define C_RED "\e[31m"
+# define C_WHT "\e[0m"
+
 #define PORT 6667
 #define BACKLOG 20
 #define MAXCLIENT 10
@@ -80,6 +87,7 @@ class Server {
 		void					setSocket();
 		void					bindSocket();
 		void					socketListening();
+		void					clientInterfaceConnection();
 		void					serverRoutine();
 		void					initPollfd();
 		void					acceptConnection();

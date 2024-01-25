@@ -21,12 +21,13 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	cout << "---------- I'M THE SERVER ----------" << endl;
+	cout << C_BOL "\n--------------------- WELCOME ON IRCserv 🎙 ---------------------\n" C_WHT << endl;
 
 	Server server(argv[1], argv[2]);
 
 	try
 	{
+		cout << "Server initialization in progress..." << endl;
 		server.createSocket();
 		server.setSocket();
 		server.bindSocket();
@@ -37,6 +38,7 @@ int main(int argc, char **argv) {
 	{
 		std::cerr << e.what() << endl;
 	}
-	cout << endl << "Closing Server ..." << endl;
+	cout << endl << "\nClosing Server ..." << endl;
+	cout << C_BOL "------------- So long and thanks for all the fish 🐋 ------------\n" C_WHT << endl;
 	return 0;
 }
