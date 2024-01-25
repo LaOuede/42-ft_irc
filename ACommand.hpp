@@ -3,8 +3,8 @@
 
 #pragma once
 
-# include <iostream>
-# include <string>
+#include <iostream>
+#include <string>
 
 
 using std::cout;
@@ -20,24 +20,21 @@ class ACommand {
 		virtual ~ACommand();
 
 		// Getters & Setters
-		string const &getCommandName() const;
+		string const	&getCommandName() const;
 
 		// Methods
-		virtual string executeCommand(Server *server) = 0;
-
-		// Exceptions
+		virtual			string executeCommand(Server *server) = 0;
 
 	private:
 		// Constructors & Destructors
 		ACommand();
-		ACommand( ACommand const &rhs ) ;
+		ACommand(ACommand const &rhs) ;
 
 		// Operator overload
-		ACommand &operator=( ACommand const &rhs ) ;
+		ACommand		&operator=(ACommand const &rhs) ;
 	
 		// Attributes
-		string _name;
-
+		string			_name;
 };
 
 #endif

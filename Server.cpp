@@ -1,10 +1,11 @@
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
-#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
-
 extern bool g_running;
-
+/* ************************************************************************** */
+/* Defines                                                                    */
+/* ************************************************************************** */
+#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
 # define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
 # define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
@@ -27,6 +28,7 @@ Server::~Server() {
 	cleanup();
 	closeFds();
 }
+
 
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
@@ -444,6 +446,7 @@ bool	Server::isChannelInServer(string channelName){
 	cout << "channel NON trouver" << endl;
 	return false;
 }
+
 
 /* ************************************************************************** */
 /* Exceptions                                                                 */

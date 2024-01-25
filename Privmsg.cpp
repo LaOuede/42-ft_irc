@@ -1,24 +1,24 @@
-# include "Privmsg.hpp"
-# include "Server.hpp"
-# include "CommandHandler.hpp"
+#include "Privmsg.hpp"
+#include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-
 #define PRIVMSG(nick, target, msg) ":" + nick + " PRIVMSG " + target + " " + msg + "\r\n"
 #define ERR_CANNOTSENDTOCHAN(nickname, channel) "404 " + nickname + " " + channel + " :Cannot send to channel\r\n"
 #define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick/channel\r\n"
 #define ERR_NOTEXTTOSEND(target) "412 " + target + " :No text to send\r\n"
 #define ERR_NEEDMOREPARAMS "461 PRIVMSG :Not enough parameters\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
 Privmsg::Privmsg() : ACommand("PRIVMSG"){}
 
-
 Privmsg::~Privmsg() {}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */

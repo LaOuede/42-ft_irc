@@ -1,6 +1,6 @@
-# include "Kick.hpp"
-# include "Server.hpp"
-# include "CommandHandler.hpp"
+#include "Kick.hpp"
+#include "Server.hpp"
+#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */

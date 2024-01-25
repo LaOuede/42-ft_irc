@@ -3,17 +3,17 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <iostream>
-# include <string>
-# include <map>
-# include <list>
+#include "ACommand.hpp"
+#include <iostream>
+#include <list>
+#include <map>
+#include <string>
 
 using std::cout;
 using std::endl;
-using std::string;
-using std::map;
 using std::list;
+using std::map;
+using std::string;
 
 class Server;
 class Channel;
@@ -33,8 +33,7 @@ class Kick : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
-
+		string	_name;
 };
 
 #endif

@@ -15,12 +15,12 @@
 
 using std::cout;
 using std::endl;
+using std::exception;
+using std::make_pair;
 using std::map;
 using std::pair;
-using std::make_pair;
-using std::exception;
-using std::string;
 using std::reverse_iterator;
+using std::string;
 
 class Server;
 
@@ -46,11 +46,10 @@ class Channel {
 		void			broadcastListUser(Server *server, int &user_fd);
 		void			broadcastToAll(string &msg);
 
-		// Exceptions
-
 	private:
 		// Construtors & Destructors
 		Channel();
+	
 		// Attributes
 		int				_nb_users;
 		int				_nb_operators;

@@ -87,8 +87,3 @@ string CommandHandler::sendResponse(Server *server) {
 	this->_command_tokens.clear();
 	return ERR_UNKNOWNCOMMAND;
 }
-
-
-/* ************************************************************************** */
-/* Exceptions                                                                 */
-/* ************************************************************************** */

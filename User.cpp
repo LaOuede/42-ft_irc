@@ -17,12 +17,14 @@
 #define ERR_USERTOOLONG "400 :Username too long\r\n"
 #define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the username\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
 User::User() : ACommand("USER") {}
 
 User::~User() {}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */

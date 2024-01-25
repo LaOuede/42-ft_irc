@@ -39,7 +39,6 @@ class Part : public ACommand {
 		string			_error_msg;
 		list<string>	_channel_name;
 		string			_reason;
-
 };
 
 #endif

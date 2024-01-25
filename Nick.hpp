@@ -3,15 +3,15 @@
 
 #pragma once
 
-# include "ACommand.hpp"
-# include <map>
-# include <iostream>
-# include <string>
+#include "ACommand.hpp"
+#include <map>
+#include <iostream>
+#include <string>
 
 using std::cout;
 using std::endl;
-using std::string;
 using std::map;
+using std::string;
 
 class Server;
 
@@ -28,7 +28,7 @@ class Nick : public ACommand {
 
 	private:
 		// Attributes
-		string _name;
+		string	_name;
 };
 
 #endif
