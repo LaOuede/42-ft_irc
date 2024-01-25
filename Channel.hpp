@@ -34,6 +34,9 @@ class Channel {
 		int const &getUsersNb() const;
 		int const &getOperatorsNb() const;
 		map<int, int> &getUserList();
+		bool const &getTopicRestrict() const;
+		string const &getTopic() const;
+		void setTopic(string const &topic);
 
 		// Methods
 		void addUserToChannel(Server *Server, string &user, int &user_fd, int role);
@@ -51,9 +54,11 @@ class Channel {
 		// Construtors & Destructors
 		Channel();
 		// Attributes
-		int						_nb_users;
-		int						_nb_operators;
-		string					_channel_name;
+		int				_nb_users;
+		int				_nb_operators;
+		string			_channel_name;
+		string			_topic;
+		bool			_topic_restrict;
 		map<int, int>	_user_list;
 };
 
