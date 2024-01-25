@@ -14,6 +14,7 @@
 #define RPL_QUITCHANNEL(user, function, channel, reason) ":" + user + " " + function + " " + channel + " " + reason + "\r\n"
 #define ERR_NOTONCHANNEL(channel_name) "442 PART '" + channel_name + "' :You're not on that channel\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -35,7 +36,7 @@ string Part::executeCommand(Server *server) {
 	} */
 	// 1. PARSING
 	this->_error_msg = parseCommand(server);
-	if (this->_error_msg.compare("") != 0) {
+	if (!this->_error_msg.empty()) {
 		cleanup();
 		return this->_error_msg;
 	}
@@ -93,8 +94,7 @@ string Part::getReason(const list<string> &command) {
 	if (reason == ":WeeChat") {
 		return "";
 	}
-	it++;
-	for (; it != command.end(); ++it) {
+	for (it++; it != command.end(); ++it) {
 		reason += " " + *it;
 	}
 	return reason;
@@ -102,38 +102,32 @@ string Part::getReason(const list<string> &command) {
 
 void Part::splitParameters(string to_split, list<string> &to_fill) {
 	istringstream stream(to_split);
-	char delimiter = ',';
 	string token;
 
-	while (getline(stream, token, delimiter)) {
+	while (getline(stream, token, ',')) {
 		to_fill.push_back(token);
 	}
 }
 
 //2. PROCESS DECONNECTIONS
 string Part::processChannelDeconnections(Server *server) {
-	list<string>::const_iterator it;
-	string error_msg;
-	int &user_fd = server->getFds()[server->getClientIndex()].fd;
-	Channel *channel;
+	int user_fd = server->getFds()[server->getClientIndex()].fd;
 
-	it = this->_channel_name.begin();
-	for (; it != this->_channel_name.end(); ++it) {
-		map<string, Channel *>::const_iterator mapIt = server->getChannelList().find(*it);
+	for (list<string>::const_iterator it = _channel_name.begin(); it != _channel_name.end(); ++it) {
+		const string &channel_name = *it;
+		map<string, Channel *> &channel_list = server->getChannelList();
+		map<string, Channel *>::const_iterator mapIt = channel_list.find(channel_name);
 
-		if (mapIt != server->getChannelList().end()) {
-			channel = mapIt->second;
+		if (mapIt != channel_list.end()) {
+			Channel *channel = mapIt->second;
 			if (channel->isUserInChannel(user_fd)) {
-				broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, this->_reason);
+				broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, _reason);
 				channel->removeUserFromChannel(server, user_fd);
-				continue;
 			} else {
-				const string &channel_name = channel->getChannelName();
 				server->sendToClient(ERR_NOTONCHANNEL(channel_name));
 			}
 		} else {
-			error_msg = ERR_NOSUCHCHANNEL(this->_name, *it);
-			server->sendToClient(error_msg);
+			server->sendToClient(ERR_NOSUCHCHANNEL(_name, channel_name));
 		}
 	}
 	string msg = RPL_QUITCHANNEL(server->getUserDB()[user_fd]._nickname, this->getCommandName(), channel->getChannelName(), this->_reason);
@@ -149,5 +143,5 @@ void Part::broadcastUserQuitMessage(Channel *channel, const string &user, const 
 
 // 3. CLEAN UP
 void Part::cleanup() {
-	this->_channel_name.clear();
+	list<string>().swap(this->_channel_name);
 }

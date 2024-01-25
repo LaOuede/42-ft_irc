@@ -32,11 +32,11 @@ class Join : public ACommand {
 		string executeCommand(Server *server);
 		string parseCommand(Server *server);
 		string parseParameters(const list<string> &command);
-		void splitParameters(string to_split, list<string> &to_fill);
+		void splitParameters(string const &to_split, list<string> &to_fill);
 		string parseAttributes(const list<string> &command);
 		void createChannelVector();
 		string processChannelConnections(Server *Server);
-		string parseChannelNameAndKey(string name, string key);
+		string parseChannelNameAndKey(string const &name, string key);
 		void joinChannel(Server *server, string const &channel_name);
 		bool isChannelExisting(Server *server, string const &channel_name);
 		void createChannel(Server *server, string const &channel_name, string &user, int &fd);

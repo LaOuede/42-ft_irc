@@ -37,6 +37,7 @@
 
 using std::cout;
 using std::endl;
+using std::exception;
 using std::string;
 using std::map;
 
@@ -109,13 +110,13 @@ class Server {
 		bool					isChannelInServer(string channelName);
 
 		// Exceptions
-		std::exception			socketFailureException();
-		std::exception			bindFailureException();
-		std::exception			listenFailureException();
-		std::exception			acceptFailureException();
-		std::exception			recvFailureException();
-		std::exception			sendFailureException();
-		std::exception			setsockoptFailureException();
+		exception				socketFailureException();
+		exception				bindFailureException();
+		exception				listenFailureException();
+		exception				acceptFailureException();
+		exception				recvFailureException();
+		exception				sendFailureException();
+		exception				setsockoptFailureException();
 
 	private:
 		// Attributes
