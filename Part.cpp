@@ -55,11 +55,7 @@ string Part::parseCommand(Server *server) {
 	if (!this->_error_msg.empty()) {
 		return this->_error_msg;
 	}
-	this->_error_msg = parseAttributes(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
-	}
-	return "";
+	return parseAttributes(command);
 }
 
 string Part::parseParameters(const list<string> &command) {

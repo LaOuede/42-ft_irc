@@ -74,11 +74,7 @@ string Join::parseCommand(Server *server) {
 	if (!this->_error_msg.empty()) {
 		return this->_error_msg;
 	}
-	this->_error_msg = parseAttributes(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
-	}
-	return "";
+	return parseAttributes(command);
 }
 
 string Join::parseParameters(const list<string> &command) {
