@@ -16,6 +16,7 @@
 #include "Invite.hpp"
 #include "Join.hpp"
 #include "Kick.hpp"
+#include "Names.hpp"
 #include "Nick.hpp"
 #include "Part.hpp"
 #include "Pass.hpp"

@@ -6,6 +6,7 @@
 /* ************************************************************************** */
 #define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -16,8 +17,8 @@ CommandHandler::CommandHandler() {
 CommandHandler::~CommandHandler() {
 	map<string, ACommand *>::iterator it;
 
-	it = this->_command_caller.begin();for (; it != this->_command_caller.end(); it++ 
-	) {
+	it = this->_command_caller.begin();for
+	(; it != this->_command_caller.end(); it++ ) {
 		delete it->second;
 	}
 	this->_command_caller.clear();
@@ -37,15 +38,16 @@ list<string> &CommandHandler::getCommandTokens() {
 /* ************************************************************************** */
 void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("CAP", new Cap));
-	this->_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
-	this->_command_caller.insert(pair<string, ACommand *>("USER", new User));
-	this->_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
-	this->_command_caller.insert(pair<string, ACommand *>("PART", new Part));
-	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
+	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 	this->_command_caller.insert(pair<string, ACommand *>("JOIN", new Join));
 	this->_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
+	this->_command_caller.insert(pair<string, ACommand *>("NAMES", new Names));
+	this->_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
+	this->_command_caller.insert(pair<string, ACommand *>("PART", new Part));
+	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
+	this->_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
 	this->_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
-	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
+	this->_command_caller.insert(pair<string, ACommand *>("USER", new User));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
