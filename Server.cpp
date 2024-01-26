@@ -254,6 +254,9 @@ int Server::getBuffer(string &buffer) {
 		}
 		else
 			return -1;
+
+		cout << "buffer :" << buffer << endl;
+		cout << "_buf :" << _buf << endl;
 	}
 }
 
