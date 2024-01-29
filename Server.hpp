@@ -123,6 +123,7 @@ class Server {
 		exception				recvFailureException();
 		exception				sendFailureException();
 		exception				setsockoptFailureException();
+		exception				pollFailureException();
 
 	private:
 		// Attributes

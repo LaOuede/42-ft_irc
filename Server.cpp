@@ -140,7 +140,8 @@ void Server::clientInterfaceConnection() {
 void Server::serverRoutine(){
 	initPollfd();
 	while(g_running){
-		if(poll(this->_fds, MAXFDS, 100) == 1){
+		int status = poll(this->_fds, MAXFDS, 100);
+		if(status > 0){
 			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
 				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
 					acceptConnection();
@@ -151,7 +152,10 @@ void Server::serverRoutine(){
 					closeConnection();
 				}
 			}
-		}
+		}else if (status == -1)
+			pollFailureException();
+
+
 		// only for visualition of the fd
 		// for(int i = 0; i < MAXFDS; i++)
 		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
@@ -477,4 +481,8 @@ std::exception Server::sendFailureException() {
 
 std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
+}
+
+std::exception Server::pollFailureException(){
+	throw std::runtime_error("poll() error");
 }
