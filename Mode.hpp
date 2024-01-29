@@ -32,6 +32,8 @@ class Mode : public ACommand {
 		void	modeT(Server *server);
 		void	modeK(Server *server, list<string>::iterator it);
 		void	modeO(Server *server, list<string>::iterator it);
+		string  sendToUser(Server *server);
+        int     findToOpFd(Server *server);
 		void	modeL(Server *server, list<string>::iterator it);
 		bool	isValidChar();
 
@@ -42,6 +44,7 @@ class Mode : public ACommand {
 		string	_mode_param;
 		string	_name;
 		string	_nickname;
+		string	_target;
 };
 
 #endif

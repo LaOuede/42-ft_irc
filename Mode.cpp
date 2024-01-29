@@ -12,6 +12,9 @@
 #define ERR_WRONGCHAR "400 :Wrong character or too long password\r\n"
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
+#define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick\r\n"
+#define CLIENTOPTARGET(nickname, target) nickname + " :set " + target + " operator mode\r\n"
+#define TARGETOPBYCLIENT(nickname) "You was set operator mode by " + nickname + "\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -25,7 +28,7 @@ Mode::~Mode() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Mode::executeCommand(Server *server) {
-	int	&fd = server->getFds()[server->getClientIndex()].fd;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
 	list<string>::iterator it = tokens.begin();
 	this->_channel = *it;
@@ -44,7 +47,7 @@ string Mode::executeCommand(Server *server) {
 }
 
 string Mode::parseFirstPart(Server *server, const list<string> &tokens) {
-	int	&fd = server->getFds()[server->getClientIndex()].fd;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
 	clientInfo &user_info = server->getUserDB()[fd];
 
 	if (!user_info._welcomed)
@@ -93,17 +96,17 @@ void Mode::modeT(Server *server) {
 
 void Mode::modeK(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(this->_channel);
-	if(it == server->getCommandHandler().getCommandTokens().end()) {	
+	if(it == server->getCommandHandler().getCommandTokens().end()) {    
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 		return ;
 	}
+	this->_mode_param = *++it;
 	if(!isValidChar() && this->_mode_param.size() < 10) {
 		string error = ERR_WRONGCHAR;
 		server->sendToClient(error);
 		return ;
 	}
-	this->_mode_param = *++it;
 	if(_mode[0] == '+')
 		channel->setPassword(this->_mode_param);
 	else
@@ -112,7 +115,7 @@ void Mode::modeK(Server *server, list<string>::iterator it) {
 
 void Mode::modeO(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(this->_channel);
-	if(it == server->getCommandHandler().getCommandTokens().end()) {	
+	if(it == server->getCommandHandler().getCommandTokens().end()) {
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 	}
@@ -120,16 +123,40 @@ void Mode::modeO(Server *server, list<string>::iterator it) {
 	if(channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
 		string error = ERR_CHANOPRIVSNEEDED(this->_nickname, this->_channel);
 		server->sendToClient(error);
+	} else if (_mode[0] == '+') {
+		channel->getUserList()[findToOpFd(server)] = OPERATOR;
+		string response = CLIENTOPTARGET(_nickname, _target);//mesage a formater correctement
+		server->sendToClient(response);//mesage a formater correctement
+		sendToUser(server);
+		channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
+
+	} else if (_mode[0] == '-'){
+		
 	}
 }
 
+string Mode::sendToUser(Server *server){
+	if(!server->isNickInServer(this->_target))
+		return ERR_NOSUCHNICK(this->_target);
+	string response = TARGETOPBYCLIENT(_nickname);
+	send(findToOpFd(server), response.c_str(), response.size(), 0); //TODO gerer -1
+	return "";
+}
+
+int Mode::findToOpFd(Server *server) {
+	map<int, clientInfo> &user_db = server->getUserDB();
+	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it)
+		if (it->second._nickname == this->_nickname)
+			return it->first;
+	return 0;
+}
+
 void Mode::modeL(Server *server, list<string>::iterator it) {
-	if(it == server->getCommandHandler().getCommandTokens().end()) {	
+	if(it == server->getCommandHandler().getCommandTokens().end()) {    
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 	}
 	this->_mode_param = *++it;
-	
 }
 
 bool Mode::isValidChar() {
