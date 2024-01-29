@@ -25,10 +25,20 @@ class Invite : public ACommand {
 		string	executeCommand(Server *server);
 		int		findClientToInvite(Server *server, const string &nickname_invited);
 		string	parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token);
+		bool	isClientInvited(Server *server, int fd, string channel_token);
 
 	private:
 		// Attributes
 		string	_name;
+		string	_nickname;
+		string	_channel;
+		string	_invited;
+		int		_fd_invited;
 };
 
 #endif
+
+//si channel restrict et clientindex eest operator : peut inviter
+//si channel restrcit et clientindex est pas operator : ne peut pas inviter
+//si channel pas restrict : ne peut pas inviter
+

@@ -189,7 +189,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect on socket #" << _fds[i].fd << endl;
-			//initBaseUser(status, i);
+			// initBaseUser(status, i);
 			return;
 		}
 	}
@@ -197,7 +197,7 @@ void Server::addNewClient(int status) {
 	close(status);
 }
 
-/* void Server::initBaseUser(int status, int i)
+void Server::initBaseUser(int status, int i)
 {
 	if(status == 4)
 	{
@@ -223,7 +223,7 @@ void Server::addNewClient(int status) {
 		_userDB[_fds[i].fd]._password_valid = true;
 		_userDB[_fds[i].fd]._welcomed = true;
 	}
-} */
+}
 
 void Server::receiver() {
 	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
