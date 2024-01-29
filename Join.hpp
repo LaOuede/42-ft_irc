@@ -37,8 +37,9 @@ class Join : public ACommand {
 		void							createChannelVector();
 		string							processChannelConnections(Server *Server);
 		string							parseChannelNameAndKey(string const &name, string key);
-		void							joinChannel(Server *server, string const &channel_name);
+		void							joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key);
 		bool							isChannelExisting(Server *server, string const &channel_name);
+		bool							isOnGuestsList(Server *server, int &user_fd, string const &channel_name);
 		void							createChannel(Server *server, string const &channel_name, string &user, int &fd);
 		void							cleanup();
 

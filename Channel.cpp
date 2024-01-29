@@ -14,7 +14,7 @@
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
 Channel::Channel(string const&name) :
-	_nb_users(0), _nb_operators(0), _channel_name(name) {}
+	_nb_users(0), _nb_operators(0), _channel_name(name), _password(""), _invite_restrict(false) {}
 
 Channel::~Channel() {
 	this->_user_list.clear();
@@ -44,6 +44,10 @@ bool const &Channel::getTopicRestrict() const {
 	return this->_topic_restrict;
 }
 
+void Channel::setTopicRestrict(bool const &topic_restrict) {
+	this->_topic_restrict = topic_restrict;
+}
+
 string const &Channel::getTopic() const {
 	return this->_topic;
 }
@@ -52,6 +56,25 @@ void Channel::setTopic(string const &topic) {
 	this->_topic = topic;
 }
 
+string const &Channel::getPassword() const {
+	return this->_password;
+}
+
+void Channel::setPassword(string const &password) {
+	this->_password = password;
+}
+
+bool const &Channel::getInviteRestrict() const {
+	return this->_invite_restrict;
+}
+
+void Channel::setInviteRestrict(bool const &invite_restrict) {
+	this->_invite_restrict = invite_restrict;
+}
+
+list<int> &Channel::getGuestsList() {
+	return this->_guests_list;
+}
 
 
 /* ************************************************************************** */
@@ -61,6 +84,7 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 	this->_user_list[user_fd] = role;
 	role == OPERATOR ? this->_nb_operators++ : this->_nb_users++;
 	server->getUserDB()[user_fd]._nb_channel++;
+	this->_guests_list.push_back(user_fd);
 
 	string msg = RPL_JOINCHANNEL(user, this->_channel_name);
 	broadcastToAll(msg);
@@ -116,6 +140,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 	if (it != this->_user_list.end()) {
 		checkRole(this, it->second);
 		this->_user_list.erase(it);
+		updateGuestsList(server, user_fd);
 		updateChannelOperator(server);
 		server->getUserDB()[user_fd]._nb_channel--;
 		broadcastListUser(server, user_fd);
@@ -150,4 +175,27 @@ void Channel::updateChannelOperator(Server *server) {
 		this->_nb_operators++;
 		this->_nb_users--;
 	}
+}
+
+void Channel::updateGuestsList(Server *server, int &user_fd) {
+	cout << "DEBUG _guests_list BEFORE removeUserFromChannel() " + this->_channel_name + " :";
+	cout << "guests list: ";
+	for (list<int>::iterator it = this->_guests_list.begin(); it != this->_guests_list.end(); ++it) {
+		string &user = server->getUserDB()[*it]._nickname;
+		cout << user + " ";
+	}
+	cout << "\n" << endl;
+
+	list<int>::const_iterator it = find(this->_guests_list.begin(), this->_guests_list.end(), user_fd);
+	if (it != this->_guests_list.end()) {
+		it = this->_guests_list.erase(it);
+	}
+
+	cout << "DEBUG _guests_list AFTER removeUserFromChannel() " + this->_channel_name + " :";
+	cout << "guests list: ";
+	for (list<int>::iterator ite = this->_guests_list.begin(); ite != this->_guests_list.end(); ++ite) {
+		string &user = server->getUserDB()[*ite]._nickname;
+		cout << user + " ";
+	}
+	cout << "\n" << endl;
 }
