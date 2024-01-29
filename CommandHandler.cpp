@@ -41,15 +41,15 @@ void CommandHandler::initializeCommandCaller() {
 	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 	this->_command_caller.insert(pair<string, ACommand *>("JOIN", new Join));
 	this->_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
+	this->_command_caller.insert(pair<string, ACommand *>("MODE", new Mode));
 	this->_command_caller.insert(pair<string, ACommand *>("NAMES", new Names));
 	this->_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
 	this->_command_caller.insert(pair<string, ACommand *>("PART", new Part));
 	this->_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
 	this->_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
 	this->_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
-	this->_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 	this->_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
-	this->_command_caller.insert(pair<string, ACommand *>("MODE", new Mode));
+	this->_command_caller.insert(pair<string, ACommand *>("USER", new User));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
