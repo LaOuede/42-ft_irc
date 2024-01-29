@@ -21,8 +21,10 @@ bool parsingPassword(string password) {
 	return true;
 }
 
-void Server::sendToClient(const string &response) {
-	send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0);
+void Server::sendToClient(const string response) {
+	if (send(this->_fds[this->_client_index].fd, response.c_str(), response.size(), 0) == -1) {
+		sendFailureException();
+	}
 }
 
 void shutdown(int sig){

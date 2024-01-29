@@ -108,6 +108,7 @@ void Names::printListUsers(Server *server) {
 }
 
 bool Names::isChannelExisting(Server *server, const string &channel_name) {
+	
 	return server->getChannelList().find(channel_name) != server->getChannelList().end();
 }
 

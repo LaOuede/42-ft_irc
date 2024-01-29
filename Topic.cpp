@@ -72,7 +72,7 @@ string Topic::findTopic(Server *server, const list<string> &tokens, Channel *cha
 	if (tokens.size() == 1) {
 		if (channel->getTopic().empty()) {
 			string topic_message = RPL_NOTOPIC(channel->getChannelName());
-			server->sendToClient(topic_message);
+			server->sendToClient(RPL_NOTOPIC(channel->getChannelName()));
 			return "";
 		}
 		else

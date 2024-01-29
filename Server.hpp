@@ -107,7 +107,7 @@ class Server {
 		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
-		void					sendToClient(const string &response);
+		void					sendToClient(const string response);
 		void					closeFds();
 		void					closeChannelFds();
 		bool					isChannelEmpty(Channel *channel);

@@ -337,15 +337,9 @@ void Server::messageHandler() {
 	this->_command_handler.commandTokenizer( this );
 	response = this->_command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
+		sendToClient(response);
 	}
-	if (this->_bytes_sent == -1)
-		sendFailureException();
-	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << fd << " to confirm reception" << endl;
-	} else {
-		cout << "Message partially sent to client socket " << fd << ": " << this->_bytes_sent << endl;
-	}
+	cout << "Request from client on socket " << fd << " processed\n" << endl;
 	welcomeMessage();
 }
 
