@@ -52,21 +52,6 @@ void Channel::setTopic(string const &topic) {
 	this->_topic = topic;
 }
 
-
-bool const &Channel::getTopicRestrict() const {
-	return this->_topic_restrict;
-}
-
-string const &Channel::getTopic() const {
-	return this->_topic;
-}
-
-void Channel::setTopic(string const &topic) {
-	this->_topic = topic;
-}
-
-
-
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
