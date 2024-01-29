@@ -1,4 +1,4 @@
-#include "Invite.hpp"
+#include "Topic.hpp"
 #include "Server.hpp"
 #include "CommandHandler.hpp"
 
@@ -6,31 +6,27 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
-#define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " INVITE :Not enough parameters\r\n"
+#define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " TOPIC :Not enough parameters\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
-#define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
-#define ERR_CANTINVITESELF "437 :You can't invite yourself\r\n"
-#define RPL_INVITING(nickname, nickname_invited, channel) ":" + nickname + " INVITE " + nickname_invited + " " + channel + "\r\n"
-
+#define RPL_NOTOPIC(channel) "331 " + channel + " :" + channel + "\r\n"
+#define RPL_TOPIC(nickname, channel, topic) "332 " + nickname + " " + channel + " :" + topic + "\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
-Invite::Invite() : ACommand("INVITE") {}
+Topic::Topic() : ACommand("TOPIC") {}
 
-Invite::~Invite() {}
-
+Topic::~Topic() {}
 
 /* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
-string Invite::executeCommand(Server *server) {
+string Topic::executeCommand(Server *server) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
-	string &nickname_invited = *tokens.begin();
-	string &channel_token = *++tokens.begin();
+	string &channel_token = *tokens.begin();
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 
@@ -43,40 +39,56 @@ string Invite::executeCommand(Server *server) {
 	if (user_list.find(fd) == user_list.end())
 		return ERR_NOTONCHANNEL(nickname, channel_token);
 
-	if (user_list[fd] != OPERATOR) //TODO ajuster quand il y aura des channels private avec les MOD?
+	if (channel->getTopicRestrict() && user_list[fd] != OPERATOR)
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
-	int fd_invited = findClientToInvite(server, nickname_invited);
-	if (fd_invited == fd)
-		return ERR_CANTINVITESELF;
-	else if (fd_invited == 0)
-		return ERR_USERNOTEXIST(nickname_invited);
-
-	channel->addUserToChannel(server, nickname_invited, fd_invited, USER);
-	string message = RPL_INVITING(nickname, nickname_invited, channel_token);
-	channel->broadcastToAll(message);
+	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !channel->getTopicRestrict()) {
+		this->_topic = findTopic(server, tokens, channel);
+		channel->setTopic(this->_topic);
+		if (this->_topic.empty())
+			return "";
+		string topic_message = RPL_TOPIC(nickname, channel_token, this->_topic);
+		channel->broadcastToAll(topic_message);
+	}
 	return "";
 }
 
-int Invite::findClientToInvite(Server *server, const string &nickname_invited) {
-	map<int, clientInfo> &user_db = server->getUserDB();
-	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it) {
-		if (it->second._nickname == nickname_invited) {
-			return it->first;
-		}
-	}
-	return 0;
-}
-
-string Invite::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
+string Topic::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
 
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
-	if (tokens.size() < 2)
+	if (tokens.size() < 1)
 		return ERR_NEEDMOREPARAMS(nickname);
 	if (!server->getChannel(channel_token))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";
+}
+
+string Topic::findTopic(Server *server, const list<string> &tokens, Channel *channel) {
+	list<string>::const_iterator it2 = ++tokens.begin();
+	string topic;
+	if (tokens.size() == 1) {
+		if (channel->getTopic().empty()) {
+			string topic_message = RPL_NOTOPIC(channel->getChannelName());
+			server->sendToClient(topic_message);
+			return "";
+		}
+		else
+			return channel->getTopic();
+	} else if (tokens.size() == 2 && (*it2)[0] == ':' && (*it2)[1] == ':') {
+		channel->setTopic("");
+		string topic_message = RPL_NOTOPIC(channel->getChannelName());
+		server->sendToClient(topic_message);
+		return "";
+	} else {
+		topic = *it2;
+		while (++it2 != tokens.end()) {
+			topic += " " + *it2;
+			if (topic.length() > 25)
+				break;
+		}
+	}
+	return topic;
 }
