@@ -158,7 +158,6 @@ string Join::processChannelConnections(Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 	vector<pair<string, string> >::const_iterator it;
 
-	cout << "processChannelConnections()" << endl;
 	it = this->_channel_vector.begin();
 	for (; it != this->_channel_vector.end(); ++it) {
 		this->_error_msg = "";
@@ -196,17 +195,7 @@ string Join::parseChannelNameAndKey(string const &name, string key) {
 	return "";
 }
 
-bool Join::isOnGuestsList(Server *server, int &user_fd, string const &channel_name) {
-	list<int> &guest = server->getChannel(channel_name)->getGuestsList();
-	for (list<int>::const_iterator it = guest.begin(); it != guest.end(); ++it) {
-		if (*it == user_fd)
-			return true;
-	}
-	return false;
-}
-
 void Join::joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key) {
-	cout << "joinChannel()" << endl;
 	string &user = server->getUserDB()[user_fd]._nickname;
 	int &nb_channel = server->getUserDB()[user_fd]._nb_channel;
 	string error_msg;
@@ -218,9 +207,10 @@ void Join::joinChannel(Server *server, int &user_fd, string const &channel_name,
 			return;
 		}
 		if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
+			//faire une fonction checkMode() avec Invite et Password
 			if (key == channel->getPassword()) { 
 				if (channel->getInviteRestrict() == false
-					|| (channel->getInviteRestrict() == true && isOnGuestsList(server, user_fd, channel_name))) {
+					|| (channel->getInviteRestrict() == true && channel->isOnGuestsList(user_fd))) {
 						channel->addUserToChannel(server, user, user_fd, USER);
 					} else {
 						server->sendToClient(ERR_INVITEONLYCHAN(user, channel_name));

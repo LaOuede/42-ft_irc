@@ -8,7 +8,7 @@
 #define ERR_NOTONCHANNEL(channel) "442 PART '" + channel + "' :You're not on that channel\r\n"
 #define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
 #define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
-
+#define RPL_TOPIC(nickname, channel, topic) "332 " + nickname + " " + channel + " :" + topic + "\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -84,10 +84,9 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 	this->_user_list[user_fd] = role;
 	role == OPERATOR ? this->_nb_operators++ : this->_nb_users++;
 	server->getUserDB()[user_fd]._nb_channel++;
-	this->_guests_list.push_back(user_fd);
-
-	string msg = RPL_JOINCHANNEL(user, this->_channel_name);
-	broadcastToAll(msg);
+	updateGuestsList(user_fd, "add");
+	broadcastToAll(RPL_JOINCHANNEL(user, this->_channel_name));
+	broadcastToAll(RPL_TOPIC(user, this->_channel_name, this->_topic));
 	broadcastListUser(server, user_fd);
 
 	// DEBUG Print map
@@ -109,10 +108,10 @@ bool Channel::isUserInChannel(int const &fd) {
 void Channel::rplEndOfNames(Server *server, int &user_fd) {
 	string &nickname = server->getUserDB()[user_fd]._nickname;
 	string &channel = this->_channel_name;
-	string msg = RPL_ENDOFNAMES(nickname, channel);
-	broadcastToAll(msg);
+	broadcastToAll(RPL_ENDOFNAMES(nickname, channel));
 }
 
+/* Check if nickname is mandatory in message */
 void Channel::broadcastListUser(Server *server, int &user_fd) {
 	const string &nickname = server->getUserDB()[user_fd]._nickname;
 	string list_user = "353 " + nickname + " " + this->_channel_name + " :";
@@ -128,7 +127,8 @@ void Channel::broadcastListUser(Server *server, int &user_fd) {
 	rplEndOfNames(server, user_fd);
 }
 
-void Channel::broadcastToAll(string &msg) {
+/* TO DO : À revoir pour le sendFailureException() */
+void Channel::broadcastToAll(string msg) {
 	for (map<int, int>::iterator it = this->_user_list.begin(); it != this->_user_list.end(); ++it) {
 		send(it->first, msg.c_str(), msg.size(), 0);
 	}
@@ -140,7 +140,7 @@ void Channel::removeUserFromChannel(Server *server, int &user_fd) {
 	if (it != this->_user_list.end()) {
 		checkRole(this, it->second);
 		this->_user_list.erase(it);
-		updateGuestsList(server, user_fd);
+		updateGuestsList(user_fd, "remove");
 		updateChannelOperator(server);
 		server->getUserDB()[user_fd]._nb_channel--;
 		broadcastListUser(server, user_fd);
@@ -177,25 +177,25 @@ void Channel::updateChannelOperator(Server *server) {
 	}
 }
 
-void Channel::updateGuestsList(Server *server, int &user_fd) {
-	cout << "DEBUG _guests_list BEFORE removeUserFromChannel() " + this->_channel_name + " :";
-	cout << "guests list: ";
-	for (list<int>::iterator it = this->_guests_list.begin(); it != this->_guests_list.end(); ++it) {
-		string &user = server->getUserDB()[*it]._nickname;
-		cout << user + " ";
+void Channel::updateGuestsList(int &user_fd, string status) {
+	if (status == "add") {
+		if (!isOnGuestsList(user_fd)) {
+			this->_guests_list.push_back(user_fd);
+			return;
+		}
 	}
-	cout << "\n" << endl;
+	if (status == "remove") {
+		list<int>::const_iterator it = find(this->_guests_list.begin(), this->_guests_list.end(), user_fd);
+		if (it != this->_guests_list.end()) {
+			it = this->_guests_list.erase(it);
+		}
+	}
+}
 
-	list<int>::const_iterator it = find(this->_guests_list.begin(), this->_guests_list.end(), user_fd);
-	if (it != this->_guests_list.end()) {
-		it = this->_guests_list.erase(it);
+bool Channel::isOnGuestsList(int const &user_fd) {
+	for (list<int>::const_iterator it = this->_guests_list.begin(); it != this->_guests_list.end(); ++it) {
+		if (*it == user_fd)
+			return true;
 	}
-
-	cout << "DEBUG _guests_list AFTER removeUserFromChannel() " + this->_channel_name + " :";
-	cout << "guests list: ";
-	for (list<int>::iterator ite = this->_guests_list.begin(); ite != this->_guests_list.end(); ++ite) {
-		string &user = server->getUserDB()[*ite]._nickname;
-		cout << user + " ";
-	}
-	cout << "\n" << endl;
+	return false;
 }

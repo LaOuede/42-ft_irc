@@ -50,13 +50,15 @@ class Channel {
 		// Methods
 		void			addUserToChannel(Server *Server, string &user, int &user_fd, int role);
 		bool			isUserInChannel(int const &user_fd);
+		bool			isOnGuestsList(int const &user_fd);
 		void			rplEndOfNames(Server *server, int &user_fd);
 		void			removeUserFromChannel(Server *server, int &user_fd);
 		void			checkRole(Channel *channel, int &role);
-		void			updateGuestsList(Server *server, int &user_fd);
+		void			updateGuestsList(int &user_fd, string status);
 		void			updateChannelOperator(Server *server);
 		void			broadcastListUser(Server *server, int &user_fd);
-		void			broadcastToAll(string &msg);
+		void			broadcastToAll(string msg);
+		//TO DO : bool			checkMode(Channel *channel, int &user_fd);
 
 	private:
 		// Construtors & Destructors
