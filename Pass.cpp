@@ -1,6 +1,5 @@
 #include "Pass.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -28,7 +27,7 @@ string Pass::executeCommand(Server *server) {
 	if (password_token.empty())
 		return (ERR_PASSWORDEMPTY);
 	
-	if (!this->isThePasswordValid(password_token, server))	
+	if (!isThePasswordValid(password_token, server))	
 		return (ERR_PASSWDMISMATCH);
 	
 	server->getUserDB()[fd]._password_valid = true;

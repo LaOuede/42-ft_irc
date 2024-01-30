@@ -14,6 +14,6 @@ Cap::~Cap() {}
 /* ************************************************************************** */
 string Cap::executeCommand(Server *server) {
 	(void)server;
-	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	cout << "Server dealing with : " << getCommandName() << " function" << endl;
 	return "\r\n";
 }

@@ -1,6 +1,5 @@
 #include "Ping.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */

@@ -28,12 +28,14 @@ class Mode : public ACommand {
 		string	executeCommand(Server *server);
 		string	parseFirstPart(Server *server, const list<string> &tokens);
 		void	selectMode(Server *server, list<string>::iterator it);
-		void	modeI(Server *server);
-		void	modeT(Server *server);
-		void	modeK(Server *server, list<string>::iterator it);
-		void	modeO(Server *server, list<string>::iterator it);
-		void	modeL(Server *server, list<string>::iterator it);
+		void	modeInvite(Server *server);
+		void	modeTopic(Server *server);
+		void	modePassword(Server *server, list<string>::iterator it);
+		void	modeOperator(Server *server, list<string>::iterator it);
+		void	modeLimit(Server *server, list<string>::iterator it);
 		bool	isValidChar();
+		bool	isValidNumber(string &number);
+
 
 	private:
 		// Attributes
@@ -42,6 +44,7 @@ class Mode : public ACommand {
 		string	_mode_param;
 		string	_name;
 		string	_nickname;
+		string	_users_limit;
 };
 
 #endif

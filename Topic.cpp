@@ -1,6 +1,5 @@
 #include "Topic.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -41,12 +40,12 @@ string Topic::executeCommand(Server *server) {
 
 	if (channel->getTopicRestrict() || user_list[fd] != OPERATOR)
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
-	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR)) {
-		this->_topic = findTopic(server, tokens, channel);
-		channel->setTopic(this->_topic);
-		if (this->_topic.empty())
+	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !(channel->getTopicRestrict() && user_list[fd] == OPERATOR)) {
+		_topic = findTopic(server, tokens, channel);
+		channel->setTopic(_topic);
+		if (_topic.empty())
 			return "";
-		string topic_message = RPL_TOPIC(nickname, channel_token, this->_topic);
+		string topic_message = RPL_TOPIC(nickname, channel_token, _topic);
 		channel->broadcastToAll(topic_message);
 	}
 	return "";
@@ -61,7 +60,7 @@ string Topic::parseFirstPart(Server *server, const list<string> &tokens, const s
 		return ERR_WELCOMED;
 	if (tokens.size() < 1)
 		return ERR_NEEDMOREPARAMS(nickname);
-	if (!server->getChannel(channel_token))
+	if (!server->isChannelInServer(channel_token))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";
 }

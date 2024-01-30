@@ -1,6 +1,5 @@
 #include "Kick.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -82,7 +81,7 @@ string Kick::parseFirstPart(Server *server, const list<string> &tokens, const st
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
 		return ERR_NEEDMOREPARAMS(nickname);
-	if (!server->getChannel(channel_token))
+	if (!server->isChannelInServer(channel_token))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";
 }
