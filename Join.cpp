@@ -1,6 +1,6 @@
 #include "Join.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
+#include "Channel.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -43,7 +43,7 @@ Join::~Join() {}
 // MAIN FUNCTION
 string Join::executeCommand(Server *server) {
 	/* DEBUG À SUPPRIMER */
-	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	cout << "Server dealing with : " << getCommandName() << " function" << endl;
 
 	// 0. Am I authentificated ?
 /* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
@@ -51,10 +51,10 @@ string Join::executeCommand(Server *server) {
 		return (ERR_WELCOMED); 
 	} */
 	// 1. PARSING
-	this->_error_msg = parseCommand(server);
-	if (!this->_error_msg.empty()) {
+	_error_msg = parseCommand(server);
+	if (!_error_msg.empty()) {
 		cleanup();
-		return this->_error_msg;
+		return _error_msg;
 	}
 
 	// 3. Process connections
@@ -72,36 +72,36 @@ string Join::executeCommand(Server *server) {
 string Join::parseCommand(Server *server) {
 	list<string> command = server->getCommandHandler().getCommandTokens();
 	
-	this->_error_msg = parseParameters(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
+	_error_msg = parseParameters(command);
+	if (!_error_msg.empty()) {
+		return _error_msg;
 	}
-	this->_error_msg = parseAttributes(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
+	_error_msg = parseAttributes(command);
+	if (!_error_msg.empty()) {
+		return _error_msg;
 	}
 	return "";
 }
 
 string Join::parseParameters(const list<string> &command) {
 	if (command.empty()) {
-		return ERR_NEEDMOREPARAMS(this->_name);
+		return ERR_NEEDMOREPARAMS(_name);
 	}
 	if (command.size() > 2) {
-		return ERR_TOOMANYPARAMS(this->_name);
+		return ERR_TOOMANYPARAMS(_name);
 	}
 	return "";
 }
 
 string Join::parseAttributes(const list<string> &command) {
-	splitParameters(command.front(), this->_channel_name);
+	splitParameters(command.front(), _channel_name);
 	if (command.size() == 2) {
-		splitParameters(command.back(), this->_channel_key);
+		splitParameters(command.back(), _channel_key);
 	}
-	if (this->_channel_name.size() > CHANLIMIT) {
+	if (_channel_name.size() > CHANLIMIT) {
 		return ERR_TOOMANYCHANNELSCONNECTION;
 	}
-	if (this->_channel_key.size() > this->_channel_name.size()) {
+	if (_channel_key.size() > _channel_name.size()) {
 		return ERR_TOOMANYKEYS;
 	}
 	return "";
@@ -130,25 +130,25 @@ void Join::splitParameters(string const &to_split, list<string> &to_fill) {
 
 //2. CREATING A VECTOR<pair<CHANNEL_NAME, CHANNEL_KEY>>
 void Join::createChannelVector() {
-	size_t vector_size = this->_channel_name.size();
-	this->_channel_vector.reserve(vector_size);
+	size_t vector_size = _channel_name.size();
+	_channel_vector.reserve(vector_size);
 
 	for (size_t i = 0; i < vector_size; i++) {
-		string name = this->_channel_name.front();
-		string key = this->_channel_key.empty() ? "" : this->_channel_key.front();
+		string name = _channel_name.front();
+		string key = _channel_key.empty() ? "" : _channel_key.front();
 
-		this->_channel_vector.push_back(make_pair(name, key));
+		_channel_vector.push_back(make_pair(name, key));
 
-		this->_channel_name.pop_front();
-		if (!this->_channel_key.empty()) {
-			this->_channel_key.pop_front();
+		_channel_name.pop_front();
+		if (!_channel_key.empty()) {
+			_channel_key.pop_front();
 		}
 	}
 
 	// DEBUG Print vector
 /* 	cout << "--- Elements in vector ---" << endl;
-	for (size_t i = 0; i < this->_channel_vector.size(); ++i) {
-	std::cout << "index " << i << " : " << this->_channel_vector[i].first << " - " << this->_channel_vector[i].second << std::endl;
+	for (size_t i = 0; i < _channel_vector.size(); ++i) {
+	std::cout << "index " << i << " : " << _channel_vector[i].first << " - " << _channel_vector[i].second << std::endl;
 	}
 	cout << "\n" << endl; */
 }
@@ -158,13 +158,12 @@ string Join::processChannelConnections(Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 	vector<pair<string, string> >::const_iterator it;
 
-	cout << "processChannelConnections()" << endl;
-	it = this->_channel_vector.begin();
-	for (; it != this->_channel_vector.end(); ++it) {
-		this->_error_msg = "";
+	it = _channel_vector.begin();
+	for (; it != _channel_vector.end(); ++it) {
+		_error_msg = "";
 		parseChannelNameAndKey(it->first, it->second);
-		if (!this->_error_msg.empty()) {
-			server->sendToClient(this->_error_msg);
+		if (!_error_msg.empty()) {
+			server->sendToClient(_error_msg);
 			continue;
 		}
 		joinChannel(server, fd, it->first, it->second);
@@ -174,70 +173,62 @@ string Join::processChannelConnections(Server *server) {
 
 string Join::parseChannelNameAndKey(string const &name, string key) {
 	if (name.empty() || (name[0] != '#' && name[0] != '&')) {
-		this->_error_msg = ERR_UNKNOWNERROR(this->_name, name);
-		return this->_error_msg;
+		_error_msg = ERR_UNKNOWNERROR(_name, name);
+		return _error_msg;
 	}
 	if (name.size() > 10 || name.size() < 2) {
-		this->_error_msg = ERR_CHANNELNAME(name);
-		return this->_error_msg;
+		_error_msg = ERR_CHANNELNAME(name);
+		return _error_msg;
 	}
 	if (name.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
-		this->_error_msg = ERR_WRONGCHARCHANNELNAME(name);
-		return this->_error_msg;
+		_error_msg = ERR_WRONGCHARCHANNELNAME(name);
+		return _error_msg;
 	}
 	if (key.find_first_not_of(CHARACTERS_ALLOWED, 1) != string::npos) {
-		this->_error_msg = ERR_WRONGCHARCHANNELKEY(key);
-		return this->_error_msg;
+		_error_msg = ERR_WRONGCHARCHANNELKEY(key);
+		return _error_msg;
 	}
 	if (!key.empty() && key.size() > 10) {
-		this->_error_msg = ERR_CHANNELKEYTOOLONG(key);
-		return this->_error_msg;
+		_error_msg = ERR_CHANNELKEYTOOLONG(key);
+		return _error_msg;
 	}
 	return "";
 }
 
-bool Join::isOnGuestsList(Server *server, int &user_fd, string const &channel_name) {
-	list<int> &guest = server->getChannel(channel_name)->getGuestsList();
-	for (list<int>::const_iterator it = guest.begin(); it != guest.end(); ++it) {
-		if (*it == user_fd)
-			return true;
-	}
-	return false;
-}
-
 void Join::joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key) {
-	cout << "joinChannel()" << endl;
 	string &user = server->getUserDB()[user_fd]._nickname;
 	int &nb_channel = server->getUserDB()[user_fd]._nb_channel;
-	string error_msg;
 
-	if (isChannelExisting(server, channel_name)) {
+	if (server->isChannelInServer(channel_name)) {
 		Channel *channel = server->getChannel(channel_name);
 		if (channel->isUserInChannel(user_fd)) {
 			server->sendToClient(ERR_ALREADYINCHANNEL(channel_name));
 			return;
 		}
-		if (channel->getUsersNb() < MAXINCHANNEL - 1 && nb_channel < MAXINCHANNEL) {
-			if (key == channel->getPassword()) { 
-				if (channel->getInviteRestrict() == false
-					|| (channel->getInviteRestrict() == true && isOnGuestsList(server, user_fd, channel_name))) {
-						channel->addUserToChannel(server, user, user_fd, USER);
-					} else {
-						server->sendToClient(ERR_INVITEONLYCHAN(user, channel_name));
-					}
-			} else {
-				server->sendToClient(ERR_BADCHANNELKEY(channel->getChannelName()));
-			}
-		} else {
-			server->sendToClient(ERR_CHANNELISFULL);
+		if (checkMode(server, channel, key, user, user_fd, nb_channel, channel_name)) {
+			channel->addUserToChannel(server, user, user_fd, USER);
+
 		}
 	} else {
 		createChannel(server, channel_name, user, user_fd);
 	}
 }
 
-bool Join::isChannelExisting(Server *server, const string &channel_name) {
-	return server->getChannelList().find(channel_name) != server->getChannelList().end();
+bool Join::checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, int &nb_channel, string channel_name) {
+	if ((channel->getLimitRestrict() == true && channel->getNbInChannel() >= channel->getUsersLimit())
+		|| (channel->getLimitRestrict() == false && channel->getNbInChannel() > MAXINCHANNEL && nb_channel > MAXINCHANNEL)) {
+		server->sendToClient(ERR_CHANNELISFULL);
+		return false;
+	}
+	if (key != channel->getPassword()) { 
+		server->sendToClient(ERR_BADCHANNELKEY(channel->getChannelName()));
+		return false;
+	}
+	if (channel->getInviteRestrict() == true && !channel->isOnGuestsList(user_fd)) {
+		server->sendToClient(ERR_INVITEONLYCHAN(user, channel_name));
+		return false;
+	}
+	return true;
 }
 
 void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
@@ -258,7 +249,7 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 
 // 4. CLEAN UP
 void Join::cleanup() {
-	list<string>().swap(this->_channel_name);
-	list<string>().swap(this->_channel_key);
-	vector<pair<string, string> >().swap(this->_channel_vector);
+	list<string>().swap(_channel_name);
+	list<string>().swap(_channel_key);
+	vector<pair<string, string> >().swap(_channel_vector);
 }

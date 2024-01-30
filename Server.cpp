@@ -34,44 +34,44 @@ Server::~Server() {
 /* Getters & Setters                                                          */
 /* ************************************************************************** */
 int &Server::getSocketFd() {
-	return this->_socket_fd;
+	return _socket_fd;
 }
 
 string const &Server::getCommandReceived() const {
-	return this->_command_received;
+	return _command_received;
 }
 
 map <int, clientInfo> &Server::getUserDB() {
-	return this->_userDB;
+	return _userDB;
 }
 
 uint32_t &Server::getClientIndex() {
-	return this->_client_index;
+	return _client_index;
 }
 
 CommandHandler &Server::getCommandHandler() {
-	return this->_command_handler;
+	return _command_handler;
 }
 
 string &Server::getHostname() {
-	return this->_hostname;
+	return _hostname;
 }
 
 struct pollfd *Server::getFds() {
-	return this->_fds;
+	return _fds;
 }
 
 string &Server::getPassword() {
-	return this->_password;
+	return _password;
 }
 
 
 map<string, Channel *> &Server::getChannelList() {
-	return this->_channel_list;
+	return _channel_list;
 }
 
 Channel *Server::getChannel(string const &channel_name) {
-	return this->_channel_list[channel_name];
+	return _channel_list[channel_name];
 }
 
 
@@ -79,37 +79,37 @@ Channel *Server::getChannel(string const &channel_name) {
 /* Functions                                                                  */
 /* ************************************************************************** */
 void Server::createSocket() {
-	this->_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->_socket_fd == -1)
+	_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (_socket_fd == -1)
 		socketFailureException();
 	cout << "	...Server has been created! " << endl;
 }
 
 void Server::setSocket() {
-	if ((setsockopt(this->_socket_fd, SOL_SOCKET, SO_REUSEADDR, &this->_reuse, sizeof(this->_reuse)) == -1)
-		|| (fcntl(this->_socket_fd, F_SETFL, O_NONBLOCK) == -1))
+	if ((setsockopt(_socket_fd, SOL_SOCKET, SO_REUSEADDR, &_reuse, sizeof(_reuse)) == -1)
+		|| (fcntl(_socket_fd, F_SETFL, O_NONBLOCK) == -1))
 		setsockoptFailureException();
 	cout << "	...Server has been set!" << endl;
 }
 
 void Server::bindSocket() {
-	memset(&this->_sa, 0, sizeof this->_sa);
-	this->_sa.sin_family = AF_INET;
-	this->_sa.sin_addr.s_addr = htonl(INADDR_ANY);
-	this->_sa.sin_port = htons(this->_port);
-	if (bind(this->_socket_fd, (struct sockaddr *)&this->_sa, sizeof this->_sa) == -1)
+	memset(&_sa, 0, sizeof _sa);
+	_sa.sin_family = AF_INET;
+	_sa.sin_addr.s_addr = htonl(INADDR_ANY);
+	_sa.sin_port = htons(_port);
+	if (bind(_socket_fd, (struct sockaddr *)&_sa, sizeof _sa) == -1)
 		bindFailureException();
-	cout << "	...Socket has been bound to localhost port: " << C_BOL C_BLU << this->_port << C_WHT << endl;
+	cout << "	...Socket has been bound to localhost port: " << C_BOL C_BLU << _port << C_WHT << endl;
 	char hostname[1024];
 	gethostname(hostname, 1024);
 	_hostname = static_cast<string>(hostname);
 }
 
 void Server::socketListening() {
-	if (listen(this->_socket_fd, BACKLOG) != 0) {
+	if (listen(_socket_fd, MAXFDS) != 0) {
 		listenFailureException();
 	}
-	cout << "	...Server listening on port: " << C_BOL C_BLU << this->_port << C_WHT << endl;
+	cout << "	...Server listening on port: " << C_BOL C_BLU << _port << C_WHT << endl;
 	clientInterfaceConnection();
 }
 
@@ -133,21 +133,21 @@ void Server::clientInterfaceConnection() {
 	cout << C_ITA "    USER user2 0 * :user2" C_WHT << endl;
 	cout << C_BOL "  to set your nickname, type this:" C_WHT << endl;
 	cout << C_ITA "    NICK allo1" C_WHT << endl;
-	cout << "*****************************************************************\n" << endl;
+	cout << "****************************************************************\n" << endl;
 	cout << C_RED C_BOL "Log: " << C_WHT << endl;
 }
 
 void Server::serverRoutine(){
 	initPollfd();
 	while(g_running){
-		int status = poll(this->_fds, MAXFDS, 100);
+		int status = poll(_fds, MAXFDS, 100);
 		if(status > 0){
-			for(this->_client_index = 0; this->_client_index < MAXFDS; this->_client_index++){
-				if(this->_client_index == 0 && this->_fds[this->_client_index].revents & POLLIN){
+			for(_client_index = 0; _client_index < MAXFDS; _client_index++){
+				if(_client_index == 0 && _fds[_client_index].revents & POLLIN){
 					acceptConnection();
-				}else if(_fds[this->_client_index].revents & POLLIN)
+				}else if(_fds[_client_index].revents & POLLIN)
 					receiver();
-				else if(_fds[this->_client_index].revents & (POLLNVAL | POLLERR | POLLHUP)){
+				else if(_fds[_client_index].revents & (POLLNVAL | POLLERR | POLLHUP)){
 					cout << "(POLLNVAL | POLLERR | POLLHUP)" << endl;
 					closeConnection();
 				}
@@ -164,17 +164,17 @@ void Server::serverRoutine(){
 }
 
 void Server::initPollfd() {
-	this->_fds[0].fd = this->_socket_fd;
-	this->_fds[0].events = POLLIN;
-	this->_nfds++;
+	_fds[0].fd = _socket_fd;
+	_fds[0].events = POLLIN;
+	_nfds++;
 	for(int i = 1; i < MAXFDS; i++){
-		this->_fds[i].fd = -1;
+		_fds[i].fd = -1;
 		_userDB[_fds[i].fd]._floodCount = 0;
 	}
 }
 
 void Server::acceptConnection() {
-	int status = accept(this->_socket_fd, 0, 0);
+	int status = accept(_socket_fd, 0, 0);
 	if(status != -1){
 		addNewClient(status);
 	}else
@@ -189,7 +189,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect on socket #" << _fds[i].fd << endl;
-			// initBaseUser(status, i);
+			initBaseUser(status, i);
 			return;
 		}
 	}
@@ -242,9 +242,9 @@ int Server::getBuffer(string &buffer) {
 	
 	while(1){
 		bzero(_buf, BUFFERSIZE);
-		bytes = recv(_fds[this->_client_index].fd, _buf, BUFFERSIZE, 0);
-		if(bytes == 0 || _userDB[_fds[this->_client_index].fd]._floodCount > FLOODCOUNTLIMIT){
-			if(_userDB[_fds[this->_client_index].fd]._floodCount > 5)
+		bytes = recv(_fds[_client_index].fd, _buf, BUFFERSIZE, 0);
+		if(bytes == 0 || _userDB[_fds[_client_index].fd]._floodCount > FLOODCOUNTLIMIT){
+			if(_userDB[_fds[_client_index].fd]._floodCount > 5)
 				send(_fds[_client_index].fd, ERR_FLOOD, strlen(ERR_FLOOD), 0);
 			return closeConnection();
 		}
@@ -272,7 +272,7 @@ int Server::closeConnection() {
 }
 
 int	Server::inputTooLongError(string &buffer){
-	send(this->_fds[this->_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
+	send(_fds[_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
 	buffer.clear();
 	_userDB[_fds[_client_index].fd]._floodCount++;
 	return -1;
@@ -283,11 +283,11 @@ void Server::floodProtection(){
 		// cout << "current time :" << currentTime << endl;
 		// cout << "last time :" << _userDB[_fds[_client_index].fd]._lastTime << endl;
 	if(currentTime - _userDB[_fds[_client_index].fd]._lastTime > FLOODTIMELIMIT){
-		_userDB[_fds[this->_client_index].fd]._floodCount = 0;
+		_userDB[_fds[_client_index].fd]._floodCount = 0;
 		_userDB[_fds[_client_index].fd]._lastTime = currentTime;
 	}
 	else
-		_userDB[_fds[this->_client_index].fd]._floodCount++;
+		_userDB[_fds[_client_index].fd]._floodCount++;
 }
 
 bool Server::parseBuffer(string &buffer) {
@@ -331,66 +331,51 @@ void Server::trimBuffer(size_t pos, string &buffer) {
 
 void Server::messageHandler() {
 	string response;
-	int &fd = this->_fds[this->_client_index].fd;
+	int &fd = _fds[_client_index].fd;
 
-	cout << "Message received from client socket " << fd << ": " << this->_command_received << endl;
-	this->_command_handler.commandTokenizer( this );
-	response = this->_command_handler.sendResponse( this );
+	cout << "Message received from client socket " << fd << ": " << _command_received << endl;
+	_command_handler.commandTokenizer( this );
+	response = _command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
+		if (send(fd, response.c_str(), response.size(), 0) == -1) {
+			sendFailureException();
+		}
 	}
-	if (this->_bytes_sent == -1)
-		sendFailureException();
-	else if (this->_bytes_sent == (int)response.size()) {
-		cout << "Message sent to client socket " << fd << " to confirm reception" << endl;
-	} else {
-		cout << "Message partially sent to client socket " << fd << ": " << this->_bytes_sent << endl;
-	}
+	cout << "Message sent to client socket " << fd << " to confirm reception\n" << endl;
 	welcomeMessage();
 }
 
 void Server::welcomeMessage() {
-	string &hostname = this->_hostname;
-	int &fd = this->_fds[this->_client_index].fd;
-	string &nickname = this->_userDB[this->_fds[this->_client_index].fd]._nickname;
-	string &username = this->_userDB[this->_fds[this->_client_index].fd]._username;
-	bool &passworded = this->_userDB[this->_fds[this->_client_index].fd]._password_valid;
-	bool &welcomed = this->_userDB[this->_fds[this->_client_index].fd]._welcomed;
+	string &hostname = _hostname;
+	int &fd = _fds[_client_index].fd;
+	string &nickname = _userDB[_fds[_client_index].fd]._nickname;
+	string &username = _userDB[_fds[_client_index].fd]._username;
+	bool &passworded = _userDB[_fds[_client_index].fd]._password_valid;
+	bool &welcomed = _userDB[_fds[_client_index].fd]._welcomed;
 	//manque le mot de passe
 
 	if (username != "" && nickname != "" && welcomed == false && passworded == true) {
 		welcomed = true;
 		string response = WELCOME(hostname, nickname, username);
-		this->_bytes_sent = send(fd, response.c_str(), response.size(), 0);
-		if (this->_bytes_sent == -1)
+		_bytes_sent = send(fd, response.c_str(), response.size(), 0);
+		if (_bytes_sent == -1)
 			sendFailureException();
 	}
 }
 
-// DEGUG - Print command name
-void Server::parseCommand() {
-	size_t pos = this->_command_received.find_first_of(" ");
-	if (pos == string::npos) {
-		cout << "Command received: " << this->_command_received << endl;
-	} else {
-		this->_command_received = this->_command_received.substr(0, pos);
-		cout << "Command received: " << this->_command_received << endl;
-	}
-}
-
 void Server::cleanup() {
-	this->_userDB.clear();
+	_userDB.clear();
 	cleanChannelList();
 }
 
 void Server::cleanChannelList() {
 	map<string, Channel *>::iterator it;
 
-	it = this->_channel_list.begin();
-	for (; it != this->_channel_list.end(); it++ ) {
+	it = _channel_list.begin();
+	for (; it != _channel_list.end(); it++ ) {
 		delete it->second;
 	}
-	this->_channel_list.clear();
+	_channel_list.clear();
 }
 
 void	Server::closeFds() {
@@ -404,10 +389,10 @@ void Server::closeChannelFds() {
 	map<string, Channel *>::iterator it;
 	list<string> channelsToDelete;
 
-	it = this->_channel_list.begin();
-	for (; it != this->_channel_list.end(); it++) {
-		if (it->second->isUserInChannel(this->_fds[this->_client_index].fd)) {
-			broadcastUserQuitMessage(it->second, this->_userDB[_fds[_client_index].fd]._nickname);
+	it = _channel_list.begin();
+	for (; it != _channel_list.end(); it++) {
+		if (it->second->isUserInChannel(_fds[_client_index].fd)) {
+			broadcastUserQuitMessage(it->second, _userDB[_fds[_client_index].fd]._nickname);
 			it->second->removeUserFromChannel(this, _fds[_client_index].fd);
 		}
 		if (isChannelEmpty(it->second)) {
@@ -416,8 +401,8 @@ void Server::closeChannelFds() {
 	}
 	delIt = channelsToDelete.begin();
 	for (; delIt != channelsToDelete.end(); ++delIt) {
-		delete this->_channel_list[*delIt];
-		this->_channel_list.erase(*delIt);
+		delete _channel_list[*delIt];
+		_channel_list.erase(*delIt);
 	}
 }
 
@@ -443,12 +428,7 @@ bool Server::isNickInServer(string nickname){
 }
 
 bool	Server::isChannelInServer(string channelName){
-	if(_channel_list.find(channelName) != _channel_list.end()){
-		cout << "channel trouver" << endl;
-		return true;
-	}
-	cout << "channel NON trouver" << endl;
-	return false;
+	return _channel_list.find(channelName) != _channel_list.end();
 }
 
 

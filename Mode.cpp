@@ -1,12 +1,12 @@
 #include "Mode.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_NEEDMOREPARAMS(nickname) "461 " + nickname + " MODE :Not enough parameters\r\n"
 #define ERR_WELCOMED "462 MODE :You are not authenticated\r\n"
+#define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
 #define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect\r\n"
 #define ERR_WRONGCHAR "400 :Wrong character or too long password\r\n"
@@ -38,13 +38,16 @@ string Mode::executeCommand(Server *server) {
 	_nickname = user_info._nickname;
 
 	string error = parseFirstPart(server, tokens);
-	if (!error.empty())
+	if (!error.empty()) {
 		return error;
+	}
 	_mode = *++it;
-	if ((_mode[0] == '-' || _mode[0] == '+') && (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k' || _mode[1] == 'o' || _mode[1] == 'l')) {
+	if ((_mode[0] == '-' || _mode[0] == '+')
+		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l')) {
 		selectMode(server, it);
-	} else
+	} else {
 		return ERR_WRONGPARAMS(_nickname);
+	}
 	return "";
 }
 
@@ -56,7 +59,7 @@ string Mode::parseFirstPart(Server *server, const list<string> &tokens) {
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
 		return ERR_NEEDMOREPARAMS(_nickname);
-	if (!server->getChannel(_channel))
+	if (!server->isChannelInServer(_channel))
 		return ERR_NOSUCHCHANNEL(_channel);
 	return "";
 }
@@ -65,57 +68,78 @@ void Mode::selectMode(Server *server, list<string>::iterator it) {
 	switch (_mode[1])
 	{
 	case 'i':
-		modeI(server);
+		modeInvite(server);
 		break;
 	case 't':
-		modeT(server);
+		modeTopic(server);
 		break;
 	case 'k':
-		modeK(server, it);
+		modePassword(server, it);
 		break;
 	case 'o':
-		modeO(server, it);
+		modeOperator(server, it);
 		break;
 	case 'l':
-		modeL(server, it);
+		modeLimit(server, it);
 		break;
 	}
 }
 
-void Mode::modeI(Server *server) {
-	if (_mode[0] == '+')
-		server->getChannel(_channel)->setInviteRestrict(true);
-	else
-		server->getChannel(_channel)->setInviteRestrict(false);
-}
+void Mode::modeInvite(Server *server) {
+	if (server->getCommandHandler().getCommandTokens().size() > 2) {
+		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+		return;
+	}
 
-void Mode::modeT(Server *server) {
-	if (_mode[0] == '+')
-		server->getChannel(_channel)->setTopicRestrict(true);
-	else
-		server->getChannel(_channel)->setTopicRestrict(false);
-}
-
-void Mode::modeK(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
-	if (it == server->getCommandHandler().getCommandTokens().end()) {    
-		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
-		server->sendToClient(error);
-		return ;
+	if (_mode[0] == '+') {
+		channel->setInviteRestrict(true);
+		channel->broadcastToAll("400 MODE :Invite Restrict mode is ON\r\n");
+	} else {
+		channel->setInviteRestrict(false);
+		channel->broadcastToAll("400 MODE :Invite Restrict mode is OFF\r\n");
 	}
-	_mode_param = *++it;
-	if (!isValidChar() && _mode_param.size() < 10) {
-		string error = ERR_WRONGCHAR;
-		server->sendToClient(error);
-		return ;
-	}
-	if (_mode[0] == '+')
-		channel->setPassword(_mode_param);
-	else
-		channel->setPassword("");
 }
 
-void Mode::modeO(Server *server, list<string>::iterator it) {
+void Mode::modeTopic(Server *server) {
+	if (server->getCommandHandler().getCommandTokens().size() > 2) {
+		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+		return;
+	}
+
+	Channel *channel = server->getChannel(_channel);
+	if (_mode[0] == '+') {
+		channel->setTopicRestrict(true);
+		channel->broadcastToAll("400 MODE :Topic Restrict mode is ON\r\n");
+	} else {
+		channel->setTopicRestrict(false);
+		channel->broadcastToAll("400 MODE :Topic Restrict mode is OFF\r\n");
+	}
+}
+
+void Mode::modePassword(Server *server, list<string>::iterator it) {
+	Channel *channel = server->getChannel(_channel);
+	if (it == server->getCommandHandler().getCommandTokens().end()) {	
+		server->sendToClient(ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname));
+		return ;
+	}
+	if (!isValidChar() && _mode_param.size() < 10) {
+		server->sendToClient(ERR_WRONGCHAR);
+		return ;
+	}
+	if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
+		_mode_param = *++it;
+		channel->setPassword(_mode_param);
+		channel->broadcastToAll("400 MODE :Password Restrict mode is ON\r\n");
+	} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
+		channel->setPassword("");
+		channel->broadcastToAll("400 MODE :Password Restrict mode is OFF\r\n");
+	} else {
+		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+	}
+}
+
+void Mode::modeOperator(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
 	string msg;
 	if (it == server->getCommandHandler().getCommandTokens().end()) {
@@ -178,12 +202,41 @@ int Mode::findToOpFd(Server *server) {
 	return 0;
 }
 
-void Mode::modeL(Server *server, list<string>::iterator it) {
-	if(it == server->getCommandHandler().getCommandTokens().end()) {    
-		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
-		server->sendToClient(error);
+void Mode::modeLimit(Server *server, list<string>::iterator it) {
+	if (server->getCommandHandler().getCommandTokens().size() > 3) {
+		server->sendToClient(ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname));
+		return ;
 	}
-	_mode_param = *++it;
+
+	Channel *channel = server->getChannel(_channel);
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	if (channel->getUserList().find(fd) == channel->getUserList().end()) {
+		server->sendToClient(ERR_NOTONCHANNEL(_nickname, _channel));
+		return;
+	}
+	if(channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
+		server->sendToClient(ERR_CHANOPRIVSNEEDED(_nickname, _channel));
+		return;
+	}
+
+	if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
+		_users_limit = *++it;
+		if (isValidNumber(_users_limit)) {
+			channel->setLimitRestrict(true);
+			channel->setUsersLimit(atoi(_users_limit.c_str()));
+			channel->broadcastToAll("400 MODE :Limit Restrict mode is ON\r\n");
+		} else {
+			server->sendToClient(ERR_WRONGPARAMS(_nickname));
+			return;
+		}
+	} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
+		channel->setLimitRestrict(false);
+		channel->setUsersLimit(-1);
+		channel->broadcastToAll("400 MODE :Limit Restrict mode is OFF\r\n");
+	} else {
+		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+	}
+
 }
 
 bool Mode::isValidChar() {
@@ -191,5 +244,17 @@ bool Mode::isValidChar() {
 
 	if (_mode_param.find_first_not_of(characters) != string::npos)
 			return false;
+	return true;
+}
+
+bool Mode::isValidNumber(string &number) {
+	for (size_t i = 0; i < number.size(); i++) {
+		if (!isdigit(number[i])) {
+			return false;
+		}
+	}
+	if (atoi(number.c_str()) < 1 || atoi(number.c_str()) > MAXINCHANNEL) {
+		return false;
+	}
 	return true;
 }

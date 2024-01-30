@@ -1,6 +1,5 @@
 #include "Invite.hpp"
 #include "Server.hpp"
-#include "CommandHandler.hpp"
 
 /* ************************************************************************** */
 /* Defines                                                                    */
@@ -30,35 +29,35 @@ Invite::~Invite() {}
 string Invite::executeCommand(Server *server) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
-	this->_invited = *tokens.begin();
-	this->_channel = *++tokens.begin();
+	_invited = *tokens.begin();
+	_channel = *++tokens.begin();
 	clientInfo &user_info = server->getUserDB()[fd];
-	this->_nickname = user_info._nickname;
+	_nickname = user_info._nickname;
 
-	string error = parseFirstPart(server, tokens, this->_channel);
+	string error = parseFirstPart(server, tokens, _channel);
 	if (!error.empty())
 		return error;
 
-	Channel *channel = server->getChannel(this->_channel);
+	Channel *channel = server->getChannel(_channel);
 	if (!channel->getInviteRestrict())
-		return ERR_CHANOPRIVSNEEDED2(this->_nickname, this->_channel);
+		return ERR_CHANOPRIVSNEEDED2(_nickname, _channel);
 	map<int, int> &user_list = channel->getUserList();
 	if (user_list.find(fd) == user_list.end())
-		return ERR_NOTONCHANNEL(this->_nickname, this->_channel);
+		return ERR_NOTONCHANNEL(_nickname, _channel);
 
-	if ((isClientInvited(server, fd, this->_channel) && user_list[fd] != OPERATOR) || !isClientInvited(server, fd, this->_channel))
-		return ERR_CHANOPRIVSNEEDED(this->_nickname, this->_channel);
-	this->_fd_invited = findClientToInvite(server, this->_invited);
-	if (this->_fd_invited == fd)
+	if ((isClientInvited(server, fd, _channel) && user_list[fd] != OPERATOR) || !isClientInvited(server, fd, _channel))
+		return ERR_CHANOPRIVSNEEDED(_nickname, _channel);
+	_fd_invited = findClientToInvite(server, _invited);
+	if (_fd_invited == fd)
 		return ERR_CANTINVITESELF;
-	else if (this->_fd_invited == 0)
-		return ERR_USERNOTEXIST(this->_invited);
+	else if (_fd_invited == 0)
+		return ERR_USERNOTEXIST(_invited);
 
-	list<int> &invited = server->getChannel(this->_channel)->getGuestsList();
-	invited.push_back(this->_fd_invited);
-	string message = RPL_INVITING(this->_nickname, this->_invited, this->_channel);
+	list<int> &invited = server->getChannel(_channel)->getGuestsList();
+	invited.push_back(_fd_invited);
+	string message = RPL_INVITING(_nickname, _invited, _channel);
 	server->sendToClient(message);
-	send(this->_fd_invited, message.c_str(), message.size(), 0);
+	send(_fd_invited, message.c_str(), message.size(), 0);
 	return "";
 }
 
@@ -90,7 +89,7 @@ string Invite::parseFirstPart(Server *server, const list<string> &tokens, const 
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
 		return ERR_NEEDMOREPARAMS(nickname);
-	if (!server->getChannel(channel_token))
+	if (!server->isChannelInServer(_channel))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";
 }
