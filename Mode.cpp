@@ -13,8 +13,10 @@
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
 #define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick\r\n"
-#define CLIENTOPTARGET(nickname, target) nickname + " :set " + target + " operator mode\r\n"
-#define TARGETOPBYCLIENT(nickname) "You was set operator mode by " + nickname + "\r\n"
+#define ERR_ALREADYMODE "400 :This mode is already set\r\n"
+#define ERR_MODEYOURSELF "400 :You can't set/unset operator yourself\r\n"
+#define CLIENTOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is promote operator \r\n"
+#define CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demote from operator \r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -31,18 +33,18 @@ string Mode::executeCommand(Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
 	list<string>::iterator it = tokens.begin();
-	this->_channel = *it;
+	_channel = *it;
 	clientInfo &user_info = server->getUserDB()[fd];
-	this->_nickname = user_info._nickname;
+	_nickname = user_info._nickname;
 
 	string error = parseFirstPart(server, tokens);
 	if (!error.empty())
 		return error;
-	this->_mode = *++it;
-	if ((this->_mode[0] == '-' || this->_mode[0] == '+') && (this->_mode[1] == 'i' || this->_mode[1] == 't' || this->_mode[1] == 'k' || this->_mode[1] == 'o' || this->_mode[1] == 'l')) {
+	_mode = *++it;
+	if ((_mode[0] == '-' || _mode[0] == '+') && (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k' || _mode[1] == 'o' || _mode[1] == 'l')) {
 		selectMode(server, it);
 	} else
-		return ERR_WRONGPARAMS(this->_nickname);
+		return ERR_WRONGPARAMS(_nickname);
 	return "";
 }
 
@@ -53,14 +55,14 @@ string Mode::parseFirstPart(Server *server, const list<string> &tokens) {
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
 	if (tokens.size() < 2)
-		return ERR_NEEDMOREPARAMS(this->_nickname);
-	if (!server->getChannel(this->_channel))
-		return ERR_NOSUCHCHANNEL(this->_channel);
+		return ERR_NEEDMOREPARAMS(_nickname);
+	if (!server->getChannel(_channel))
+		return ERR_NOSUCHCHANNEL(_channel);
 	return "";
 }
 
 void Mode::selectMode(Server *server, list<string>::iterator it) {
-	switch (this->_mode[1])
+	switch (_mode[1])
 	{
 	case 'i':
 		modeI(server);
@@ -81,72 +83,97 @@ void Mode::selectMode(Server *server, list<string>::iterator it) {
 }
 
 void Mode::modeI(Server *server) {
-	if (this->_mode[0] == '+')
-		server->getChannel(this->_channel)->setInviteRestrict(true);
+	if (_mode[0] == '+')
+		server->getChannel(_channel)->setInviteRestrict(true);
 	else
-		server->getChannel(this->_channel)->setInviteRestrict(false);
+		server->getChannel(_channel)->setInviteRestrict(false);
 }
 
 void Mode::modeT(Server *server) {
-	if (this->_mode[0] == '+')
-		server->getChannel(this->_channel)->setTopicRestrict(true);
+	if (_mode[0] == '+')
+		server->getChannel(_channel)->setTopicRestrict(true);
 	else
-		server->getChannel(this->_channel)->setTopicRestrict(false);
+		server->getChannel(_channel)->setTopicRestrict(false);
 }
 
 void Mode::modeK(Server *server, list<string>::iterator it) {
-	Channel *channel = server->getChannel(this->_channel);
-	if(it == server->getCommandHandler().getCommandTokens().end()) {    
+	Channel *channel = server->getChannel(_channel);
+	if (it == server->getCommandHandler().getCommandTokens().end()) {    
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 		return ;
 	}
-	this->_mode_param = *++it;
-	if(!isValidChar() && this->_mode_param.size() < 10) {
+	_mode_param = *++it;
+	if (!isValidChar() && _mode_param.size() < 10) {
 		string error = ERR_WRONGCHAR;
 		server->sendToClient(error);
 		return ;
 	}
-	if(_mode[0] == '+')
-		channel->setPassword(this->_mode_param);
+	if (_mode[0] == '+')
+		channel->setPassword(_mode_param);
 	else
 		channel->setPassword("");
 }
 
 void Mode::modeO(Server *server, list<string>::iterator it) {
-	Channel *channel = server->getChannel(this->_channel);
-	if(it == server->getCommandHandler().getCommandTokens().end()) {
+	Channel *channel = server->getChannel(_channel);
+	string msg;
+	if (it == server->getCommandHandler().getCommandTokens().end()) {
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 	}
-	this->_mode_param = *++it;
-	if(channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
-		string error = ERR_CHANOPRIVSNEEDED(this->_nickname, this->_channel);
+	_mode_param = *++it;
+	if (_nickname == _mode_param){
+		string error = ERR_MODEYOURSELF;
+		server->sendToClient(error);
+		return ;
+	}
+	if (channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
+		string error = ERR_CHANOPRIVSNEEDED(_nickname, _channel);
 		server->sendToClient(error);
 	} else if (_mode[0] == '+') {
-		channel->getUserList()[findToOpFd(server)] = OPERATOR;
-		string response = CLIENTOPTARGET(_nickname, _target);//mesage a formater correctement
-		server->sendToClient(response);//mesage a formater correctement
-		sendToUser(server);
-		channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
+		if (changeUserMode(server, OPERATOR))
+			return ;
+		msg = CLIENTOPTARGET(_nickname, _channel, _mode_param);
 
 	} else if (_mode[0] == '-'){
-		
+		if (changeUserMode(server, USER))
+			return;
+		msg = CLIENTDEOPTARGET(_nickname, _channel, _mode_param);
 	}
+		channel->broadcastToAll(msg);
+		channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
 }
 
-string Mode::sendToUser(Server *server){
-	if(!server->isNickInServer(this->_target))
-		return ERR_NOSUCHNICK(this->_target);
-	string response = TARGETOPBYCLIENT(_nickname);
-	send(findToOpFd(server), response.c_str(), response.size(), 0); //TODO gerer -1
-	return "";
+int Mode::changeUserMode(Server *server, int mode){
+	map<int, int> &userlist = server->getChannel(_channel)->getUserList();
+	map<int, int>::iterator it = userlist.begin();
+	for(; it != userlist.end(); it++){
+		if(it->first == findToOpFd(server)){
+			if(it->second != mode)
+				it->second = mode;
+			else{
+				string response = ERR_ALREADYMODE;
+				server->sendToClient(response);
+				return 1;
+			}
+		}
+	}
+	return 0;
 }
+
+// string Mode::sendToUser(Server *server){
+// 	if(!server->isNickInServer(_mode_param))
+// 		return ERR_NOSUCHNICK(_mode_param);
+// 	string response = TARGETOPBYCLIENT(_nickname);
+// 	send(findToOpFd(server), response.c_str(), response.size(), 0); //TODO gerer -1
+// 	return "";
+// }
 
 int Mode::findToOpFd(Server *server) {
 	map<int, clientInfo> &user_db = server->getUserDB();
 	for (map<int, clientInfo>::const_iterator it = user_db.begin(); it != user_db.end(); ++it)
-		if (it->second._nickname == this->_nickname)
+		if (it->second._nickname == _mode_param)
 			return it->first;
 	return 0;
 }
@@ -156,13 +183,13 @@ void Mode::modeL(Server *server, list<string>::iterator it) {
 		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
 		server->sendToClient(error);
 	}
-	this->_mode_param = *++it;
+	_mode_param = *++it;
 }
 
 bool Mode::isValidChar() {
 	string characters = CHARACTERS_ALLOWED;
 
-	if (this->_mode_param.find_first_not_of(characters) != string::npos)
+	if (_mode_param.find_first_not_of(characters) != string::npos)
 			return false;
 	return true;
 }
