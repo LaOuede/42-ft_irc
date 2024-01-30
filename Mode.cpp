@@ -139,7 +139,7 @@ void Mode::modePassword(Server *server, list<string>::iterator it) {
 	}
 }
 
-void Mode::modeO(Server *server, list<string>::iterator it) {
+void Mode::modeOperator(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
 	string msg;
 	if (it == server->getCommandHandler().getCommandTokens().end()) {
