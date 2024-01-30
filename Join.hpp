@@ -21,6 +21,7 @@ using std::unordered_map;
 using std::vector;
 
 class Server;
+class Channel;
 
 class Join : public ACommand {
 	public:
@@ -37,9 +38,8 @@ class Join : public ACommand {
 		void							createChannelVector();
 		string							processChannelConnections(Server *Server);
 		string							parseChannelNameAndKey(string const &name, string key);
+		bool							checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, int &nb_channel, string channel_name);
 		void							joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key);
-		bool							isChannelExisting(Server *server, string const &channel_name);
-		bool							isOnGuestsList(Server *server, int &user_fd, string const &channel_name);
 		void							createChannel(Server *server, string const &channel_name, string &user, int &fd);
 		void							cleanup();
 

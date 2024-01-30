@@ -27,7 +27,7 @@ Part::~Part() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Part::executeCommand(Server *server) {
-	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
+	cout << "Server dealing with : " << getCommandName() << " function" << endl;
 
 	// 0. Am I authentificated ?
 /* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
@@ -35,10 +35,10 @@ string Part::executeCommand(Server *server) {
 		return (ERR_WELCOMED);
 	} */
 	// 1. PARSING
-	this->_error_msg = parseCommand(server);
-	if (!this->_error_msg.empty()) {
+	_error_msg = parseCommand(server);
+	if (!_error_msg.empty()) {
 		cleanup();
-		return this->_error_msg;
+		return _error_msg;
 	}
 	// 2. Process deconnections
 	processChannelDeconnections(server);
@@ -51,13 +51,13 @@ string Part::executeCommand(Server *server) {
 string Part::parseCommand(Server *server) {
 	list<string> command = server->getCommandHandler().getCommandTokens();
 	
-	this->_error_msg = parseParameters(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
+	_error_msg = parseParameters(command);
+	if (!_error_msg.empty()) {
+		return _error_msg;
 	}
-	this->_error_msg = parseAttributes(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
+	_error_msg = parseAttributes(command);
+	if (!_error_msg.empty()) {
+		return _error_msg;
 	}
 	return "";
 }
@@ -72,17 +72,17 @@ string Part::parseParameters(const list<string> &command) {
 	} */
 
 	if (command.empty()) {
-		return ERR_NEEDMOREPARAMS(this->_name);
+		return ERR_NEEDMOREPARAMS(_name);
 	}
 	return "";
 }
 
 string Part::parseAttributes(const list<string> &command) {
-	splitParameters(command.front(), this->_channel_name);
+	splitParameters(command.front(), _channel_name);
 	if (command.size() > 1) {
-		this->_reason = getReason(command);
-		if (this->_reason.size() > 50) {
-			return ERR_REASONTOOLONG(this->_name);
+		_reason = getReason(command);
+		if (_reason.size() > 50) {
+			return ERR_REASONTOOLONG(_name);
 		}
 	}
 	return "";
@@ -135,11 +135,11 @@ string Part::processChannelDeconnections(Server *server) {
 
 void Part::broadcastUserQuitMessage(Channel *channel, const string &user, const string &reason) {
 	const string &channel_name = channel->getChannelName();
-	string msg = RPL_QUITCHANNEL(user, this->getCommandName(), channel_name, reason);
+	string msg = RPL_QUITCHANNEL(user, getCommandName(), channel_name, reason);
 	channel->broadcastToAll(msg);
 }
 
 // 3. CLEAN UP
 void Part::cleanup() {
-	list<string>().swap(this->_channel_name);
+	list<string>().swap(_channel_name);
 }

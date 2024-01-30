@@ -32,8 +32,7 @@
 #define C_WHT "\e[0m"
 
 #define PORT 6667
-#define BACKLOG 20
-#define MAXCLIENT 10
+#define MAXCLIENT 40
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
 #define BUFFERSIZE 512
 #define MAXMSGLEN 512
@@ -103,7 +102,6 @@ class Server {
 		void 					buildCommandReceived(size_t pos, string &buffer);
 		void 					trimBuffer(size_t pos, string &buffer);
 		void					messageHandler();
-		void					parseCommand();
 		void					welcomeMessage();
 		void					cleanup();
 		void					cleanChannelList();
