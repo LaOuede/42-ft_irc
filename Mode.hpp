@@ -32,6 +32,9 @@ class Mode : public ACommand {
 		void	modeT(Server *server);
 		void	modeK(Server *server, list<string>::iterator it);
 		void	modeO(Server *server, list<string>::iterator it);
+		int		changeUserMode(Server *server, int mode);
+		string  sendToUser(Server *server);
+        int     findToOpFd(Server *server);
 		void	modeL(Server *server, list<string>::iterator it);
 		bool	isValidChar();
 
