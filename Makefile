@@ -42,13 +42,13 @@ RM			=	rm -rf
 
 # Directories
 SRCS_DIR	=	./src
-INC_DIR		=	./inc
-OBJ_DIR		=	./obj
+INCS_DIR	=	./inc
+OBJS_DIR	=	./obj
 
 # Files
 SRCS		=	$(wildcard $(SRCS_DIR)/*.cpp)
-OBJS		=	$(patsubst $(SRCS_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
-HEADS		=	$(wildcard $(INC_DIR)/*.hpp) $(wildcard $(INC_DIR)/*.tpp)
+OBJS		=	$(patsubst $(SRCS_DIR)/%.cpp,$(OBJS_DIR)/%.o,$(SRCS))
+HEADS		=	$(wildcard $(INCS_DIR)/*.hpp) $(wildcard $(INCS_DIR)/*.tpp)
 
 #------------------------------------------------------------------------------#
 #                                  RULES                                       #
@@ -59,7 +59,7 @@ all: dir $(NAME)
 
 # Create directories
 dir:
-	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJS_DIR)
 
 # Compilation
 $(NAME) : $(OBJS)
@@ -68,14 +68,14 @@ $(NAME) : $(OBJS)
 	@echo "\n$W---------------------- $(NAME) $Gcreated ✅ $W----------------------\n"
 
 # Compilation of source files
-$(OBJ_DIR)/%.o: $(SRCS_DIR)/%.cpp $(HEADS)
-	@$(CC) $(CPPFLAGS) -I$(INC_DIR) -c $< -o $@
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp $(HEADS)
+	@$(CC) $(CPPFLAGS) -I$(INCS_DIR) -c $< -o $@
 
 # Remove objects and executables
 clean:
 	@echo "\n$W>>>>>>>>>>>>>>>>>>>>>>>>>>> $YCLEANING $W<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
-	@$(RM) $(OBJ_DIR)
-	@echo "$W----------------- $(NAME) : $(OBJ_DIR) was $Rdeleted ❌$W----------------"
+	@$(RM) $(OBJS_DIR)
+	@echo "$W----------------- $(NAME) : $(OBJS_DIR) was $Rdeleted ❌$W----------------"
 
 fclean: clean
 	@$(RM) $(NAME)
