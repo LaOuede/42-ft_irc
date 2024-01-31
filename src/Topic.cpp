@@ -38,8 +38,7 @@ string Topic::executeCommand(Server *server) {
 	if (user_list.find(fd) == user_list.end())
 		return ERR_NOTONCHANNEL(nickname, channel_token);
 
-	// TODO '&&' à la place de '||' ?
-	if (channel->getTopicRestrict() || user_list[fd] != OPERATOR)
+	if ((channel->getTopicRestrict() && user_list[fd] != OPERATOR) || user_list[fd] != OPERATOR)
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
 	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !(channel->getTopicRestrict() && user_list[fd] == OPERATOR)) {
 		_topic = findTopic(server, tokens, channel);
