@@ -10,9 +10,10 @@
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
 #define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect\r\n"
-#define ERR_WRONGCHAR "400 :Wrong character or too long password\r\n"
+#define ERR_WRONGCHAR "400 :Wrong character or password too long\r\n"
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
+#define ERR_WRONGLIMIT(nickname) "461 " + nickname + " MODE :Syntax error OR out of range size\r\n"
 #define ERR_NOSUCHNICK(mode_param) "401 " + mode_param + " :No such nick\r\n"
 #define ERR_ALREADYMODE "400 :This mode is already set\r\n"
 #define ERR_MODEYOURSELF "400 :You can't set/unset yourself operator\r\n"
@@ -20,12 +21,12 @@
 #define RPL_CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demoted from operator\r\n"
 #define RPL_LIMITON(nickname, channel, users_limit) ":" + nickname + " MODE " + channel + " :" + users_limit + " is the new users limit\r\n"
 #define RPL_LIMITOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more user limit\r\n"
-#define RPL_TOPICON(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic update is restricted\r\n"
-#define RPL_TOPICOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more restriction on topic\r\n"
-#define RPL_PASSWORDON(nickname, channel) ":" + nickname + " MODE " + channel + " :Password is requested\r\n"
-#define RPL_PASSWORDOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No password needed\r\n"
-#define RPL_INVITEON(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation only\r\n"
-#define RPL_INVITEOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more invitation needed\r\n"
+#define RPL_TOPICON(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic IS restricted\r\n"
+#define RPL_TOPICOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic NOT restricted\r\n"
+#define RPL_PASSWORDON(nickname, channel) ":" + nickname + " MODE " + channel + " :Password IS requested\r\n"
+#define RPL_PASSWORDOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Password NOT requested\r\n"
+#define RPL_INVITEON(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation IS requested\r\n"
+#define RPL_INVITEOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation NOT requested\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -101,12 +102,14 @@ void Mode::modeInvite(Server *server) {
 	}
 
 	Channel *channel = server->getChannel(_channel);
-	if (_mode[0] == '+') {
-		channel->setInviteRestrict(true);
-		channel->broadcastToAll(RPL_INVITEON(_nickname, _channel));
-	} else {
-		channel->setInviteRestrict(false);
-		channel->broadcastToAll(RPL_INVITEOFF(_nickname, _channel));
+	if (checkUserStatus(server, channel)) {
+		if (_mode[0] == '+') {
+			channel->setInviteRestrict(true);
+			channel->broadcastToAll(RPL_INVITEON(_nickname, _channel));
+		} else {
+			channel->setInviteRestrict(false);
+			channel->broadcastToAll(RPL_INVITEOFF(_nickname, _channel));
+		}
 	}
 }
 
@@ -117,12 +120,14 @@ void Mode::modeTopic(Server *server) {
 	}
 
 	Channel *channel = server->getChannel(_channel);
-	if (_mode[0] == '+') {
-		channel->setTopicRestrict(true);
-		channel->broadcastToAll(RPL_TOPICON(_nickname, _channel));
-	} else {
-		channel->setTopicRestrict(false);
-		channel->broadcastToAll(RPL_TOPICOFF(_nickname, _channel));
+	if (checkUserStatus(server, channel)) {
+		if (_mode[0] == '+') {
+			channel->setTopicRestrict(true);
+			channel->broadcastToAll(RPL_TOPICON(_nickname, _channel));
+		} else {
+			channel->setTopicRestrict(false);
+			channel->broadcastToAll(RPL_TOPICOFF(_nickname, _channel));
+		}
 	}
 }
 
@@ -132,26 +137,26 @@ void Mode::modePassword(Server *server, list<string>::iterator it) {
 		server->sendToClient(ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname));
 		return ;
 	}
-	if (!isValidChar() && _mode_param.size() < 10) {
-		server->sendToClient(ERR_WRONGCHAR);
-		return ;
-	}
-	if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
-		_mode_param = *++it;
-		channel->setPassword(_mode_param);
-		channel->broadcastToAll(RPL_PASSWORDON(_nickname, _channel));
-	} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
-		channel->setPassword("");
-		channel->broadcastToAll(RPL_PASSWORDOFF(_nickname, _channel));
-	} else {
-		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+	if (checkUserStatus(server, channel)) {
+		if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
+			_mode_param = *++it;
+			if (!isValidChar() || _mode_param.size() > 10) {
+				server->sendToClient(ERR_WRONGCHAR);
+				return ;
+			}
+			channel->setPassword(_mode_param);
+			channel->broadcastToAll(RPL_PASSWORDON(_nickname, _channel));
+		} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
+			channel->setPassword("");
+			channel->broadcastToAll(RPL_PASSWORDOFF(_nickname, _channel));
+		} else {
+			server->sendToClient(ERR_WRONGPARAMS(_nickname));
+		}
 	}
 }
 
 bool Mode::isValidChar() {
-	string characters = CHARACTERS_ALLOWED;
-
-	if (_mode_param.find_first_not_of(characters) != string::npos)
+	if (_mode_param.find_first_not_of(CHARACTERS_ALLOWED) != string::npos)
 			return false;
 	return true;
 }
@@ -164,9 +169,7 @@ void Mode::modeOperator(Server *server, list<string>::iterator it) {
 		server->sendToClient(msg);
 		return ;
 	}
-	if (channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
-		server->sendToClient(ERR_CHANOPRIVSNEEDED(_nickname, _channel));
-	} else if (_mode[0] == '+') {
+	if (_mode[0] == '+') {
 		if (changeUserMode(server, OPERATOR))
 			return ;
 		msg = RPL_CLIENTOPTARGET(_nickname, _channel, _mode_param);
@@ -180,13 +183,15 @@ void Mode::modeOperator(Server *server, list<string>::iterator it) {
 }
 
 string Mode::parseOpParameter(Server *server, list<string>::iterator it, Channel *channel) {
+	if (!checkUserStatus(server, channel))
+		return "";
 	if (it == server->getCommandHandler().getCommandTokens().end())
-			return ERR_NEEDMOREPARAMS(_nickname);
+		return ERR_NEEDMOREPARAMS(_nickname);
 	_mode_param = *++it;
 	if(!server->isNickInServer(_mode_param) || !channel->isUserInChannel(findToOpFd(server)))
-			return (ERR_NOSUCHNICK(_mode_param));
+		return (ERR_NOSUCHNICK(_mode_param));
 	if (_nickname == _mode_param)
-			return (ERR_MODEYOURSELF);
+		return (ERR_MODEYOURSELF);
 	return "";
 }
 
@@ -198,8 +203,7 @@ int Mode::changeUserMode(Server *server, int mode){
 			if(it->second != mode)
 				it->second = mode;
 			else{
-				string response = ERR_ALREADYMODE;
-				server->sendToClient(response);
+				server->sendToClient(ERR_ALREADYMODE);
 				return 1;
 			}
 		}
@@ -228,7 +232,7 @@ void Mode::modeLimit(Server *server, list<string>::iterator it) {
 		} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
 			modeLimitOFF(channel);
 		} else {
-			server->sendToClient(ERR_WRONGPARAMS(_nickname));
+			server->sendToClient(ERR_WRONGLIMIT(_nickname));
 		}
 	}
 }

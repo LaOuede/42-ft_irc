@@ -26,9 +26,6 @@ Names::~Names() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Names::executeCommand(Server *server) {
-	/* DEBUG À SUPPRIMER */
-	cout << "Server dealing with : " << getCommandName() << " function" << endl;
-
 	if (!authentificationCheck(server)) {
 		return ERR_WELCOMED;
 	}
