@@ -17,6 +17,7 @@ using std::string;
 using std::list;
 
 class Server;
+class Channel;
 
 class Mode : public ACommand {
 	public:
@@ -38,7 +39,9 @@ class Mode : public ACommand {
 		void	modeLimit(Server *server, list<string>::iterator it);
 		bool	isValidChar();
 		bool	isValidNumber(string &number);
-
+		bool	checkUserStatus(Server *server, Channel *channel);
+		void	modeLimitON(Server *server, Channel *channel, list<string>::iterator it);
+		void	modeLimitOFF(Channel *channel);
 
 	private:
 		// Attributes
