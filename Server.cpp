@@ -189,7 +189,7 @@ void Server::addNewClient(int status) {
 			_fds[i].fd = status;
 			_fds[i].events = POLLIN;
 			cout << "New connect on socket #" << _fds[i].fd << endl;
-			initBaseUser(status, i);
+			//initBaseUser(status, i);
 			return;
 		}
 	}
