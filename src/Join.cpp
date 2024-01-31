@@ -192,7 +192,6 @@ string Join::parseChannelNameAndKey(string const &name, string key) {
 
 void Join::joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key) {
 	string &user = server->getUserDB()[user_fd]._nickname;
-	int &nb_channel = server->getUserDB()[user_fd]._nb_channel;
 
 	if (server->isChannelInServer(channel_name)) {
 		Channel *channel = server->getChannel(channel_name);
@@ -200,7 +199,7 @@ void Join::joinChannel(Server *server, int &user_fd, string const &channel_name,
 			server->sendToClient(ERR_ALREADYINCHANNEL(channel_name));
 			return;
 		}
-		if (checkMode(server, channel, key, user, user_fd, nb_channel, channel_name)) {
+		if (checkMode(server, channel, key, user, user_fd, channel_name)) {
 			channel->addUserToChannel(server, user, user_fd, USER);
 
 		}
@@ -209,9 +208,9 @@ void Join::joinChannel(Server *server, int &user_fd, string const &channel_name,
 	}
 }
 
-bool Join::checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, int &nb_channel, string channel_name) {
+bool Join::checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, string channel_name) {
 	if ((channel->getLimitRestrict() == true && channel->getNbInChannel() >= channel->getUsersLimit())
-		|| (channel->getLimitRestrict() == false && channel->getNbInChannel() >= MAXINCHANNEL) {
+		|| (channel->getLimitRestrict() == false && channel->getNbInChannel() >= MAXINCHANNEL)) {
 		server->sendToClient(ERR_CHANNELISFULL);
 		return false;
 	}

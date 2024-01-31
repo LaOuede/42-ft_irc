@@ -39,7 +39,7 @@ class Join : public ACommand {
 		void							createChannelVector();
 		string							processChannelConnections(Server *Server);
 		string							parseChannelNameAndKey(string const &name, string key);
-		bool							checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, int &nb_channel, string channel_name);
+		bool							checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, string channel_name);
 		void							joinChannel(Server *server, int &user_fd, string const &channel_name, string const &key);
 		void							createChannel(Server *server, string const &channel_name, string &user, int &fd);
 		bool							checkChannelsLimits(Server *server, int &fd);
