@@ -38,18 +38,18 @@ list<string> &CommandHandler::getCommandTokens() {
 /* ************************************************************************** */
 void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("CAP", new Cap));
-	_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
-	_command_caller.insert(pair<string, ACommand *>("USER", new User));
-	_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
-	_command_caller.insert(pair<string, ACommand *>("PART", new Part));
-	_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
+	_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 	_command_caller.insert(pair<string, ACommand *>("JOIN", new Join));
 	_command_caller.insert(pair<string, ACommand *>("KICK", new Kick));
-	_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
-	_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
-	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 	_command_caller.insert(pair<string, ACommand *>("MODE", new Mode));
 	_command_caller.insert(pair<string, ACommand *>("NAMES", new Names));
+	_command_caller.insert(pair<string, ACommand *>("NICK", new Nick));
+	_command_caller.insert(pair<string, ACommand *>("PASS", new Pass));
+	_command_caller.insert(pair<string, ACommand *>("PART", new Part));
+	_command_caller.insert(pair<string, ACommand *>("PING", new Ping));
+	_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
+	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
+	_command_caller.insert(pair<string, ACommand *>("USER", new User));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {

@@ -133,7 +133,6 @@ void Channel::rplEndOfNames(Server *server, int &user_fd) {
 	broadcastToAll(RPL_ENDOFNAMES(nickname, channel));
 }
 
-/* TODO Check if nickname is mandatory in message */
 void Channel::broadcastListUser(Server *server, int &user_fd) {
 	const string &nickname = server->getUserDB()[user_fd]._nickname;
 	string list_user = "353 " + nickname + " " + _channel_name + " :";

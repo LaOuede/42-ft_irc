@@ -9,6 +9,7 @@
 #define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick/channel\r\n"
 #define ERR_NOTEXTTOSEND(target) "412 " + target + " :No text to send\r\n"
 #define ERR_NEEDMOREPARAMS "461 PRIVMSG :Not enough parameters\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 
 
 /* ************************************************************************** */
@@ -23,7 +24,12 @@ Privmsg::~Privmsg() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Privmsg::executeCommand(Server *server) {
-	parseParameter(server);
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
+	}
+	string status = parseParameter(server);
+	if(!status.empty())
+		return status ;
 	_nick = server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname;
 	_response = PRIVMSG(_nick, _target, _msg);
 	if(_target[0] == '#' || _target[0] == '&')
@@ -33,12 +39,19 @@ string Privmsg::executeCommand(Server *server) {
 	return "";
 }
 
+bool Privmsg::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+}
+
 string Privmsg::parseParameter(Server *server){
 	list<string>::const_iterator it = server->getCommandHandler().getCommandTokens().begin();
-	_target = *it++;
+	if(it != server->getCommandHandler().getCommandTokens().end())
+		_target = *it++;
 	if(_target.empty())
 		return ERR_NEEDMOREPARAMS;
-	_msg = *it++;
+	if(it != server->getCommandHandler().getCommandTokens().end())
+		_msg = *it++;
 	if(_msg.empty())
 		return ERR_NOTEXTTOSEND(_target);
 	while(it != server->getCommandHandler().getCommandTokens().end()){

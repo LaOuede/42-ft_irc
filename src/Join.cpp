@@ -45,28 +45,25 @@ string Join::executeCommand(Server *server) {
 	/* DEBUG À SUPPRIMER */
 	cout << "Server dealing with : " << getCommandName() << " function" << endl;
 
-	// 0. Am I authentificated ?
-/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	if (server->getUserDB()[fd]._welcomed == false) {
-		return (ERR_WELCOMED); 
-	} */
-	// 1. PARSING
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
+	}
 	_error_msg = parseCommand(server);
 	if (!_error_msg.empty()) {
 		cleanup();
 		return _error_msg;
 	}
-
-	// 3. Process connections
 	createChannelVector();
 	processChannelConnections(server);
-
-	// 4. Clean Up
 	cleanup();
-
 	return "";
 }
 
+//0. Authentification check
+bool Join::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+}
 
 //1. COMMAND PARSING
 string Join::parseCommand(Server *server) {

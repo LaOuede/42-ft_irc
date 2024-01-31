@@ -153,7 +153,7 @@ void Server::serverRoutine(){
 				}
 			}
 		}else if (status == -1)
-			pollFailureException();
+			return ;
 
 
 		// only for visualition of the fd
@@ -175,10 +175,10 @@ void Server::initPollfd() {
 
 void Server::acceptConnection() {
 	int status = accept(_socket_fd, 0, 0);
-	if(status != -1){
+	if(status != -1)
 		addNewClient(status);
-	}else
-		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
+	else
+		cout << "acceptConntection failure" << endl;
 }
 
 void Server::addNewClient(int status) {
@@ -447,10 +447,6 @@ std::exception Server::listenFailureException() {
 	throw std::runtime_error("listen() error");
 }
 
-std::exception Server::acceptFailureException() {
-	throw std::runtime_error("accept() error");
-}
-
 std::exception Server::recvFailureException() {
 	throw std::runtime_error("recv() error");
 }
@@ -463,6 +459,3 @@ std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
 }
 
-std::exception Server::pollFailureException(){
-	throw std::runtime_error("poll() error");
-}

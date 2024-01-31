@@ -29,12 +29,17 @@ Invite::~Invite() {}
 string Invite::executeCommand(Server *server) {
 	int	&fd = server->getFds()[server->getClientIndex()].fd;
 	list<string> &tokens = server->getCommandHandler().getCommandTokens();
-	_invited = *tokens.begin();
-	_channel = *++tokens.begin();
 	clientInfo &user_info = server->getUserDB()[fd];
 	_nickname = user_info._nickname;
 
-	string error = parseFirstPart(server, tokens, _channel);
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
+	}
+	if (tokens.size() < 2)
+		return ERR_NEEDMOREPARAMS(_nickname);
+	_invited = *tokens.begin();
+	_channel = *++tokens.begin();
+	string error = parseFirstPart(server, _channel);
 	if (!error.empty())
 		return error;
 
@@ -61,6 +66,11 @@ string Invite::executeCommand(Server *server) {
 	return "";
 }
 
+bool Invite::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+}
+
 bool Invite::isClientInvited(Server *server, int fd, string channel_token) {
 	list<int> &invited = server->getChannel(channel_token)->getGuestsList();
 	for (list<int>::const_iterator it = invited.begin(); it != invited.end(); ++it) {
@@ -80,15 +90,7 @@ int Invite::findClientToInvite(Server *server, const string &nickname_invited) {
 	return 0;
 }
 
-string Invite::parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token) {
-	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	clientInfo &user_info = server->getUserDB()[fd];
-	string &nickname = user_info._nickname;
-
-	if (!user_info._welcomed)
-		return ERR_WELCOMED;
-	if (tokens.size() < 2)
-		return ERR_NEEDMOREPARAMS(nickname);
+string Invite::parseFirstPart(Server *server, const string &channel_token) {
 	if (!server->isChannelInServer(_channel))
 		return ERR_NOSUCHCHANNEL(channel_token);
 	return "";

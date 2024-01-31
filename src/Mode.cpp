@@ -6,18 +6,26 @@
 /* ************************************************************************** */
 #define ERR_NEEDMOREPARAMS(nickname) "461 " + nickname + " MODE :Not enough parameters\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
-#define ERR_WELCOMED "462 MODE :You are not authenticated\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
 #define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect\r\n"
 #define ERR_WRONGCHAR "400 :Wrong character or too long password\r\n"
 #define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
-#define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick\r\n"
+#define ERR_NOSUCHNICK(mode_param) "401 " + mode_param + " :No such nick\r\n"
 #define ERR_ALREADYMODE "400 :This mode is already set\r\n"
-#define ERR_MODEYOURSELF "400 :You can't set/unset operator yourself\r\n"
-#define CLIENTOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is promote operator \r\n"
-#define CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demote from operator \r\n"
+#define ERR_MODEYOURSELF "400 :You can't set/unset yourself operator\r\n"
+#define RPL_CLIENTOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is promoted operator\r\n"
+#define RPL_CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demoted from operator\r\n"
+#define RPL_LIMITON(nickname, channel, users_limit) ":" + nickname + " MODE " + channel + " :" + users_limit + " is the new users limit\r\n"
+#define RPL_LIMITOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more user limit\r\n"
+#define RPL_TOPICON(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic update is restricted\r\n"
+#define RPL_TOPICOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more restriction on topic\r\n"
+#define RPL_PASSWORDON(nickname, channel) ":" + nickname + " MODE " + channel + " :Password is requested\r\n"
+#define RPL_PASSWORDOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No password needed\r\n"
+#define RPL_INVITEON(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation only\r\n"
+#define RPL_INVITEOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more invitation needed\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -44,7 +52,7 @@ string Mode::executeCommand(Server *server) {
 	}
 	_mode = *++it;
 	if ((_mode[0] == '-' || _mode[0] == '+')
-		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l')) {
+		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l') && _mode.size() == 2) {
 		selectMode(server, it);
 	} else {
 		return ERR_WRONGPARAMS(_nickname);
@@ -95,10 +103,10 @@ void Mode::modeInvite(Server *server) {
 	Channel *channel = server->getChannel(_channel);
 	if (_mode[0] == '+') {
 		channel->setInviteRestrict(true);
-		channel->broadcastToAll("400 MODE :Invite Restrict mode is ON\r\n");
+		channel->broadcastToAll(RPL_INVITEON(_nickname, _channel));
 	} else {
 		channel->setInviteRestrict(false);
-		channel->broadcastToAll("400 MODE :Invite Restrict mode is OFF\r\n");
+		channel->broadcastToAll(RPL_INVITEOFF(_nickname, _channel));
 	}
 }
 
@@ -111,10 +119,10 @@ void Mode::modeTopic(Server *server) {
 	Channel *channel = server->getChannel(_channel);
 	if (_mode[0] == '+') {
 		channel->setTopicRestrict(true);
-		channel->broadcastToAll("400 MODE :Topic Restrict mode is ON\r\n");
+		channel->broadcastToAll(RPL_TOPICON(_nickname, _channel));
 	} else {
 		channel->setTopicRestrict(false);
-		channel->broadcastToAll("400 MODE :Topic Restrict mode is OFF\r\n");
+		channel->broadcastToAll(RPL_TOPICOFF(_nickname, _channel));
 	}
 }
 
@@ -131,10 +139,10 @@ void Mode::modePassword(Server *server, list<string>::iterator it) {
 	if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
 		_mode_param = *++it;
 		channel->setPassword(_mode_param);
-		channel->broadcastToAll("400 MODE :Password Restrict mode is ON\r\n");
+		channel->broadcastToAll(RPL_PASSWORDON(_nickname, _channel));
 	} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
 		channel->setPassword("");
-		channel->broadcastToAll("400 MODE :Password Restrict mode is OFF\r\n");
+		channel->broadcastToAll(RPL_PASSWORDOFF(_nickname, _channel));
 	} else {
 		server->sendToClient(ERR_WRONGPARAMS(_nickname));
 	}
@@ -151,31 +159,35 @@ bool Mode::isValidChar() {
 void Mode::modeOperator(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
 	string msg;
-	if (it == server->getCommandHandler().getCommandTokens().end()) {
-		string error = ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname);
-		server->sendToClient(error);
-	}
-	_mode_param = *++it;
-	if (_nickname == _mode_param){
-		string error = ERR_MODEYOURSELF;
-		server->sendToClient(error);
+	msg = parseOpParameter(server, it, channel);
+	if(!msg.empty()){
+		server->sendToClient(msg);
 		return ;
 	}
 	if (channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
-		string error = ERR_CHANOPRIVSNEEDED(_nickname, _channel);
-		server->sendToClient(error);
+		server->sendToClient(ERR_CHANOPRIVSNEEDED(_nickname, _channel));
 	} else if (_mode[0] == '+') {
 		if (changeUserMode(server, OPERATOR))
 			return ;
-		msg = CLIENTOPTARGET(_nickname, _channel, _mode_param);
-
+		msg = RPL_CLIENTOPTARGET(_nickname, _channel, _mode_param);
 	} else if (_mode[0] == '-'){
 		if (changeUserMode(server, USER))
 			return;
-		msg = CLIENTDEOPTARGET(_nickname, _channel, _mode_param);
+		msg = RPL_CLIENTDEOPTARGET(_nickname, _channel, _mode_param);
 	}
 		channel->broadcastToAll(msg);
 		channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
+}
+
+string Mode::parseOpParameter(Server *server, list<string>::iterator it, Channel *channel) {
+	if (it == server->getCommandHandler().getCommandTokens().end())
+			return ERR_NEEDMOREPARAMS(_nickname);
+	_mode_param = *++it;
+	if(!server->isNickInServer(_mode_param) || !channel->isUserInChannel(findToOpFd(server)))
+			return (ERR_NOSUCHNICK(_mode_param));
+	if (_nickname == _mode_param)
+			return (ERR_MODEYOURSELF);
+	return "";
 }
 
 int Mode::changeUserMode(Server *server, int mode){
@@ -194,14 +206,6 @@ int Mode::changeUserMode(Server *server, int mode){
 	}
 	return 0;
 }
-
-// string Mode::sendToUser(Server *server){
-// 	if(!server->isNickInServer(_mode_param))
-// 		return ERR_NOSUCHNICK(_mode_param);
-// 	string response = TARGETOPBYCLIENT(_nickname);
-// 	send(findToOpFd(server), response.c_str(), response.size(), 0); //TODO gerer -1
-// 	return "";
-// }
 
 int Mode::findToOpFd(Server *server) {
 	map<int, clientInfo> &user_db = server->getUserDB();
@@ -260,7 +264,7 @@ void Mode::modeLimitON(Server *server, Channel *channel, list<string>::iterator 
 	if (isValidNumber(_users_limit)) {
 		channel->setLimitRestrict(true);
 		channel->setUsersLimit(atoi(_users_limit.c_str()));
-		channel->broadcastToAll("400 MODE :Limit Restrict mode is ON\r\n");
+		channel->broadcastToAll(RPL_LIMITON(_nickname, _channel, _users_limit));
 	} else {
 		server->sendToClient(ERR_WRONGPARAMS(_nickname));
 	}
@@ -269,5 +273,5 @@ void Mode::modeLimitON(Server *server, Channel *channel, list<string>::iterator 
 void Mode::modeLimitOFF(Channel *channel) {
 	channel->setLimitRestrict(false);
 	channel->setUsersLimit(-1);
-	channel->broadcastToAll("400 MODE :Limit Restrict mode is OFF\r\n");
+	channel->broadcastToAll(RPL_LIMITOFF(_nickname, _channel));
 }

@@ -22,6 +22,7 @@ class Privmsg : public ACommand {
 
 		// Methods
 		string	executeCommand(Server *server);
+		bool	authentificationCheck(Server *server);
 		string	parseParameter(Server *server);
 		string	sendToChannel(Server *server);
 		string	sendToUser(Server *server);

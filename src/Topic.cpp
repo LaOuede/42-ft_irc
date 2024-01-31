@@ -38,9 +38,7 @@ string Topic::executeCommand(Server *server) {
 	if (user_list.find(fd) == user_list.end())
 		return ERR_NOTONCHANNEL(nickname, channel_token);
 
-	if ((channel->getTopicRestrict() && user_list[fd] != OPERATOR) || user_list[fd] != OPERATOR)
-		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
-	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !(channel->getTopicRestrict() && user_list[fd] == OPERATOR)) {
+	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !channel->getTopicRestrict()) {
 		_topic = findTopic(server, tokens, channel);
 		channel->setTopic(_topic);
 		if (_topic.empty())
@@ -76,7 +74,7 @@ string Topic::findTopic(Server *server, const list<string> &tokens, Channel *cha
 		}
 		else
 			return channel->getTopic();
-	} else if (tokens.size() == 2 && (*it2)[0] == ':' && (*it2)[1] == ':') {
+	} else if (tokens.size() == 2 && (*it2)[0] == ':' && (*it2)[1] == ':'){
 		channel->setTopic("");
 		string topic_message = RPL_NOTOPIC(channel->getChannelName());
 		server->sendToClient(topic_message);
