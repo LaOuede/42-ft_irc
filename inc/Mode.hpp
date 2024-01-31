@@ -33,6 +33,7 @@ class Mode : public ACommand {
 		void	modeTopic(Server *server);
 		void	modePassword(Server *server, list<string>::iterator it);
 		void	modeOperator(Server *server, list<string>::iterator it);
+		string	parseOpParameter(Server *server, list<string>::iterator it, Channel *channel);
 		int		changeUserMode(Server *server, int mode);
 		string  sendToUser(Server *server);
         int     findToOpFd(Server *server);

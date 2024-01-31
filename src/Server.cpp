@@ -153,13 +153,7 @@ void Server::serverRoutine(){
 				}
 			}
 		}else if (status == -1)
-			pollFailureException();
-
-
-		// only for visualition of the fd
-		// for(int i = 0; i < MAXFDS; i++)
-		// 	cout << "i : "<< i << " -> " <<_fds[i].fd << endl;
-		// sleep(1);
+			return ;
 	}
 }
 
@@ -175,10 +169,10 @@ void Server::initPollfd() {
 
 void Server::acceptConnection() {
 	int status = accept(_socket_fd, 0, 0);
-	if(status != -1){
+	if(status != -1)
 		addNewClient(status);
-	}else
-		acceptFailureException(); // peut etre pas d'exception si on veux pas que le server ferme
+	else
+		cout << "acceptConntection failure" << endl;
 }
 
 void Server::addNewClient(int status) {
@@ -227,7 +221,7 @@ void Server::initBaseUser(int status, int i)
 
 void Server::receiver() {
 	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
-	if(getBuffer(buffer) == -1){
+	if(buffering(buffer) == -1){
 		cout << "buffer : " << buffer << " / Client index : " << _client_index << endl;
 		return;
 	}
@@ -237,7 +231,7 @@ void Server::receiver() {
 		buffer.clear();
 }
 
-int Server::getBuffer(string &buffer) {
+int Server::buffering(string &buffer) {
 	int bytes = 0;
 	
 	while(1){
@@ -280,8 +274,6 @@ int	Server::inputTooLongError(string &buffer){
 
 void Server::floodProtection(){
 	time_t currentTime = time(nullptr);
-		// cout << "current time :" << currentTime << endl;
-		// cout << "last time :" << _userDB[_fds[_client_index].fd]._lastTime << endl;
 	if(currentTime - _userDB[_fds[_client_index].fd]._lastTime > FLOODTIMELIMIT){
 		_userDB[_fds[_client_index].fd]._floodCount = 0;
 		_userDB[_fds[_client_index].fd]._lastTime = currentTime;
@@ -298,7 +290,6 @@ bool Server::parseBuffer(string &buffer) {
 }
 
 void Server::processRequests(string &buffer) {
-	// _buffer.assign("NICK salut\r\nNICK\r\nNICK\r\n");
 	if(_buf[0] != 0)
 		return;
 	while(buffer.empty() == false){
@@ -352,7 +343,6 @@ void Server::welcomeMessage() {
 	string &username = _userDB[_fds[_client_index].fd]._username;
 	bool &passworded = _userDB[_fds[_client_index].fd]._password_valid;
 	bool &welcomed = _userDB[_fds[_client_index].fd]._welcomed;
-	//manque le mot de passe
 
 	if (username != "" && nickname != "" && welcomed == false && passworded == true) {
 		welcomed = true;
@@ -447,14 +437,6 @@ std::exception Server::listenFailureException() {
 	throw std::runtime_error("listen() error");
 }
 
-std::exception Server::acceptFailureException() {
-	throw std::runtime_error("accept() error");
-}
-
-std::exception Server::recvFailureException() {
-	throw std::runtime_error("recv() error");
-}
-
 std::exception Server::sendFailureException() {
 	throw std::runtime_error("send() error");
 }
@@ -463,6 +445,3 @@ std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
 }
 
-std::exception Server::pollFailureException(){
-	throw std::runtime_error("poll() error");
-}

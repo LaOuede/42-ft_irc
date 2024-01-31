@@ -24,6 +24,7 @@ class Names : public ACommand {
 
 		// Methods
 		string			executeCommand(Server *server);
+		bool			authentificationCheck(Server *server);
 		string			parseCommand(Server *server);
 		string			parseParameters(const list<string> &command);
 		string			parseAttributes(const list<string> &command);

@@ -11,6 +11,7 @@
 #define ERR_TOOMANYCHANNELSDISPLAY "400 NAMES :Trying to display users from too many channels\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 
 
 /* ************************************************************************** */
@@ -25,54 +26,49 @@ Names::~Names() {}
 /* Functions                                                                  */
 /* ************************************************************************** */
 string Names::executeCommand(Server *server) {
-	/* DEBUG À SUPPRIMER */
-	cout << "Server dealing with : " << this->getCommandName() << " function" << endl;
-
-	// 0. Am I authentificated ?
-/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	if (server->getUserDB()[fd]._welcomed == false) {
-		return (ERR_WELCOMED); 
-	} */
-	// 1. PARSING
-	this->_error_msg = parseCommand(server);
-	if (!this->_error_msg.empty()) {
-		cleanup();
-		return this->_error_msg;
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
 	}
-
-	// 2. Process connections
+	_error_msg = parseCommand(server);
+	if (!_error_msg.empty()) {
+		cleanup();
+		return _error_msg;
+	}
 	printListUsers(server);
-
-	// 3. Clean Up
 	cleanup();
-
 	return "";
+}
+
+//0. Authentification check
+bool Names::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 //1. COMMAND PARSING
 string Names::parseCommand(Server *server) {
 	list<string> command = server->getCommandHandler().getCommandTokens();
 	
-	this->_error_msg = parseParameters(command);
-	if (!this->_error_msg.empty()) {
-		return this->_error_msg;
+	_error_msg = parseParameters(command);
+	if (!_error_msg.empty()) {
+		return _error_msg;
 	}
 	return parseAttributes(command);
 }
 
 string Names::parseParameters(const list<string> &command) {
 	if (command.empty()) {
-		return ERR_NEEDMOREPARAMS(this->_name);
+		return ERR_NEEDMOREPARAMS(_name);
 	}
 	if (command.size() > 1) {
-		return ERR_TOOMANYPARAMS(this->_name);
+		return ERR_TOOMANYPARAMS(_name);
 	}
 	return "";
 }
 
 string Names::parseAttributes(const list<string> &command) {
-	splitParameters(command.front(), this->_channels_to_display);
-	if (this->_channels_to_display.size() > CHANLIMIT) {
+	splitParameters(command.front(), _channels_to_display);
+	if (_channels_to_display.size() > CHANLIMIT) {
 		return ERR_TOOMANYCHANNELSDISPLAY;
 	}
 	return "";
@@ -92,7 +88,7 @@ void Names::splitParameters(string const &to_split, list<string> &to_fill) {
 void Names::printListUsers(Server *server) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
 
-	for (list<string>::const_iterator it = this->_channels_to_display.begin(); it != this->_channels_to_display.end(); it++) {
+	for (list<string>::const_iterator it = _channels_to_display.begin(); it != _channels_to_display.end(); it++) {
 		if (isChannelExisting(server, *it)) {
 		Channel *channel = server->getChannel(*it);
 			if (channel->isUserInChannel(fd)) {
@@ -134,5 +130,5 @@ void Names::rplEndOfNames(Server *server, int &user_fd, string const &channel) {
 
 // 3. CLEAN UP
 void Names::cleanup() {
-	list<string>().swap(this->_channels_to_display);
+	list<string>().swap(_channels_to_display);
 }

@@ -13,6 +13,7 @@
 #define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
 #define RPL_QUITCHANNEL(user, function, channel, reason) ":" + user + " " + function + " " + channel + " " + reason + "\r\n"
 #define ERR_NOTONCHANNEL(channel_name) "442 PART '" + channel_name + "' :You're not on that channel\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 
 
 /* ************************************************************************** */
@@ -29,22 +30,23 @@ Part::~Part() {}
 string Part::executeCommand(Server *server) {
 	cout << "Server dealing with : " << getCommandName() << " function" << endl;
 
-	// 0. Am I authentificated ?
-/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	if (server->getUserDB()[fd]._welcomed == false) {
-		return (ERR_WELCOMED);
-	} */
-	// 1. PARSING
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
+	}
 	_error_msg = parseCommand(server);
 	if (!_error_msg.empty()) {
 		cleanup();
 		return _error_msg;
 	}
-	// 2. Process deconnections
 	processChannelDeconnections(server);
-	// 3. Clean Up
 	cleanup();
 	return "";
+}
+
+//0. Authentification check
+bool Part::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 //1. COMMAND PARSING

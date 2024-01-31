@@ -14,6 +14,7 @@
 #define ERR_NEEDMOREPARAMS(function) "461 " + function + " :Not enough parameters\r\n"
 #define ERR_TOOMANYCHANNELSCONNECTION "400 JOIN :Trying to connect to too many channels at the same time\r\n"
 #define ERR_TOOMANYCHANNELSLIST "400 JOIN :You have reached your maximum number of channels (5)\n"
+#define ERR_TOOMANYCHANNELSSERVER "400 JOIN :Server has reached maximum number of channels (10)\n"
 #define ERR_TOOMANYKEYS "400 JOIN :Number of keys is superior to number of channels\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
@@ -42,61 +43,55 @@ Join::~Join() {}
 /* ************************************************************************** */
 // MAIN FUNCTION
 string Join::executeCommand(Server *server) {
-	/* DEBUG À SUPPRIMER */
-	cout << "Server dealing with : " << getCommandName() << " function" << endl;
-
-	// 0. Am I authentificated ?
-/* 	int	&fd = server->getFds()[server->getClientIndex()].fd;
-	if (server->getUserDB()[fd]._welcomed == false) {
-		return (ERR_WELCOMED); 
-	} */
-	// 1. PARSING
+	if (!authentificationCheck(server)) {
+		return ERR_WELCOMED;
+	}
 	_error_msg = parseCommand(server);
 	if (!_error_msg.empty()) {
 		cleanup();
 		return _error_msg;
 	}
-
-	// 3. Process connections
 	createChannelVector();
 	processChannelConnections(server);
-
-	// 4. Clean Up
 	cleanup();
-
 	return "";
 }
 
+//0. Authentification check
+bool Join::authentificationCheck(Server *server) {
+    int &fd = server->getFds()[server->getClientIndex()].fd;
+    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+}
 
 //1. COMMAND PARSING
 string Join::parseCommand(Server *server) {
-	list<string> command = server->getCommandHandler().getCommandTokens();
+	_command = server->getCommandHandler().getCommandTokens();
 	
-	_error_msg = parseParameters(command);
+	_error_msg = parseParameters();
 	if (!_error_msg.empty()) {
 		return _error_msg;
 	}
-	_error_msg = parseAttributes(command);
+	_error_msg = parseAttributes();
 	if (!_error_msg.empty()) {
 		return _error_msg;
 	}
 	return "";
 }
 
-string Join::parseParameters(const list<string> &command) {
-	if (command.empty()) {
+string Join::parseParameters() {
+	if (_command.empty()) {
 		return ERR_NEEDMOREPARAMS(_name);
 	}
-	if (command.size() > 2) {
+	if (_command.size() > 2) {
 		return ERR_TOOMANYPARAMS(_name);
 	}
 	return "";
 }
 
-string Join::parseAttributes(const list<string> &command) {
-	splitParameters(command.front(), _channel_name);
-	if (command.size() == 2) {
-		splitParameters(command.back(), _channel_key);
+string Join::parseAttributes() {
+	splitParameters(_command.front(), _channel_name);
+	if (_command.size() == 2) {
+		splitParameters(_command.back(), _channel_key);
 	}
 	if (_channel_name.size() > CHANLIMIT) {
 		return ERR_TOOMANYCHANNELSCONNECTION;
@@ -216,7 +211,7 @@ void Join::joinChannel(Server *server, int &user_fd, string const &channel_name,
 
 bool Join::checkMode(Server *server, Channel *channel, string key, string &user, int &user_fd, int &nb_channel, string channel_name) {
 	if ((channel->getLimitRestrict() == true && channel->getNbInChannel() >= channel->getUsersLimit())
-		|| (channel->getLimitRestrict() == false && channel->getNbInChannel() > MAXINCHANNEL && nb_channel > MAXINCHANNEL)) {
+		|| (channel->getLimitRestrict() == false && channel->getNbInChannel() >= MAXINCHANNEL) {
 		server->sendToClient(ERR_CHANNELISFULL);
 		return false;
 	}
@@ -232,13 +227,10 @@ bool Join::checkMode(Server *server, Channel *channel, string key, string &user,
 }
 
 void Join::createChannel(Server *server, string const &channel_name, string &user, int &fd) {
-	string msg;
-	int &nb_channel = server->getUserDB()[fd]._nb_channel;
-
-	if (server->getChannelList().size() >= MAXCHANNEL && nb_channel >= MAXINCHANNEL) {
-		server->sendToClient(ERR_TOOMANYCHANNELSLIST);
+	if (!checkChannelsLimits(server, fd)) {
 		return;
 	}
+
 	Channel *channel = new Channel(channel_name);
 	if (!channel) {
 		server->sendFailureException();
@@ -247,8 +239,23 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 	channel->addUserToChannel(server, user, fd, OPERATOR);
 }
 
+bool Join::checkChannelsLimits(Server *server, int &fd) {
+	int &nb_channel = server->getUserDB()[fd]._nb_channel;
+	cout << "nb channel I'm is: " << nb_channel << endl;
+	if (server->getChannelList().size() >= MAXCHANNEL) {
+		server->sendToClient(ERR_TOOMANYCHANNELSSERVER);
+		return false;
+	}
+	if (nb_channel >= CHANLIMIT) {
+		server->sendToClient(ERR_TOOMANYCHANNELSLIST);
+		return false;
+	}
+	return true;
+}
+
 // 4. CLEAN UP
 void Join::cleanup() {
+	list<string>().swap(_command);
 	list<string>().swap(_channel_name);
 	list<string>().swap(_channel_key);
 	vector<pair<string, string> >().swap(_channel_vector);

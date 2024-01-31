@@ -43,17 +43,17 @@ string User::executeCommand(Server *server) {
 
 	if (server->getCommandHandler().getCommandTokens().size() < 4)
 		return ERR_NEEDMOREPARAMS;
-
+	string temp_username;
 	while (it != server->getCommandHandler().getCommandTokens().end()) {
 		string message_parsing = parsingUsername(*it, server);
-		
+		temp_username = *it;
 		if (!message_parsing.empty())
 			return message_parsing;
 		it++;
 
 		message_parsing = parsingMiddleTokensAndRealname(it, server);
-		if (!message_parsing.empty())
-			return message_parsing;
+		if (!message_parsing.empty()){
+			return message_parsing;}
 		it++;
 
 		if (it != server->getCommandHandler().getCommandTokens().end()) {
@@ -65,6 +65,7 @@ string User::executeCommand(Server *server) {
 		else
 			break;
 	}
+	server->getUserDB()[fd]._username = temp_username;
 	// cout << "--- Elements in map ---" << endl;
 	// map<int, clientInfo>::const_iterator it2;
 	// it2 = server->getUserDB().begin();
@@ -81,8 +82,6 @@ string User::defaultUser(string &username, string &realname){
 }
 
 string User::parsingUsername(string username, Server *server) {
-	int &fd = server->getFds()[server->getClientIndex()].fd;
-
 	if (!isValidChar(username))
 		return ERR_WRONGCHAR;
 
@@ -90,7 +89,6 @@ string User::parsingUsername(string username, Server *server) {
 		return ERR_USERTOOLONG;
 
 	if (!isUserInUse(username, server)) {
-		server->getUserDB()[fd]._username = username;
 		return "";
 	}
 	return ERR_ALREADYREGISTRED;
@@ -131,9 +129,9 @@ string User::parsingMiddleTokensAndRealname(list<string>::iterator& it, Server *
 	if (it->find_first_of(":") != 0)
 		return ERR_WRONGCHAR3;
 
-	server->getUserDB()[fd]._realname = it->erase(0, 1);
-	if (!isValidChar(server->getUserDB()[fd]._realname))
+	if (!isValidChar(it->erase(0, 1)))
 		return ERR_WRONGCHARREAL;
+	server->getUserDB()[fd]._realname = *it;
 	return "";
 }
 

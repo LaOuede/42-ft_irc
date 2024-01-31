@@ -38,9 +38,10 @@ string Topic::executeCommand(Server *server) {
 	if (user_list.find(fd) == user_list.end())
 		return ERR_NOTONCHANNEL(nickname, channel_token);
 
-	if ((channel->getTopicRestrict() && user_list[fd] != OPERATOR) || user_list[fd] != OPERATOR)
+	if (channel->getTopicRestrict() && user_list[fd] != OPERATOR)
 		return ERR_CHANOPRIVSNEEDED(nickname, channel_token);
-	else if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !(channel->getTopicRestrict() && user_list[fd] == OPERATOR)) {
+
+	if ((channel->getTopicRestrict() && user_list[fd] == OPERATOR) || !channel->getTopicRestrict()) {
 		_topic = findTopic(server, tokens, channel);
 		channel->setTopic(_topic);
 		if (_topic.empty())
@@ -66,23 +67,25 @@ string Topic::parseFirstPart(Server *server, const list<string> &tokens, const s
 }
 
 string Topic::findTopic(Server *server, const list<string> &tokens, Channel *channel) {
+	(void)server;
 	list<string>::const_iterator it2 = ++tokens.begin();
 	string topic;
 	if (tokens.size() == 1) {
 		if (channel->getTopic().empty()) {
 			string topic_message = RPL_NOTOPIC(channel->getChannelName());
-			server->sendToClient(topic_message);
+			channel->broadcastToAll(topic_message);
 			return "";
 		}
 		else
 			return channel->getTopic();
-	} else if (tokens.size() == 2 && (*it2)[0] == ':' && (*it2)[1] == ':') {
+	} else if (tokens.size() == 2 && (*it2)[0] == ':' && (*it2)[1] == ':'){
 		channel->setTopic("");
 		string topic_message = RPL_NOTOPIC(channel->getChannelName());
-		server->sendToClient(topic_message);
+		channel->broadcastToAll(topic_message);
 		return "";
 	} else {
 		topic = *it2;
+		topic.erase(0, 1);
 		while (++it2 != tokens.end()) {
 			topic += " " + *it2;
 			if (topic.length() > 25)

@@ -23,8 +23,9 @@ class Invite : public ACommand {
 
 		// Methods
 		string	executeCommand(Server *server);
+		bool	authentificationCheck(Server *server);
 		int		findClientToInvite(Server *server, const string &nickname_invited);
-		string	parseFirstPart(Server *server, const list<string> &tokens, const string &channel_token);
+		string	parseFirstPart(Server *server, const string &channel_token);
 		bool	isClientInvited(Server *server, int fd, string channel_token);
 
 	private:

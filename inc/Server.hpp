@@ -92,7 +92,7 @@ class Server {
 		void					addNewClient(int status);
 		void					initBaseUser(int status, int i);
 		void 					receiver();
-		int						getBuffer(string &buffer); //to rename
+		int						buffering(string &buffer);
 		int						closeConnection();
 		int						inputTooLongError(string &buffer);
 		void					floodProtection();
@@ -117,11 +117,8 @@ class Server {
 		exception				socketFailureException();
 		exception				bindFailureException();
 		exception				listenFailureException();
-		exception				acceptFailureException();
-		exception				recvFailureException();
 		exception				sendFailureException();
 		exception				setsockoptFailureException();
-		exception				pollFailureException();
 
 	private:
 		// Attributes

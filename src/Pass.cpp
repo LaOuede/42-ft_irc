@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_PASSWORDEMPTY "461 USER :You need to enter a password\r\n"
+#define ERR_PASSWORDEMPTY "461 PASS :You need to enter a password\r\n"
 #define ERR_ALREADYREGISTRED "463 PRIVMSG :Unauthorized command (already registered)\r\n"
 #define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect, you need to set the password in your client\r\n"
 #define GOOD_PASSWORD "400 PRIVMSG :The password is good\r\n"

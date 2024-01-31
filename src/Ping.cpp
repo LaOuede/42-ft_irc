@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
+#define ERR_NEEDMOREPARAMS "461 PING :Not enough parameters\r\n"
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
