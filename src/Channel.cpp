@@ -133,7 +133,7 @@ void Channel::rplEndOfNames(Server *server, int &user_fd) {
 	broadcastToAll(RPL_ENDOFNAMES(nickname, channel));
 }
 
-/* Check if nickname is mandatory in message */
+/* TODO Check if nickname is mandatory in message */
 void Channel::broadcastListUser(Server *server, int &user_fd) {
 	const string &nickname = server->getUserDB()[user_fd]._nickname;
 	string list_user = "353 " + nickname + " " + _channel_name + " :";
@@ -149,7 +149,7 @@ void Channel::broadcastListUser(Server *server, int &user_fd) {
 	rplEndOfNames(server, user_fd);
 }
 
-/* TO DO : À revoir pour le sendFailureException() */
+/* TODO : À revoir pour le sendFailureException() */
 void Channel::broadcastToAll(string msg) {
 	for (map<int, int>::iterator it = _user_list.begin(); it != _user_list.end(); ++it) {
 		send(it->first, msg.c_str(), msg.size(), 0);
@@ -216,9 +216,5 @@ void Channel::updateGuestsList(int &user_fd, string status) {
 }
 
 bool Channel::isOnGuestsList(int const &user_fd) {
-	for (list<int>::const_iterator it = _guests_list.begin(); it != _guests_list.end(); ++it) {
-		if (*it == user_fd)
-			return true;
-	}
-	return false;
+	return find(_guests_list.begin(), _guests_list.end(), user_fd) != _guests_list.end();
 }

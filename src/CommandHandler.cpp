@@ -49,6 +49,7 @@ void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("INVITE", new Invite));
 	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 	_command_caller.insert(pair<string, ACommand *>("MODE", new Mode));
+	_command_caller.insert(pair<string, ACommand *>("NAMES", new Names));
 }
 
 void CommandHandler::commandTokenizer(Server *server) {

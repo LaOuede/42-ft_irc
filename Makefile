@@ -17,7 +17,7 @@ C 		:= \033[1;36m
 define HELP
 -----------------------------------------------------------------------
 $YTools available :$W
-make fclean		$Y->$W Suppress executable and achives
+make fclean		$Y->$W Suppress executable and archives
 make help		$Y->$W Display tools available
 make pdf		$Y->$W Open PDF subject
 make re			$Y->$W Remove objects and executables and then remake
@@ -40,13 +40,15 @@ CPPFLAGS	=	-std=c++98 -Wall -Wextra -Werror
 # Remove
 RM			=	rm -rf
 
-# Files names
-SRCS		=	$(wildcard *.cpp)
-HEADS		=	$(wildcard *.hpp, *.tpp)
+# Directories
+SRCS_DIR	=	./src
+INCS_DIR	=	./inc
+OBJS_DIR	=	./obj
 
-OBJS_DIR	=	./obj/
-OBJS_LIST	=	$(patsubst %.cpp, %.o, $(SRCS))
-OBJS		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
+# Files
+SRCS		=	$(wildcard $(SRCS_DIR)/*.cpp)
+OBJS		=	$(patsubst $(SRCS_DIR)/%.cpp,$(OBJS_DIR)/%.o,$(SRCS))
+HEADS		=	$(wildcard $(INCS_DIR)/*.hpp) $(wildcard $(INCS_DIR)/*.tpp)
 
 #------------------------------------------------------------------------------#
 #                                  RULES                                       #
@@ -55,37 +57,30 @@ OBJS		=	$(addprefix $(OBJS_DIR), $(OBJS_LIST))
 # Executable creation
 all: dir $(NAME)
 
-#Create directory for *.o files
+# Create directories
 dir:
 	@mkdir -p $(OBJS_DIR)
 
 # Compilation
 $(NAME) : $(OBJS)
 	@echo "$(ERASE_LINE)$W\n>>>>>>>>>>>>>>>>>>>> $YCompilation $Wis $Gdone ✅ $W<<<<<<<<<<<<<<<<<<<<"
-	@$(CC) $(CPPFLAGS) $(SRCS) -o $(NAME)
+	@$(CC) $(CPPFLAGS) $(OBJS) -o $(NAME)
 	@echo "\n$W---------------------- $(NAME) $Gcreated ✅ $W----------------------\n"
 
-# Create all files .o (object) from files .cpp (source code)
-$(OBJS_DIR)%.o: %.cpp $(HEADS)
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-run: all
-	@echo "\n$W---------------------- $GLaunching $W$(NAME) 🚀 $W----------------------\n"
-	./$(NAME) 6667 pass
+# Compilation of source files
+$(OBJS_DIR)/%.o: $(SRCS_DIR)/%.cpp $(HEADS)
+	@$(CC) $(CPPFLAGS) -I$(INCS_DIR) -c $< -o $@
 
 # Remove objects and executables
 clean:
 	@echo "\n$W>>>>>>>>>>>>>>>>>>>>>>>>>>> $YCLEANING $W<<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
 	@$(RM) $(OBJS_DIR)
-	@echo "$W----------------- $(NAME) : $(OBJS_DIR) was $Rdeleted ❌$W---------------"
+	@echo "$W----------------- $(NAME) : $(OBJS_DIR) was $Rdeleted ❌$W----------------"
 
 fclean: clean
 	@$(RM) $(NAME)
 	@echo "\n$W--------- All exec. and archives successfully $Rdeleted ❌$W--------\n"
 	@echo "$W>>>>>>>>>>>>>>>>>>>>> $YCleaning $Wis $Gdone ✅ $W<<<<<<<<<<<<<<<<<<<<<<\n"
-
-wee:
-	docker run -it weechat/weechat
 
 # Display tools available
 help:
@@ -99,6 +94,14 @@ pdf:
 re: fclean
 	@$(MAKE) all
 
+# Start program
+run: all
+	@echo "\n$W---------------------- $GLaunching $W$(NAME) 🚀 $W----------------------\n"
+	./$(NAME) 6667 pass
+
+# Run WeeChat client
+wee:
+	docker run -it weechat/weechat
 
 # Avoids file-target name conflicts
-.PHONY: all clean debug fclean help pdf re rpn test
+.PHONY: all clean debug fclean help pdf re rpn wee

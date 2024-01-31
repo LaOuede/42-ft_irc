@@ -17,6 +17,7 @@
 #include "Join.hpp"
 #include "Kick.hpp"
 #include "Mode.hpp"
+#include "Names.hpp"
 #include "Nick.hpp"
 #include "Part.hpp"
 #include "Pass.hpp"

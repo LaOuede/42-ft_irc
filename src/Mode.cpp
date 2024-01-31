@@ -5,6 +5,7 @@
 /* Defines                                                                    */
 /* ************************************************************************** */
 #define ERR_NEEDMOREPARAMS(nickname) "461 " + nickname + " MODE :Not enough parameters\r\n"
+#define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define ERR_WELCOMED "462 MODE :You are not authenticated\r\n"
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
@@ -139,6 +140,14 @@ void Mode::modePassword(Server *server, list<string>::iterator it) {
 	}
 }
 
+bool Mode::isValidChar() {
+	string characters = CHARACTERS_ALLOWED;
+
+	if (_mode_param.find_first_not_of(characters) != string::npos)
+			return false;
+	return true;
+}
+
 void Mode::modeOperator(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
 	string msg;
@@ -204,46 +213,33 @@ int Mode::findToOpFd(Server *server) {
 
 void Mode::modeLimit(Server *server, list<string>::iterator it) {
 	if (server->getCommandHandler().getCommandTokens().size() > 3) {
-		server->sendToClient(ERR_NEEDMOREPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname));
+		server->sendToClient(ERR_TOOMANYPARAMS(server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname));
 		return ;
 	}
 
 	Channel *channel = server->getChannel(_channel);
+	if (checkUserStatus(server, channel)) {
+		if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
+			modeLimitON(server, channel, it);
+		} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
+			modeLimitOFF(channel);
+		} else {
+			server->sendToClient(ERR_WRONGPARAMS(_nickname));
+		}
+	}
+}
+
+bool Mode::checkUserStatus(Server *server, Channel *channel) {
 	int &fd = server->getFds()[server->getClientIndex()].fd;
+
 	if (channel->getUserList().find(fd) == channel->getUserList().end()) {
 		server->sendToClient(ERR_NOTONCHANNEL(_nickname, _channel));
-		return;
+		return false;
 	}
 	if(channel->getUserList()[server->getFds()[server->getClientIndex()].fd] != OPERATOR) {
 		server->sendToClient(ERR_CHANOPRIVSNEEDED(_nickname, _channel));
-		return;
+		return false;
 	}
-
-	if (server->getCommandHandler().getCommandTokens().size() == 3 && _mode[0] == '+') {
-		_users_limit = *++it;
-		if (isValidNumber(_users_limit)) {
-			channel->setLimitRestrict(true);
-			channel->setUsersLimit(atoi(_users_limit.c_str()));
-			channel->broadcastToAll("400 MODE :Limit Restrict mode is ON\r\n");
-		} else {
-			server->sendToClient(ERR_WRONGPARAMS(_nickname));
-			return;
-		}
-	} else if (server->getCommandHandler().getCommandTokens().size() == 2 && _mode[0] == '-') {
-		channel->setLimitRestrict(false);
-		channel->setUsersLimit(-1);
-		channel->broadcastToAll("400 MODE :Limit Restrict mode is OFF\r\n");
-	} else {
-		server->sendToClient(ERR_WRONGPARAMS(_nickname));
-	}
-
-}
-
-bool Mode::isValidChar() {
-	string characters = CHARACTERS_ALLOWED;
-
-	if (_mode_param.find_first_not_of(characters) != string::npos)
-			return false;
 	return true;
 }
 
@@ -257,4 +253,21 @@ bool Mode::isValidNumber(string &number) {
 		return false;
 	}
 	return true;
+}
+
+void Mode::modeLimitON(Server *server, Channel *channel, list<string>::iterator it) {
+	_users_limit = *++it;
+	if (isValidNumber(_users_limit)) {
+		channel->setLimitRestrict(true);
+		channel->setUsersLimit(atoi(_users_limit.c_str()));
+		channel->broadcastToAll("400 MODE :Limit Restrict mode is ON\r\n");
+	} else {
+		server->sendToClient(ERR_WRONGPARAMS(_nickname));
+	}
+}
+
+void Mode::modeLimitOFF(Channel *channel) {
+	channel->setLimitRestrict(false);
+	channel->setUsersLimit(-1);
+	channel->broadcastToAll("400 MODE :Limit Restrict mode is OFF\r\n");
 }
