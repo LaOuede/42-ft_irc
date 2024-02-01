@@ -15,7 +15,7 @@
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
-Topic::Topic() : ACommand("TOPIC") {}
+Topic::Topic() : ACommand("TOPIC"){}
 
 Topic::~Topic() {}
 
@@ -28,7 +28,6 @@ string Topic::executeCommand(Server *server) {
 	string &channel_token = *tokens.begin();
 	clientInfo &user_info = server->getUserDB()[fd];
 	string &nickname = user_info._nickname;
-
 	string error = parseFirstPart(server, tokens, channel_token);
 	if (!error.empty())
 		return error;

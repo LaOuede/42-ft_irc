@@ -163,28 +163,27 @@ bool Mode::isValidChar() {
 
 void Mode::modeOperator(Server *server, list<string>::iterator it) {
 	Channel *channel = server->getChannel(_channel);
-	string msg;
-	msg = parseOpParameter(server, it, channel);
-	if(!msg.empty()){
-		server->sendToClient(msg);
-		return ;
-	}
-	if (_mode[0] == '+') {
-		if (changeUserMode(server, OPERATOR))
+	if (checkUserStatus(server, channel)){
+		string msg = parseOpParameter(server, it, channel);
+		if(!msg.empty()){
+			server->sendToClient(msg);
 			return ;
-		msg = RPL_CLIENTOPTARGET(_nickname, _channel, _mode_param);
-	} else if (_mode[0] == '-'){
-		if (changeUserMode(server, USER))
-			return;
-		msg = RPL_CLIENTDEOPTARGET(_nickname, _channel, _mode_param);
+		}
+		if (_mode[0] == '+') {
+			if (changeUserMode(server, OPERATOR))
+				return ;
+			msg = RPL_CLIENTOPTARGET(_nickname, _channel, _mode_param);
+		} else if (_mode[0] == '-'){
+			if (changeUserMode(server, USER))
+				return;
+			msg = RPL_CLIENTDEOPTARGET(_nickname, _channel, _mode_param);
+		}
+			channel->broadcastToAll(msg);
+			channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
 	}
-		channel->broadcastToAll(msg);
-		channel->broadcastListUser(server, server->getFds()[server->getClientIndex()].fd);
 }
 
 string Mode::parseOpParameter(Server *server, list<string>::iterator it, Channel *channel) {
-	if (!checkUserStatus(server, channel))
-		return "";
 	if (it == server->getCommandHandler().getCommandTokens().end())
 		return ERR_NEEDMOREPARAMS(_nickname);
 	_mode_param = *++it;

@@ -232,7 +232,7 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 
 	Channel *channel = new Channel(channel_name);
 	if (!channel) {
-		server->sendFailureException();
+		server->newFailureException();
 	}
 	server->getChannelList()[channel_name] = channel;
 	channel->addUserToChannel(server, user, fd, OPERATOR);
