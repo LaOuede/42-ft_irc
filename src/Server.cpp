@@ -19,7 +19,7 @@ extern bool g_running;
 Server::Server() {}
 
 Server::Server(string port, string password) :
-	_reuse(1), _socket_fd(0), _client_index(0), _nfds(0) {
+	_reuse(1), _socket_fd(0), _client_index(0), _bytes_read(0),  _bytes_sent(0){
 	_port = atoi(port.c_str());
 	_password = password;
 }
@@ -139,8 +139,9 @@ void Server::clientInterfaceConnection() {
 
 void Server::serverRoutine(){
 	initPollfd();
+	// int i = 0; pour tester valgring
 	while(g_running){
-		int status = poll(_fds, MAXFDS, 100);
+		int status = poll(_fds, MAXFDS, -1);
 		if(status > 0){
 			for(_client_index = 0; _client_index < MAXFDS; _client_index++){
 				if(_client_index == 0 && _fds[_client_index].revents & POLLIN){
@@ -154,13 +155,15 @@ void Server::serverRoutine(){
 			}
 		}else if (status == -1)
 			return ;
+		// if(i == 10)
+		// 	g_running = false;
+		// i++;
 	}
 }
 
 void Server::initPollfd() {
 	_fds[0].fd = _socket_fd;
 	_fds[0].events = POLLIN;
-	_nfds++;
 	for(int i = 1; i < MAXFDS; i++){
 		_fds[i].fd = -1;
 		_userDB[_fds[i].fd]._floodCount = 0;
@@ -187,7 +190,8 @@ void Server::addNewClient(int status) {
 			return;
 		}
 	}
-	send(status, ERR_SERVERFULL, strlen(ERR_SERVERFULL), 0);
+	if (send(status, ERR_SERVERFULL, strlen(ERR_SERVERFULL), 0) == -1)
+		std::cerr << "Error : SEND return -1" << endl;
 	close(status);
 }
 
@@ -222,7 +226,6 @@ void Server::initBaseUser(int status, int i)
 void Server::receiver() {
 	string &buffer = _userDB[_fds[_client_index].fd]._buffer;
 	if(buffering(buffer) == -1){
-		cout << "buffer : " << buffer << " / Client index : " << _client_index << endl;
 		return;
 	}
 	if(buffer != "\n" && parseBuffer(buffer))
@@ -238,8 +241,10 @@ int Server::buffering(string &buffer) {
 		bzero(_buf, BUFFERSIZE);
 		bytes = recv(_fds[_client_index].fd, _buf, BUFFERSIZE, 0);
 		if(bytes == 0 || _userDB[_fds[_client_index].fd]._floodCount > FLOODCOUNTLIMIT){
-			if(_userDB[_fds[_client_index].fd]._floodCount > 5)
-				send(_fds[_client_index].fd, ERR_FLOOD, strlen(ERR_FLOOD), 0);
+			if(_userDB[_fds[_client_index].fd]._floodCount > 5){
+				if(send(_fds[_client_index].fd, ERR_FLOOD, strlen(ERR_FLOOD), 0) == -1)
+					std::cerr << "Error : SEND return -1" << endl;
+			}
 			return closeConnection();
 		}
 		else if(buffer.length() > MAXMSGLEN)
@@ -266,7 +271,8 @@ int Server::closeConnection() {
 }
 
 int	Server::inputTooLongError(string &buffer){
-	send(_fds[_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0);
+	if (send(_fds[_client_index].fd, ERR_INPUTTOOLONG, strlen(ERR_INPUTTOOLONG), 0) == -1)
+		std::cerr << "Error : SEND return -1" << endl;
 	buffer.clear();
 	_userDB[_fds[_client_index].fd]._floodCount++;
 	return -1;
@@ -328,9 +334,8 @@ void Server::messageHandler() {
 	_command_handler.commandTokenizer( this );
 	response = _command_handler.sendResponse( this );
 	if (response.size() > 0) {
-		if (send(fd, response.c_str(), response.size(), 0) == -1) {
-			sendFailureException();
-		}
+		if (send(fd, response.c_str(), response.size(), 0) == -1)
+			std::cerr << "Error : SEND return -1" << endl;
 	}
 	cout << "Message sent to client socket " << fd << " to confirm reception\n" << endl;
 	welcomeMessage();
@@ -349,7 +354,7 @@ void Server::welcomeMessage() {
 		string response = WELCOME(hostname, nickname, username);
 		_bytes_sent = send(fd, response.c_str(), response.size(), 0);
 		if (_bytes_sent == -1)
-			sendFailureException();
+			std::cerr << "Error : SEND return -1" << endl;
 	}
 }
 
@@ -437,11 +442,10 @@ std::exception Server::listenFailureException() {
 	throw std::runtime_error("listen() error");
 }
 
-std::exception Server::sendFailureException() {
-	throw std::runtime_error("send() error");
+std::exception Server::newFailureException() {
+	throw std::runtime_error("new() error");
 }
 
 std::exception Server::setsockoptFailureException() {
 	throw std::runtime_error("setsockopt() error");
 }
-

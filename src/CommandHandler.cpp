@@ -50,6 +50,9 @@ void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("PRIVMSG", new Privmsg));
 	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 	_command_caller.insert(pair<string, ACommand *>("USER", new User));
+	for (map<string, ACommand *>::iterator it = _command_caller.begin(); it != _command_caller.end(); it++)
+		if(it->second == nullptr || it->second == NULL)
+			throw std::runtime_error("Fatal : New() failed");
 }
 
 void CommandHandler::commandTokenizer(Server *server) {

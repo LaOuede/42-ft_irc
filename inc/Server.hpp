@@ -117,7 +117,7 @@ class Server {
 		exception				socketFailureException();
 		exception				bindFailureException();
 		exception				listenFailureException();
-		exception				sendFailureException();
+		exception				newFailureException();
 		exception				setsockoptFailureException();
 
 	private:
@@ -138,7 +138,6 @@ class Server {
 		string					_hostname;
 		map<int, clientInfo>	_userDB;
 		struct pollfd			_fds[MAXFDS];
-		nfds_t					_nfds;
 		map<string, Channel *>	_channel_list;
 };
 

@@ -14,7 +14,7 @@
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
 Channel::Channel(string const&name) :
-	_nb_users(0), _nb_operators(0), _channel_name(name), _password(""), _invite_restrict(false) {}
+	_nb_users(0), _nb_operators(0), _channel_name(name), _topic_restrict(false), _password(""), _invite_restrict(false), _limit_restrict(false)  {}
 
 Channel::~Channel() {
 	_user_list.clear();
@@ -151,7 +151,8 @@ void Channel::broadcastListUser(Server *server, int &user_fd) {
 /* TODO : À revoir pour le sendFailureException() */
 void Channel::broadcastToAll(string msg) {
 	for (map<int, int>::iterator it = _user_list.begin(); it != _user_list.end(); ++it) {
-		send(it->first, msg.c_str(), msg.size(), 0);
+		if(send(it->first, msg.c_str(), msg.size(), 0) == -1)
+			std::cerr << "Error : SEND return -1" << endl;
 	}
 }
 
