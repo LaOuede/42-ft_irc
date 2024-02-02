@@ -9,6 +9,7 @@
 #define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect, you need to set the password in your client\r\n"
 #define GOOD_PASSWORD "400 PRIVMSG :The password is good\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */

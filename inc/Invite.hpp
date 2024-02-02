@@ -8,6 +8,7 @@
 #include <list>
 #include <string>
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::list;

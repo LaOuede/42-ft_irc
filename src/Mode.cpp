@@ -17,6 +17,7 @@
 #define ERR_NOSUCHNICK(mode_param) "401 " + mode_param + " :No such nick\r\n"
 #define ERR_ALREADYMODE "400 :This mode is already set\r\n"
 #define ERR_MODEYOURSELF "400 :You can't set/unset yourself operator\r\n"
+#define ERR_UMODEUNKNOWNFLAG(nickname) "501 " + nickname + " :Unknown MODE flag\r\n"
 #define RPL_CLIENTOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is promoted operator\r\n"
 #define RPL_CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demoted from operator\r\n"
 #define RPL_LIMITON(nickname, channel, users_limit) ":" + nickname + " MODE " + channel + " :" + users_limit + " is the new users limit\r\n"
@@ -62,7 +63,7 @@ string Mode::executeCommand(Server *server) {
 		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l') && _mode.size() == 2) {
 		selectMode(server, it);
 	} else {
-		return ERR_WRONGPARAMS(_nickname);
+		return ERR_UMODEUNKNOWNFLAG(_nickname);
 	}
 	return "";
 }

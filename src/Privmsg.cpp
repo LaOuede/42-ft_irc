@@ -71,7 +71,7 @@ string Privmsg::sendToChannel(Server *server){
 	for(; it != channel->getUserList().end(); it++)
 		if(it->first != server->getFds()[server->getClientIndex()].fd){
 			if(send(it->first, _response.c_str(), _response.size(), 0) == -1)
-				std::cerr << "Error : SEND return -1" << endl;
+				cerr << "Error : SEND return -1" << endl;
 		}
 	return "";
 }
@@ -80,7 +80,7 @@ string Privmsg::sendToUser(Server *server){
 	if(!server->isNickInServer(_target))
 		return ERR_NOSUCHNICK(_target);
 	if (send(findTargetFd(server), _response.c_str(), _response.size(), 0) == -1)
-		std::cerr << "Error : SEND return -1" << endl;
+		cerr << "Error : SEND return -1" << endl;
 	return "";
 }
 

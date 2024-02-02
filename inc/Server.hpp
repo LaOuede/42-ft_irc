@@ -40,10 +40,13 @@
 #define FLOODCOUNTLIMIT 10
 #define FLOODTIMELIMIT 1
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::exception;
+using std::isprint;
 using std::map;
+using std::runtime_error;
 using std::string;
 
 struct	clientInfo {

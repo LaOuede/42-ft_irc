@@ -63,7 +63,7 @@ string Invite::executeCommand(Server *server) {
 	string message = RPL_INVITING(_nickname, _invited, _channel);
 	server->sendToClient(message);
 	if (send(_fd_invited, message.c_str(), message.size(), 0) == -1)
-		std::cerr << "Error : SEND return -1" << endl;
+		cerr << "Error : SEND return -1" << endl;
 	return "";
 }
 

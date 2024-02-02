@@ -6,6 +6,7 @@
 /* ************************************************************************** */
 #define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -23,6 +24,7 @@ CommandHandler::~CommandHandler() {
 	_command_caller.clear();
 	list<string>().swap(_command_tokens);
 }
+
 
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
@@ -52,7 +54,7 @@ void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("USER", new User));
 	for (map<string, ACommand *>::iterator it = _command_caller.begin(); it != _command_caller.end(); it++)
 		if(it->second == nullptr || it->second == NULL)
-			throw std::runtime_error("Fatal : New() failed");
+			throw runtime_error("Fatal : New() failed");
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
@@ -62,16 +64,6 @@ void CommandHandler::commandTokenizer(Server *server) {
 	while (iss >> token) {
 		_command_tokens.push_back(token);
 	}
-
-	// DEBUG PRINT LIST
-/* 	cout << "--- Elements in list: ---" << endl;
-	list<string>::const_iterator it;
-	int index = -1;
-	it = _command_tokens.begin();
-	for (; it != _command_tokens.end(); ++it) {
-		std::cout << "index " << ++index << " :" << *it << "    size :" << it->length() << std::endl;
-	}
-	cout << "\n" << endl; */
 }
 
 string CommandHandler::sendResponse(Server *server) {

@@ -70,7 +70,7 @@ string User::executeCommand(Server *server) {
 	// map<int, clientInfo>::const_iterator it2;
 	// it2 = server->getUserDB().begin();
 	// for (; it2 != server->getUserDB().end(); ++it2) {
-	// 	std::cout << it2->first << ", " << it2->second._nickname << it2->second._username << it2->second._realname << std::endl;
+	// 	cout << it2->first << ", " << it2->second._nickname << it2->second._username << it2->second._realname << endl;
 	// }
 	return USERNAMESET(username, realname);
 }

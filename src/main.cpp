@@ -25,18 +25,15 @@ int main(int argc, char **argv) {
 
 	Server server(argv[1], argv[2]);
 
-	try
-	{
+	try {
 		cout << "Server initialization in progress..." << endl;
 		server.createSocket();
 		server.setSocket();
 		server.bindSocket();
 		server.socketListening();
 		server.serverRoutine();
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << endl;
+	} catch(const exception& e) {
+		cerr << e.what() << endl;
 	}
 	cout << endl << "\nClosing Server ..." << endl;
 	cout << C_BOL "------------- So long and thanks for all the fish 🐋 ------------\n" C_WHT << endl;

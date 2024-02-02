@@ -11,6 +11,7 @@
 #define CHANGINGNICK(oldnickname, username, hostname, newnickname) ":" + oldnickname + "!" + username + "@" + hostname + " NICK " + newnickname + "\r\n"
 #define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the nickname\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -18,6 +19,7 @@
 Nick::Nick() : ACommand("NICK") {}
 
 Nick::~Nick() {}
+
 
 /* ************************************************************************** */
 /* Functions                                                                  */

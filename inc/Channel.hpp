@@ -14,6 +14,7 @@
 #define OPERATOR 1
 #define USER 2
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::exception;
