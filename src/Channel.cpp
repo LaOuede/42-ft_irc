@@ -10,6 +10,7 @@
 #define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
 #define RPL_TOPIC(nickname, channel, topic) "332 " + nickname + " " + channel + " :" + topic + "\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -148,12 +149,28 @@ void Channel::broadcastListUser(Server *server, int &user_fd) {
 	rplEndOfNames(server, user_fd);
 }
 
-/* TODO : À revoir pour le sendFailureException() */
 void Channel::broadcastToAll(string msg) {
 	for (map<int, int>::iterator it = _user_list.begin(); it != _user_list.end(); ++it) {
 		if(send(it->first, msg.c_str(), msg.size(), 0) == -1)
 			std::cerr << "Error : SEND return -1" << endl;
 	}
+}
+
+void Channel::broadcastChannelMode(Server *server, string &nickname) {
+	string msg;
+	string mode_str = "+";
+
+	if (_invite_restrict) { mode_str += "i"; }
+	if (!_password.empty()) { mode_str += "k"; }
+	if (_limit_restrict) { mode_str += "l"; }
+	if (_topic_restrict) { mode_str += "t"; }
+
+	if (mode_str != "+") {
+		msg = "324 " + nickname + " " + _channel_name + " :" + mode_str + "\r\n";  
+	} else {
+		msg = "324 " + nickname + " " + _channel_name + " :\r\n";
+	}
+	server->sendToClient(msg);
 }
 
 void Channel::removeUserFromChannel(Server *server, int &user_fd) {

@@ -123,8 +123,11 @@ string Part::processChannelDeconnections(Server *server) {
 		if (mapIt != channel_list.end()) {
 			Channel *channel = mapIt->second;
 			if (channel->isUserInChannel(user_fd)) {
-				broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, _reason);
 				channel->removeUserFromChannel(server, user_fd);
+				broadcastUserQuitMessage(channel, server->getUserDB()[user_fd]._nickname, _reason);
+				if (server->isChannelEmpty(channel)) {
+					server->deleteChannel(channel);
+				}
 			} else {
 				server->sendToClient(ERR_NOTONCHANNEL(channel_name));
 			}

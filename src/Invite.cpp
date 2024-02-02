@@ -68,8 +68,8 @@ string Invite::executeCommand(Server *server) {
 }
 
 bool Invite::authentificationCheck(Server *server) {
-    int &fd = server->getFds()[server->getClientIndex()].fd;
-    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 bool Invite::isClientInvited(Server *server, int fd, string channel_token) {

@@ -112,6 +112,7 @@ class Server {
 		void 					broadcastUserQuitMessage(Channel *channel, const string &user);
 		bool					isNickInServer(string nickname);
 		bool					isChannelInServer(string channelName);
+		void					deleteChannel(Channel *channel);
 
 		// Exceptions
 		exception				socketFailureException();

@@ -63,7 +63,7 @@ class Channel {
 		void			updateChannelOperator(Server *server);
 		void			broadcastListUser(Server *server, int &user_fd);
 		void			broadcastToAll(string msg);
-		//TO DO : bool			checkMode(Channel *channel, int &user_fd);
+		void			broadcastChannelMode(Server *server, string &nickname);
 
 	private:
 		// Construtors & Destructors

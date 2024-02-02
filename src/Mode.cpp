@@ -28,6 +28,7 @@
 #define RPL_INVITEON(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation IS requested\r\n"
 #define RPL_INVITEOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation NOT requested\r\n"
 
+
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
@@ -51,6 +52,11 @@ string Mode::executeCommand(Server *server) {
 	if (!error.empty()) {
 		return error;
 	}
+	if (tokens.size() == 1) {
+		Channel *channel = server->getChannel(_channel);
+		channel->broadcastChannelMode(server, _nickname);
+		return "";
+	}
 	_mode = *++it;
 	if ((_mode[0] == '-' || _mode[0] == '+')
 		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l') && _mode.size() == 2) {
@@ -67,7 +73,7 @@ string Mode::parseFirstPart(Server *server, const list<string> &tokens) {
 
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
-	if (tokens.size() < 2)
+	if (tokens.size() < 1)
 		return ERR_NEEDMOREPARAMS(_nickname);
 	if (!server->isChannelInServer(_channel))
 		return ERR_NOSUCHCHANNEL(_channel);

@@ -387,17 +387,19 @@ void Server::closeChannelFds() {
 	it = _channel_list.begin();
 	for (; it != _channel_list.end(); it++) {
 		if (it->second->isUserInChannel(_fds[_client_index].fd)) {
-			broadcastUserQuitMessage(it->second, _userDB[_fds[_client_index].fd]._nickname);
 			it->second->removeUserFromChannel(this, _fds[_client_index].fd);
 		}
 		if (isChannelEmpty(it->second)) {
 			channelsToDelete.push_back(it->first);
 		}
 	}
+
 	delIt = channelsToDelete.begin();
 	for (; delIt != channelsToDelete.end(); ++delIt) {
-		delete _channel_list[*delIt];
-		_channel_list.erase(*delIt);
+		map<string, Channel *>::iterator delChannel = _channel_list.find(*delIt);
+		if (delChannel != _channel_list.end()) {
+			_channel_list.erase(delChannel);
+		}
 	}
 }
 
@@ -408,7 +410,7 @@ void Server::broadcastUserQuitMessage(Channel *channel, const string &user) {
 }
 
 bool Server::isChannelEmpty(Channel *channel) {
-	if (channel->getUsersNb() == 0 && channel->getOperatorsNb() == 0) {
+	if (isChannelInServer(channel->getChannelName()) && channel->getNbInChannel() == 0) {
 		return true;
 	}
 	return false;
@@ -424,6 +426,16 @@ bool Server::isNickInServer(string nickname){
 
 bool	Server::isChannelInServer(string channelName){
 	return _channel_list.find(channelName) != _channel_list.end();
+}
+
+void	Server::deleteChannel(Channel *channel) {
+	map<string, Channel *>::iterator it = _channel_list.find(channel->getChannelName());
+
+	if (it != _channel_list.end()) {
+		cout << "deleted channel :" << it->first << endl;
+		delete it->second;
+		_channel_list.erase(it);
+	}
 }
 
 

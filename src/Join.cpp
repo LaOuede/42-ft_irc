@@ -59,8 +59,8 @@ string Join::executeCommand(Server *server) {
 
 //0. Authentification check
 bool Join::authentificationCheck(Server *server) {
-    int &fd = server->getFds()[server->getClientIndex()].fd;
-    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 //1. COMMAND PARSING
@@ -205,6 +205,12 @@ void Join::joinChannel(Server *server, int &user_fd, string const &channel_name,
 		}
 	} else {
 		createChannel(server, channel_name, user, user_fd);
+		/* DEBUG */
+		cout << "Existing channels:" << server->getChannelList().size() << endl;
+		map<string, Channel *>::const_iterator it;
+		for (it = server->getChannelList().begin(); it != server->getChannelList().end(); ++it) {
+			cout << it->first << endl;
+		}
 	}
 }
 
