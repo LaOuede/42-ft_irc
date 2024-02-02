@@ -7,8 +7,9 @@
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
 #include <cctype>
-#include <ctime>
+#include <cstring>
 #include <csignal>
+#include <ctime>
 #include <exception>
 #include <fcntl.h>
 #include <iostream>
@@ -17,7 +18,6 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -31,14 +31,14 @@
 #define C_RED "\e[31m"
 #define C_WHT "\e[0m"
 
-#define PORT 6667
+#define BUFFERSIZE 512
+#define FLOODTIMELIMIT 1
+#define FLOODCOUNTLIMIT 10
+#define MAXCHANNEL 10
 #define MAXCLIENT 40
 #define MAXFDS (MAXCLIENT + 1) // +1 for the socket_fd
-#define BUFFERSIZE 512
 #define MAXMSGLEN 512
-#define MAXCHANNEL 10
-#define FLOODCOUNTLIMIT 10
-#define FLOODTIMELIMIT 1
+#define PORT 6667
 
 using std::cerr;
 using std::cout;
@@ -66,7 +66,6 @@ class CommandHandler;
 class Server {
 	public:
 		// Construtors & Destructors
-		Server();
 		Server(string port, string password);
 		~Server();
 

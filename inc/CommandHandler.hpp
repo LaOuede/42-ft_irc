@@ -3,13 +3,11 @@
 
 #pragma once
 
-#include <exception>
+#include <cstring>
 #include <iostream>
 #include <list>
 #include <map>
 #include <sstream>
-#include <stdexcept>
-#include <string.h>
 
 #include "ACommand.hpp"
 #include "Cap.hpp"

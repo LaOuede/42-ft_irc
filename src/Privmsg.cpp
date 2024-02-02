@@ -4,12 +4,12 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define PRIVMSG(nick, target, msg) ":" + nick + " PRIVMSG " + target + " " + msg + "\r\n"
 #define ERR_CANNOTSENDTOCHAN(nickname, channel) "404 " + nickname + " " + channel + " :Cannot send to channel\r\n"
+#define ERR_NEEDMOREPARAMS "461 PRIVMSG :Not enough parameters\r\n"
 #define ERR_NOSUCHNICK(target) "401 " + target + " :No such nick/channel\r\n"
 #define ERR_NOTEXTTOSEND(target) "412 " + target + " :No text to send\r\n"
-#define ERR_NEEDMOREPARAMS "461 PRIVMSG :Not enough parameters\r\n"
 #define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
+#define RPL_PRIVMSG(nick, target, msg) ":" + nick + " PRIVMSG " + target + " " + msg + "\r\n"
 
 
 /* ************************************************************************** */
@@ -31,7 +31,7 @@ string Privmsg::executeCommand(Server *server) {
 	if(!status.empty())
 		return status ;
 	_nick = server->getUserDB()[server->getFds()[server->getClientIndex()].fd]._nickname;
-	_response = PRIVMSG(_nick, _target, _msg);
+	_response = RPL_PRIVMSG(_nick, _target, _msg);
 	if(_target[0] == '#' || _target[0] == '&')
 		return sendToChannel(server);
 	else

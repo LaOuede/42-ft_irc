@@ -4,7 +4,7 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
+#define ERR_UNKNOWNCOMMAND(nickname, command) "421 " + nickname + " " + command + " :Unknown command\r\n"
 
 
 /* ************************************************************************** */
@@ -53,8 +53,9 @@ void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 	_command_caller.insert(pair<string, ACommand *>("USER", new User));
 	for (map<string, ACommand *>::iterator it = _command_caller.begin(); it != _command_caller.end(); it++)
-		if(it->second == nullptr || it->second == NULL)
+		if (it->second == nullptr || it->second == NULL) {
 			throw runtime_error("Fatal : New() failed");
+		}
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
@@ -71,7 +72,6 @@ string CommandHandler::sendResponse(Server *server) {
 	string	response;
 	int		&fd = server->getFds()[server->getClientIndex()].fd;
 	string	command = _command_tokens.front();
-	string	&hostname = server->getHostname();
 	string	&nickname = server->getUserDB()[fd]._nickname;
 
 	it = _command_caller.find(_command_tokens.front());
@@ -84,5 +84,5 @@ string CommandHandler::sendResponse(Server *server) {
 		}
 	}
 	_command_tokens.clear();
-	return ERR_UNKNOWNCOMMAND;
+	return ERR_UNKNOWNCOMMAND(nickname, command);
 }

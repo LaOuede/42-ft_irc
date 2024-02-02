@@ -8,7 +8,6 @@
 #define ERR_NEEDMOREPARAMS(function) "461 " + function + " :Not enough parameters\r\n"
 #define ERR_NOSUCHCHANNEL(function, channel) "463 " + function + "'" + channel + "' :No such channel\r\n"
 #define ERR_REASONTOOLONG(function) "400 " + function + " :Reason is too long (max. 10 characters)\r\n"
-#define ERR_TOOMANYCHANNELSDECONNECTION "400 PART :Trying to deconnect from too many channels\r\n"
 #define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
 #define ERR_UNKNOWNERROR(function, name) "400 " + function + " :Missing # at the begining of channel name '" + name + "'\r\n"
 #define RPL_QUITCHANNEL(user, function, channel, reason) ":" + user + " " + function + " " + channel + " " + reason + "\r\n"
@@ -65,14 +64,6 @@ string Part::parseCommand(Server *server) {
 }
 
 string Part::parseParameters(const list<string> &command) {
-	//DEBUG:
-/* 	cout << "command.size() = " << command.size() << endl;
-
-	list<string>::const_iterator it = command.begin();
-	for (; it != command.end(); it++) {
-		cout << *it << endl;
-	} */
-
 	if (command.empty()) {
 		return ERR_NEEDMOREPARAMS(_name);
 	}

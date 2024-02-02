@@ -4,11 +4,10 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_ALREADYINCHANNEL(channel) "400 JOIN :You are already in the channel '" + channel + "'\r\n"
-#define ERR_NOTONCHANNEL(channel) "442 PART '" + channel + "' :You're not on that channel\r\n"
-#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
 #define RPL_ENDOFNAMES(nickname, channel) "366 " + nickname + " " + channel + " :End of /NAMES list\r\n"
-#define RPL_TOPIC(nickname, channel, topic) "332 " + nickname + " " + channel + " :" + topic + "\r\n"
+#define RPL_JOINCHANNEL(user, channel) ":" + user + " JOIN " + channel + "\r\n"
+#define RPL_NOTOPIC(user, channel) "331 " + user + " " + channel + " :No topic is set\r\n"
+#define RPL_TOPIC(user, channel, topic) "332 " + user + " " + channel + " :" + topic + "\r\n"
 
 
 /* ************************************************************************** */
@@ -110,7 +109,11 @@ void Channel::addUserToChannel(Server *server, string &user, int &user_fd, int r
 	server->getUserDB()[user_fd]._nb_channel++;
 	updateGuestsList(user_fd, "add");
 	broadcastToAll(RPL_JOINCHANNEL(user, _channel_name));
-	broadcastToAll(RPL_TOPIC(user, _channel_name, _topic));
+	if (!_topic.empty()) {
+		server->sendToClient(RPL_TOPIC(user, _channel_name, _topic));
+	} else {
+		server->sendToClient(RPL_NOTOPIC(user, _channel_name));
+	}
 	broadcastListUser(server, user_fd);
 }
 

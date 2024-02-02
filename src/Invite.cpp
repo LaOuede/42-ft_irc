@@ -4,12 +4,12 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
+#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
+#define ERR_CHANOPRIVSNEEDED2(nickname, channel) "482 " + nickname + " " + channel + " :Channel is not in invite mode\r\n"
 #define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " INVITE :Not enough parameters\r\n"
 #define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
 #define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
-#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
-#define ERR_CHANOPRIVSNEEDED2(nickname, channel) "482 " + nickname + " " + channel + " :Channel is not in invite mode\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
 #define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
 #define ERR_CANTINVITESELF "437 :You can't invite yourself\r\n"
 #define RPL_INVITING(nickname, nickname_invited, channel) ":" + nickname + " INVITE " + nickname_invited + " " + channel + "\r\n"

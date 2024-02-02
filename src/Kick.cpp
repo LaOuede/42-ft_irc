@@ -4,16 +4,15 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " KICK :Not enough parameters\r\n"
-#define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
-#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
-#define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
-#define ERR_USERNOTINCHANNEL(nickname, channel) "441 " + nickname + " " + channel + " :They aren't on that channel\r\n"
-#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
-#define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
 #define ERR_CANTKICKSELF "437 :You can't kick yourself\r\n"
-#define KICK(nickname, channel, nickname_kicked, comment) ":" + nickname + " KICK " + channel + " " + nickname_kicked + " " + comment + "\r\n"
-#define ERR_WRONGCHAR4 "400 :Supposed to be : at the beginning of the comment\r\n"
+#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
+#define ERR_NEEDMOREPARAMS(nickname) "461 PRVMSG " + nickname + " KICK :Not enough parameters\r\n"
+#define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
+#define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
+#define ERR_USERNOTEXIST(user) "401 " + user + " :No such user in the database\r\n"
+#define ERR_USERNOTINCHANNEL(nickname, channel) "441 " + nickname + " " + channel + " :They aren't on that channel\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
+#define RPL_KICK(nickname, channel, nickname_kicked, comment) ":" + nickname + " KICK " + channel + " " + nickname_kicked + " " + comment + "\r\n"
 #define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
 
 
@@ -58,7 +57,7 @@ string Kick::executeCommand(Server *server) {
 		return ERR_USERNOTINCHANNEL(nickname_kicked, channel_token);
 		
 	string comment = getComment(tokens);
-	string message = KICK(nickname, channel_token, nickname_kicked, comment);
+	string message = RPL_KICK(nickname, channel_token, nickname_kicked, comment);
 	channel->broadcastToAll(message);
 	string &nick_kicked = server->getUserDB()[fd_kicked]._nickname;
 	broadcastUserQuitMessage(channel, nick_kicked);

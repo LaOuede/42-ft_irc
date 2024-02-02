@@ -4,9 +4,9 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
 #include <map>
-#include <string>
 
 using std::cerr;
 using std::cout;

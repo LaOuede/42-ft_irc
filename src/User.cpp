@@ -4,17 +4,17 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define USERNAMESET(username, realname) "400 :Username set to: '" + username + "' and the realname set to: '" + realname + "'\r\n"
-#define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
 #define ERR_ALREADYREGISTRED "462 PRIVMSG :You may not reregister\r\n"
+#define ERR_NEEDMOREPARAMS "461 USER :Not enough parameters\r\n"
 #define ERR_NOUSERNAME "400 :No username given\r\n"
-#define ERR_WRONGCHAR "400 :Wrong characters used in username\r\n"
-#define ERR_WRONGCHARREAL "400 :Wrong characters used in realname\r\n"
-#define ERR_WRONGCHAR0 "400 :Supposed to be 0 after the username\r\n"
-#define ERR_WRONGCHAR42 "400 :Supposed to be * after the 0\r\n"
-#define ERR_WRONGCHAR3 "400 :Supposed to be : at the beginning of the realname\r\n"
-#define ERR_USERTOOLONG "400 :Username too long\r\n"
 #define ERR_PASSWORDNEEDED "462 PRIVMSG :You need to enter a password to set the username\r\n"
+#define ERR_USERTOOLONG "400 :Username too long\r\n"
+#define ERR_WRONGCHAR "400 :Wrong characters used in username\r\n"
+#define ERR_WRONGCHAR0 "400 :Supposed to be 0 after the username\r\n"
+#define ERR_WRONGCHAR3 "400 :Supposed to be : at the beginning of the realname\r\n"
+#define ERR_WRONGCHAR42 "400 :Supposed to be * after the 0\r\n"
+#define ERR_WRONGCHARREAL "400 :Wrong characters used in realname\r\n"
+#define RPL_USERNAMESET(username, realname) "400 :Username set to: '" + username + "' and the realname set to: '" + realname + "'\r\n"
 
 
 /* ************************************************************************** */
@@ -66,13 +66,7 @@ string User::executeCommand(Server *server) {
 			break;
 	}
 	server->getUserDB()[fd]._username = temp_username;
-	// cout << "--- Elements in map ---" << endl;
-	// map<int, clientInfo>::const_iterator it2;
-	// it2 = server->getUserDB().begin();
-	// for (; it2 != server->getUserDB().end(); ++it2) {
-	// 	cout << it2->first << ", " << it2->second._nickname << it2->second._username << it2->second._realname << endl;
-	// }
-	return USERNAMESET(username, realname);
+	return RPL_USERNAMESET(username, realname);
 }
 
 string User::defaultUser(string &username, string &realname){

@@ -5,18 +5,16 @@ extern bool g_running;
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
+#define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
+#define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
 #define ERR_SERVERFULL "400 :No empty server slot\r\n"
-# define ERR_INPUTTOOLONG "417 <client> :Input line was too long\r\n"
-# define ERR_FLOOD "400 Disconnected : Flood protection, niaise pas avec moé !\r\n"
-# define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
+#define RPL_QUITCHANNEL(user, channel) ":" + user + " PART " + channel + "\r\n"
+#define RPL_WELCOME(hostname, nickname, username) ":" + hostname + " 001 " + nickname + " :Welcome, " + nickname + "!" + username + "@" + hostname + "\r\n"
 
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
 /* ************************************************************************** */
-Server::Server() {}
-
 Server::Server(string port, string password) :
 	_reuse(1), _socket_fd(0), _client_index(0), _bytes_read(0),  _bytes_sent(0){
 	_port = atoi(port.c_str());
@@ -178,8 +176,6 @@ void Server::acceptConnection() {
 }
 
 void Server::addNewClient(int status) {
-	
-	
 	for (uint32_t i = 0; i < MAXFDS; i++){
 		if (_fds[i].fd == -1){
 			_fds[i].fd = status;
@@ -351,7 +347,7 @@ void Server::welcomeMessage() {
 
 	if (username != "" && nickname != "" && welcomed == false && passworded == true) {
 		welcomed = true;
-		string response = WELCOME(hostname, nickname, username);
+		string response = RPL_WELCOME(hostname, nickname, username);
 		_bytes_sent = send(fd, response.c_str(), response.size(), 0);
 		if (_bytes_sent == -1) {
 			cerr << "Error : SEND return -1" << endl;
@@ -389,6 +385,7 @@ void Server::closeChannelFds() {
 	for (; it != _channel_list.end(); it++) {
 		if (it->second->isUserInChannel(_fds[_client_index].fd)) {
 			it->second->removeUserFromChannel(this, _fds[_client_index].fd);
+			broadcastUserQuitMessage(it->second, _userDB[_fds[_client_index].fd]._nickname);
 		}
 		if (isChannelEmpty(it->second)) {
 			channelsToDelete.push_back(it->first);
@@ -411,10 +408,7 @@ void Server::broadcastUserQuitMessage(Channel *channel, const string &user) {
 }
 
 bool Server::isChannelEmpty(Channel *channel) {
-	if (isChannelInServer(channel->getChannelName()) && channel->getNbInChannel() == 0) {
-		return true;
-	}
-	return false;
+	return (isChannelInServer(channel->getChannelName()) && channel->getNbInChannel() == 0) ? true : false;
 }
 
 bool Server::isNickInServer(string nickname){
