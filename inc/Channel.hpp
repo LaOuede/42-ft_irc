@@ -4,9 +4,9 @@
 #pragma once
 
 #include <iostream>
-#include <cstring>
 #include <list>
 #include <map>
+#include <string>
 
 #define MAXINCHANNEL 10
 #define OPERATOR 1

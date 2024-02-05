@@ -3,11 +3,11 @@
 
 #pragma once
 
-#include <cstring>
 #include <iostream>
 #include <list>
 #include <map>
 #include <sstream>
+#include <string>
 
 #include "ACommand.hpp"
 #include "Cap.hpp"
