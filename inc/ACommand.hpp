@@ -3,9 +3,8 @@
 
 #pragma once
 
+#include <cstring>
 #include <iostream>
-#include <string>
-
 
 using std::cout;
 using std::endl;
@@ -29,9 +28,6 @@ class ACommand {
 		// Constructors & Destructors
 		ACommand();
 		ACommand(ACommand const &rhs) ;
-
-		// Operator overload
-		ACommand		&operator=(ACommand const &rhs) ;
 	
 		// Attributes
 		string			_name;

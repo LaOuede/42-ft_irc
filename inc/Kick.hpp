@@ -4,10 +4,10 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
 #include <list>
 #include <map>
-#include <string>
 
 using std::cout;
 using std::endl;

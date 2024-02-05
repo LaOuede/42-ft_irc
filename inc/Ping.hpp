@@ -4,8 +4,8 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
-#include <string>
 
 using std::cout;
 using std::endl;

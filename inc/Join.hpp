@@ -4,10 +4,9 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
 #include <list>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 #define CHANLIMIT 5
@@ -17,7 +16,6 @@ using std::endl;
 using std::list;
 using std::pair;
 using std::string;
-using std::unordered_map;
 using std::vector;
 
 class Server;

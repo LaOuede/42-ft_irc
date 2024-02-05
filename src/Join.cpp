@@ -33,12 +33,6 @@ Join::~Join() {}
 
 
 /* ************************************************************************** */
-/* Getters & Setters                                                          */
-/* ************************************************************************** */
-
-
-
-/* ************************************************************************** */
 /* Functions                                                                  */
 /* ************************************************************************** */
 // MAIN FUNCTION
@@ -59,8 +53,8 @@ string Join::executeCommand(Server *server) {
 
 //0. Authentification check
 bool Join::authentificationCheck(Server *server) {
-    int &fd = server->getFds()[server->getClientIndex()].fd;
-    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 //1. COMMAND PARSING
@@ -110,17 +104,6 @@ void Join::splitParameters(string const &to_split, list<string> &to_fill) {
 	while (getline(stream, token, delimiter)) {
 		to_fill.push_back(token);
 	}
-
-	// DEBUG PRINT LIST
-/* 	cout << "--- Elements in " << to_split << ": ---" << endl;
-	list<string>::const_iterator it;
-	int index = -1;
-	it = to_fill.begin();
-	for (; it != to_fill.end(); ++it) {
-		std::cout << "index " << ++index << " :" << *it << std::endl;
-	}
-	cout << to_fill.size() << endl;
-	cout << "\n" << endl; */
 }
 
 //2. CREATING A VECTOR<pair<CHANNEL_NAME, CHANNEL_KEY>>
@@ -139,13 +122,6 @@ void Join::createChannelVector() {
 			_channel_key.pop_front();
 		}
 	}
-
-	// DEBUG Print vector
-/* 	cout << "--- Elements in vector ---" << endl;
-	for (size_t i = 0; i < _channel_vector.size(); ++i) {
-	std::cout << "index " << i << " : " << _channel_vector[i].first << " - " << _channel_vector[i].second << std::endl;
-	}
-	cout << "\n" << endl; */
 }
 
 //3. PROCESS CONNECTIONS
@@ -240,7 +216,7 @@ void Join::createChannel(Server *server, string const &channel_name, string &use
 
 bool Join::checkChannelsLimits(Server *server, int &fd) {
 	int &nb_channel = server->getUserDB()[fd]._nb_channel;
-	cout << "nb channel I'm is: " << nb_channel << endl;
+
 	if (server->getChannelList().size() >= MAXCHANNEL) {
 		server->sendToClient(ERR_TOOMANYCHANNELSSERVER);
 		return false;

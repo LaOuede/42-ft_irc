@@ -4,10 +4,11 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
 #include <list>
-#include <string>
 
+using std::cerr;
 using std::cout;
 using std::endl;
 using std::list;
@@ -38,8 +39,3 @@ class Invite : public ACommand {
 };
 
 #endif
-
-//si channel restrict et clientindex eest operator : peut inviter
-//si channel restrcit et clientindex est pas operator : ne peut pas inviter
-//si channel pas restrict : ne peut pas inviter
-

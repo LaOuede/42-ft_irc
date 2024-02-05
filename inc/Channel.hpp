@@ -3,25 +3,20 @@
 
 #pragma once
 
-#include <exception>
 #include <iostream>
+#include <cstring>
 #include <list>
 #include <map>
-#include <stdexcept>
-#include <string.h>
 
 #define MAXINCHANNEL 10
 #define OPERATOR 1
 #define USER 2
 
+using std::cerr;
 using std::cout;
 using std::endl;
-using std::exception;
 using std::list;
-using std::make_pair;
 using std::map;
-using std::pair;
-using std::reverse_iterator;
 using std::string;
 
 class Server;
@@ -63,12 +58,9 @@ class Channel {
 		void			updateChannelOperator(Server *server);
 		void			broadcastListUser(Server *server, int &user_fd);
 		void			broadcastToAll(string msg);
-		//TO DO : bool			checkMode(Channel *channel, int &user_fd);
+		void			broadcastChannelMode(Server *server, string &nickname);
 
 	private:
-		// Construtors & Destructors
-		Channel();
-	
 		// Attributes
 		int				_nb_users;
 		int				_nb_operators;

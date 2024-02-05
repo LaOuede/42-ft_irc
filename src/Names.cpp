@@ -41,8 +41,8 @@ string Names::executeCommand(Server *server) {
 
 //0. Authentification check
 bool Names::authentificationCheck(Server *server) {
-    int &fd = server->getFds()[server->getClientIndex()].fd;
-    return (server->getUserDB()[fd]._welcomed == false) ? false : true;
+	int &fd = server->getFds()[server->getClientIndex()].fd;
+	return (server->getUserDB()[fd]._welcomed == false) ? false : true;
 }
 
 //1. COMMAND PARSING

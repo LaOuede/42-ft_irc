@@ -4,29 +4,30 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_NEEDMOREPARAMS(nickname) "461 " + nickname + " MODE :Not enough parameters\r\n"
-#define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
-#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
-#define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
-#define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
-#define ERR_PASSWDMISMATCH "464 PRIVMSG :Password incorrect\r\n"
-#define ERR_WRONGCHAR "400 :Wrong character or password too long\r\n"
-#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
-#define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
-#define ERR_WRONGLIMIT(nickname) "461 " + nickname + " MODE :Syntax error OR out of range size\r\n"
-#define ERR_NOSUCHNICK(mode_param) "401 " + mode_param + " :No such nick\r\n"
 #define ERR_ALREADYMODE "400 :This mode is already set\r\n"
+#define ERR_CHANOPRIVSNEEDED(nickname, channel) "482 " + nickname + " " + channel + " :You're not channel operator\r\n"
 #define ERR_MODEYOURSELF "400 :You can't set/unset yourself operator\r\n"
+#define ERR_NEEDMOREPARAMS(nickname) "461 " + nickname + " MODE :Not enough parameters\r\n"
+#define ERR_NOSUCHCHANNEL(channel) "403 " + channel + " :No such channel\r\n"
+#define ERR_NOSUCHNICK(mode_param) "401 " + mode_param + " :No such nick\r\n"
+#define ERR_NOTONCHANNEL(nickname, channel) "442 " + nickname + " " + channel + " :You're not on that channel\r\n"
+#define ERR_TOOMANYPARAMS(function) "400 " + function + " :Too many parameters\r\n"
+#define ERR_UMODEUNKNOWNFLAG(nickname) "501 " + nickname + " :Unknown MODE flag\r\n"
+#define ERR_WELCOMED "462 PRIVMSG :You are not authenticated\r\n"
+#define ERR_WRONGCHAR "400 :Wrong character or password too long\r\n"
+#define ERR_WRONGLIMIT(nickname) "461 " + nickname + " MODE :Syntax error OR out of range size\r\n"
+#define ERR_WRONGPARAMS(nickname) "461 " + nickname + " MODE :Syntax error\r\n"
 #define RPL_CLIENTOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is promoted operator\r\n"
 #define RPL_CLIENTDEOPTARGET(nickname, channel, mode_param) ":" + nickname + " MODE " + channel + " :" + mode_param + " is demoted from operator\r\n"
-#define RPL_LIMITON(nickname, channel, users_limit) ":" + nickname + " MODE " + channel + " :" + users_limit + " is the new users limit\r\n"
-#define RPL_LIMITOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more user limit\r\n"
-#define RPL_TOPICON(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic IS restricted\r\n"
-#define RPL_TOPICOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic NOT restricted\r\n"
-#define RPL_PASSWORDON(nickname, channel) ":" + nickname + " MODE " + channel + " :Password IS requested\r\n"
-#define RPL_PASSWORDOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Password NOT requested\r\n"
 #define RPL_INVITEON(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation IS requested\r\n"
 #define RPL_INVITEOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Invitation NOT requested\r\n"
+#define RPL_LIMITON(nickname, channel, users_limit) ":" + nickname + " MODE " + channel + " :" + users_limit + " is the new users limit\r\n"
+#define RPL_LIMITOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :No more user limit\r\n"
+#define RPL_PASSWORDON(nickname, channel) ":" + nickname + " MODE " + channel + " :Password IS requested\r\n"
+#define RPL_PASSWORDOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Password NOT requested\r\n"
+#define RPL_TOPICON(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic IS restricted\r\n"
+#define RPL_TOPICOFF(nickname, channel) ":" + nickname + " MODE " + channel + " :Topic NOT restricted\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -51,12 +52,17 @@ string Mode::executeCommand(Server *server) {
 	if (!error.empty()) {
 		return error;
 	}
+	if (tokens.size() == 1) {
+		Channel *channel = server->getChannel(_channel);
+		channel->broadcastChannelMode(server, _nickname);
+		return "";
+	}
 	_mode = *++it;
 	if ((_mode[0] == '-' || _mode[0] == '+')
 		&& (_mode[1] == 'i' || _mode[1] == 't' || _mode[1] == 'k'|| _mode[1] == 'o' || _mode[1] == 'l') && _mode.size() == 2) {
 		selectMode(server, it);
 	} else {
-		return ERR_WRONGPARAMS(_nickname);
+		return ERR_UMODEUNKNOWNFLAG(_nickname);
 	}
 	return "";
 }
@@ -67,7 +73,7 @@ string Mode::parseFirstPart(Server *server, const list<string> &tokens) {
 
 	if (!user_info._welcomed)
 		return ERR_WELCOMED;
-	if (tokens.size() < 2)
+	if (tokens.size() < 1)
 		return ERR_NEEDMOREPARAMS(_nickname);
 	if (!server->isChannelInServer(_channel))
 		return ERR_NOSUCHCHANNEL(_channel);

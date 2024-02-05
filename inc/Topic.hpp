@@ -4,14 +4,14 @@
 #pragma once
 
 #include "ACommand.hpp"
+#include <cstring>
 #include <iostream>
-#include <string>
 #include <list>
 
 using std::cout;
 using std::endl;
-using std::string;
 using std::list;
+using std::string;
 
 class Server;
 

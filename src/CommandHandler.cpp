@@ -4,7 +4,8 @@
 /* ************************************************************************** */
 /* Defines                                                                    */
 /* ************************************************************************** */
-#define ERR_UNKNOWNCOMMAND ":" + hostname + " 432 " + nickname + " " + command + " :Unknown command\r\n"
+#define ERR_UNKNOWNCOMMAND(nickname, command) "421 " + nickname + " " + command + " :Unknown command\r\n"
+
 
 /* ************************************************************************** */
 /* Constructors and Destructors                                               */
@@ -23,6 +24,7 @@ CommandHandler::~CommandHandler() {
 	_command_caller.clear();
 	list<string>().swap(_command_tokens);
 }
+
 
 /* ************************************************************************** */
 /* Getters & Setters                                                          */
@@ -51,8 +53,9 @@ void CommandHandler::initializeCommandCaller() {
 	_command_caller.insert(pair<string, ACommand *>("TOPIC", new Topic));
 	_command_caller.insert(pair<string, ACommand *>("USER", new User));
 	for (map<string, ACommand *>::iterator it = _command_caller.begin(); it != _command_caller.end(); it++)
-		if(it->second == nullptr || it->second == NULL)
-			throw std::runtime_error("Fatal : New() failed");
+		if (it->second == nullptr || it->second == NULL) {
+			throw runtime_error("Fatal : New() failed");
+		}
 }
 
 void CommandHandler::commandTokenizer(Server *server) {
@@ -62,16 +65,6 @@ void CommandHandler::commandTokenizer(Server *server) {
 	while (iss >> token) {
 		_command_tokens.push_back(token);
 	}
-
-	// DEBUG PRINT LIST
-/* 	cout << "--- Elements in list: ---" << endl;
-	list<string>::const_iterator it;
-	int index = -1;
-	it = _command_tokens.begin();
-	for (; it != _command_tokens.end(); ++it) {
-		std::cout << "index " << ++index << " :" << *it << "    size :" << it->length() << std::endl;
-	}
-	cout << "\n" << endl; */
 }
 
 string CommandHandler::sendResponse(Server *server) {
@@ -79,7 +72,6 @@ string CommandHandler::sendResponse(Server *server) {
 	string	response;
 	int		&fd = server->getFds()[server->getClientIndex()].fd;
 	string	command = _command_tokens.front();
-	string	&hostname = server->getHostname();
 	string	&nickname = server->getUserDB()[fd]._nickname;
 
 	it = _command_caller.find(_command_tokens.front());
@@ -92,5 +84,5 @@ string CommandHandler::sendResponse(Server *server) {
 		}
 	}
 	_command_tokens.clear();
-	return ERR_UNKNOWNCOMMAND;
+	return ERR_UNKNOWNCOMMAND(nickname, command);
 }

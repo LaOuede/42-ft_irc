@@ -23,7 +23,7 @@ bool parsingPassword(string password) {
 
 void Server::sendToClient(const string &response) {
 	if (send(_fds[_client_index].fd, response.c_str(), response.size(), 0) == -1)
-		std::cerr << "Error : SEND return -1" << endl;
+		cerr << "Error : SEND return -1" << endl;
 }
 
 void shutdown(int sig){
