@@ -4,9 +4,9 @@
 #pragma once
 
 # include "ACommand.hpp"
-# include <cstring>
 # include <iostream>
 # include <list>
+# include <string>
 
 using std::cout;
 using std::endl;

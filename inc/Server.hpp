@@ -7,7 +7,6 @@
 #include "Channel.hpp"
 #include "CommandHandler.hpp"
 #include <cctype>
-#include <cstring>
 #include <csignal>
 #include <ctime>
 #include <exception>
@@ -18,6 +17,7 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
