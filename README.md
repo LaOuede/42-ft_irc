@@ -87,5 +87,5 @@ This project was realized as a team effort with [TwindZ](https://github.com/Twin
 
 <div align="center">
 
-To look at [my next 42 project](https://github.com/LaOuede/ft_transcendence) !
+To look at [my next 42 project](https://github.com/LaOuede/42-inception) !
 </div>
