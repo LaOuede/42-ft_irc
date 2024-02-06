@@ -51,7 +51,9 @@ make
 
 <img width="649" alt="Screen Shot 2024-02-06 at 9 01 39 AM" src="https://github.com/LaOuede/42-ft_irc/assets/114024436/744274fa-2cae-4e14-ba12-8a3b6533db6a">
 
-4- Commands implemented :
+---
+
+<h3 align="left">Commands implemented 💻</h3>
 
 <code>INVITE</code>: Allows inviting a user to join a specific channel.</br>
 <code>JOIN</code>: Allows a user to join an existing channel.</br>
@@ -73,7 +75,9 @@ make
 
 ---
 
-<div align="center">
+<h3 align="left">Collaborators 👨🏼‍🚀</h3>
+
+<div>
 
 This project was realized as a team effort with [TwindZ](https://github.com/TwindZ) and [Prezcoder](https://github.com/Prezcoder) 🚀
 
