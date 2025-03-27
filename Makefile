@@ -86,10 +86,6 @@ fclean: clean
 help:
 	@echo "$$HELP"
 
-# Open the subject
-pdf:
-	@open https://cdn.intra.42.fr/pdf/pdf/94732/fr.subject.pdf
-
 # Remove objects and executables and remake
 re: fclean
 	@$(MAKE) all
@@ -104,4 +100,4 @@ wee:
 	docker run -it weechat/weechat
 
 # Avoids file-target name conflicts
-.PHONY: all clean debug fclean help pdf re rpn wee
+.PHONY: all clean debug fclean help re rpn wee
